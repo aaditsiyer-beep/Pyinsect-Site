@@ -5,8 +5,8 @@
 //    https://<this worker>/<VIEW_PATH>/
 //
 // Settings (Cloudflare → this worker → Settings → Variables and Secrets):
-//   GITHUB_TOKEN    Secret. Fine-grained token, Contents: Read and write on the repo below.
-//   GITHUB_REPO     Text, e.g. edafawd/pyinsect-reports-data (private)
+//   GITHUB_TOKEN    Secret. Fine-grained token, Contents: Read and write on REPORTS_REPO below.
+//   (GITHUB_REPO is no longer used: the repo is fixed in the code, see REPORTS_REPO.)
 //   ALLOWED_ORIGIN  Text, e.g. https://edafawd.github.io
 //   VIEW_PASSWORD   Secret. Password for the reports page.
 //   VIEW_PATH       Secret. The secret word in the reports page address (letters, digits, - and _).
@@ -25,6 +25,9 @@ const INVASIVE = new Set([
   "fire_ant", "formosan_termite", "japanese_beetle", "oriental_beetle", "rose_chafer",
   "spongy_moth", "spotted_lanternfly",
 ]);
+// Where reports are saved. Fixed here (not a Cloudflare setting) because the setting kept pointing
+// at the public site repo. Must stay a PRIVATE repo; the relay refuses to save anywhere public.
+const REPORTS_REPO = "edafawd/pyinsect-reports-data";
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024;
 const MAX_AGE_DAYS = 60;            // reports can wait offline on a phone for a while
 const PER_IP_LIMIT = 30;            // reports per IP per hour (per Cloudflare server, best effort)
@@ -38,7 +41,7 @@ const TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/;
 const recent = new Map(), wrong = new Map();
 const reportCache = new Map();      // id → report JSON (reports never change)
 let listCache = { at: 0, ids: null };
-let privateCheck = { repo: null, at: 0 };   // last time GITHUB_REPO was confirmed private
+let privateCheck = { repo: null, at: 0 };   // last time REPORTS_REPO was confirmed private
 
 export default {
   async fetch(request, env) {
@@ -69,12 +72,12 @@ async function submit(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (request.method === "GET") {
     // Says whether the reports page is set up, never what its address or password is
-    return reply(200, { ok: true, service: "pyinsect-relay", version: 7, reports_page: Boolean(viewWord(env) && env.VIEW_PASSWORD) });
+    return reply(200, { ok: true, service: "pyinsect-relay", version: 8, reports_page: Boolean(viewWord(env) && env.VIEW_PASSWORD) });
   }
   if (request.method !== "POST") return reply(405, { error: "Use POST." });
   const origin = request.headers.get("Origin");
   if (env.ALLOWED_ORIGIN && origin !== env.ALLOWED_ORIGIN) return reply(403, { error: "Reports are only accepted from the Pyinsect site." });
-  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) return reply(500, { error: "The relay isn't set up yet (GITHUB_TOKEN / GITHUB_REPO missing)." });
+  if (!env.GITHUB_TOKEN) return reply(500, { error: "The relay isn't set up yet (GITHUB_TOKEN missing)." });
 
   const ip = request.headers.get("CF-Connecting-IP") || "?";
   if (!allow(recent, ip, 3600000, PER_IP_LIMIT)) return reply(429, { error: "Too many reports from this network. Try again later." });
@@ -86,11 +89,11 @@ async function submit(request, env) {
   count(recent, ip, 3600000);
 
   const { report, photo } = checked;
-  // Never save into a public repo (it happened twice when GITHUB_REPO was reset). Not a 400, so the
+  // Never save into a public repo (it happened when the old GITHUB_REPO setting was reset). Not a 400, so the
   // site keeps the report and sends it again once the setting is fixed.
   try {
     if (!(await repoIsPrivate(env))) {
-      return reply(503, { error: "The relay's reports repo isn't private, so the report is held back. Set GITHUB_REPO to the private repo." });
+      return reply(503, { error: "The relay's reports repo isn't private, so the report is held back. REPORTS_REPO in the relay code must be a private repo." });
     }
   } catch (e) {
     return reply(502, { error: e.message });
@@ -165,7 +168,7 @@ async function viewer(request, env, rest) {
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { ...headers, "Content-Type": "application/json" } });
 
   if (!rest.startsWith("/api/")) return new Response("Not found", { status: 404, headers });
-  if (!env.VIEW_PASSWORD || !env.GITHUB_TOKEN || !env.GITHUB_REPO) return json(500, { error: "The relay isn't fully set up (VIEW_PASSWORD / GITHUB_TOKEN / GITHUB_REPO)." });
+  if (!env.VIEW_PASSWORD || !env.GITHUB_TOKEN) return json(500, { error: "The relay isn't fully set up (VIEW_PASSWORD / GITHUB_TOKEN)." });
 
   const ip = request.headers.get("CF-Connecting-IP") || "?";
   if (!allow(wrong, ip, 900000, WRONG_PASSWORD_LIMIT)) return json(429, { error: "Too many wrong passwords. Wait 15 minutes." });
@@ -227,7 +230,7 @@ async function samePassword(given, real) {
 // ---------- GitHub ----------
 
 function gh(env, path, init = {}) {
-  return fetch(`https://api.github.com/repos/${env.GITHUB_REPO}${path ? "/" + path : ""}`, {
+  return fetch(`https://api.github.com/repos/${REPORTS_REPO}${path ? "/" + path : ""}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${env.GITHUB_TOKEN}`,
@@ -241,18 +244,18 @@ function gh(env, path, init = {}) {
 
 function ghError(status) {
   if (status === 401) return "The relay's GitHub token was rejected (expired?).";
-  if (status === 403 || status === 404) return "The relay's GitHub token can't use the reports repo.";
+  if (status === 403 || status === 404) return "The relay's GitHub token can't use the reports repo (it needs access to " + REPORTS_REPO + ").";
   return `GitHub answered ${status}.`;
 }
 
-// True when GITHUB_REPO is a private repo (checked at most every 10 minutes per Cloudflare server)
+// True when REPORTS_REPO is a private repo (checked at most every 10 minutes per Cloudflare server)
 async function repoIsPrivate(env) {
-  if (privateCheck.repo === env.GITHUB_REPO && Date.now() - privateCheck.at < 600000) return true;
+  if (privateCheck.repo === REPORTS_REPO && Date.now() - privateCheck.at < 600000) return true;
   const res = await gh(env, "");
   if (!res.ok) throw new Error(ghError(res.status));
   const info = await res.json();
   if (info.private !== true) return false;
-  privateCheck = { repo: env.GITHUB_REPO, at: Date.now() };
+  privateCheck = { repo: REPORTS_REPO, at: Date.now() };
   return true;
 }
 
