@@ -11,7 +11,7 @@
 //   VIEW_PASSWORD   Secret. Password for the reports page.
 //   VIEW_PATH       Secret. The secret word in the reports page address (letters, digits, - and _).
 
-// Must match INVASIVE in index.html (scientific names, as Pyinsect 2.8+ outputs them)
+// Must match `invasive` in assets/models/pyinsect-*.js (scientific names, as Pyinsect 2.8+ outputs them)
 const INVASIVE = new Set([
   "adelges_piceae", "agrilus_planipennis", "anisandrus_dispar", "anoplophora_glabripennis",
   "coptotermes_formosanus", "exomala_orientalis", "halyomorpha_halys", "harmonia_axyridis",
