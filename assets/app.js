@@ -45,7 +45,7 @@ async function loadModel() {
     setStatus("Starting model…", "busy");
     session = await ort.InferenceSession.create(buf, { executionProviders: ["wasm"] });
     setStatus(readyText(), "ready");
-    $("pickPhotos").disabled = false; $("pickFolder").disabled = false; $("openCamera").disabled = false;
+    $("pickPhotos").disabled = false; if ($("pickFolder")) $("pickFolder").disabled = false; $("openCamera").disabled = false;
   } catch (e) {
     console.error(e);
     setStatus(`Model failed to load: ${e.message}`, "error");
@@ -499,9 +499,11 @@ document.addEventListener("visibilitychange", () => {
 
 // ---------- wiring ----------
 $("pickPhotos").onclick = () => $("photoInput").click();
-$("pickFolder").onclick = () => $("folderInput").click();
 $("photoInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
-$("folderInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
+if ($("pickFolder")) {  // only on pages that have the folder button
+  $("pickFolder").onclick = () => $("folderInput").click();
+  $("folderInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
+}
 const tray = $("tray");
 ["dragenter", "dragover"].forEach(t => tray.addEventListener(t, e => { e.preventDefault(); tray.classList.add("drag"); }));
 ["dragleave", "drop"].forEach(t => tray.addEventListener(t, e => { e.preventDefault(); tray.classList.remove("drag"); }));
