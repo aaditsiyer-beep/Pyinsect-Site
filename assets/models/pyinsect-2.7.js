@@ -41,8 +41,8 @@ window.PYINSECT_MODEL = {
     "western_tiger_swallowtail"
   ],
   invasive: [
-    "ambrosia_beetle", "argentine_ant", "asian_giant_hornet", "asian_lady_beetle",
-    "asian_longhorned_beetle", "balsam_woolly_adelgid", "brown_marmorated_stink_bug",
+    "argentine_ant", "asian_giant_hornet", "asian_lady_beetle",
+    "asian_longhorned_beetle", "brown_marmorated_stink_bug",
     "cabbage_white", "elm_leaf_beetle", "emerald_ash_borer", "european_paper_wasp",
     "fire_ant", "formosan_termite", "japanese_beetle", "oriental_beetle", "rose_chafer",
     "spongy_moth", "spotted_lanternfly"

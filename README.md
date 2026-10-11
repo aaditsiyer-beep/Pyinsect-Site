@@ -1,7 +1,7 @@
 # Pyinsect
 
-A web app that identifies insects in photos with the Pyinsect 2.7 model (154 classes) and
-reports invasive species.
+A web app that identifies insects in photos with the Pyinsect 2.8 model (390 classes) and
+reports invasive species. The older Pyinsect 2.7 model is still available at `/2.7/`.
 
 | Where | What it does |
 |---|---|
@@ -27,10 +27,12 @@ per find) live in `reports/` of a separate private repo that only the relay can 
 4. **Relay.** The token must never be in this repo's files. A free Cloudflare Worker holds it:
    1. Sign up at https://dash.cloudflare.com/sign-up (free).
    2. **Workers & Pages → Create → Start with Hello World**, name it `pyinsect-relay`, **Deploy**.
-   3. **Edit code**, replace everything with the contents of `relay/worker.js`, **Deploy**.
+   3. In `relay/worker.js`, set `REPORTS_REPO` near the top to
+      `<your-username>/<private reports repo>`. Then **Edit code**, replace everything with the
+      contents of `relay/worker.js`, **Deploy**. (The reports repo is set in the code, not as a
+      Cloudflare setting, so it can't accidentally point at a public repo.)
    4. **Settings → Variables and Secrets → Add**:
       - `GITHUB_TOKEN`, **Secret**: the token from step 3
-      - `GITHUB_REPO`, Text: `<your-username>/<private reports repo>`
       - `ALLOWED_ORIGIN`, Text: `https://<your-username>.github.io`
       - `VIEW_PASSWORD`, **Secret**: the password for the reports page
       - `VIEW_PATH`, **Secret**: a secret word for the page address (letters, digits, `-`, `_`)
@@ -48,10 +50,11 @@ per find) live in `reports/` of a separate private repo that only the relay can 
   report, when the connection comes back, or with **Send waiting reports**.
 - To change the password or the secret word, edit `VIEW_PASSWORD` / `VIEW_PATH` in Cloudflare.
   Everyone then has to use the new link and password.
-- The invasive species list is `INVASIVE` in `index.html` **and** in `relay/worker.js`. Change
-  both, then paste `worker.js` into Cloudflare again (**Edit code → Deploy**).
+- The invasive species list is `invasive` in `assets/models/pyinsect-*.js` **and** `INVASIVE` in
+  `relay/worker.js`. Change both, then paste `worker.js` into Cloudflare again
+  (**Edit code → Deploy**).
 - The reports page has its own copy of the site's styles inside `relay/worker.js`, so it keeps
   working if the site moves or is renamed.
-- To use a newer model, replace `model/insect_model.onnx` and update `CLASS_NAMES` in
-  `index.html`. `convert_to_onnx.py` in the app folder converts a `.pth` and writes its class
+- To use a newer model, replace `model/insect_model.onnx` and update `classes` (and `size`) in
+  its settings file in `assets/models/`. `convert_to_onnx.py` in the app folder converts a `.pth` and writes its class
   list to `assets/models/models.json`.
