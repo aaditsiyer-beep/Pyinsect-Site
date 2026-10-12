@@ -322,3 +322,18 @@ input[type=file] { display: none; }
 .game-toast p { margin: 0; }
 .game-toast p + p { margin-top: 4px; color: var(--accent); font-weight: 600; }
 .speech { margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--accent-soft); font-style: italic; text-align: left; }
+
+/* Innvadex version 3: quiz, shop, map */
+.quiz, .map-panel { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.quiz p { margin: 0; }
+.quiz-q { font-family: var(--display); font-size: 18px; font-weight: 500; }
+.quiz-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.quiz-choices .btn { justify-content: center; }
+.quiz-choices .btn.right { background: var(--accent); color: #fff; opacity: 1; }
+.quiz-choices .btn.wrong { background: var(--alert); color: #fff; opacity: 1; }
+.quiz-result { font-weight: 600; min-height: 1.5em; }
+.quiz .btn.primary { align-self: flex-start; }
+.map-toggle { display: flex; gap: 8px; align-items: center; font-weight: 500; cursor: pointer; }
+.map-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.map-panel p { margin: 0; }
+.catch-map { height: 340px; border-radius: 16px; overflow: hidden; }

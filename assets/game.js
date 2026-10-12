@@ -171,11 +171,41 @@ const GYMS = [
     say: { hi: "You made it to the top! My Legendary bugs are the toughest in Oregon.", next: "A Legendary bug never gives up!", lose: "Amazing! You've earned the Mount Hood Badge!", win: "The mountain wins this time. Keep training!" } },
 ];
 
+// ---------- version 3: evolution, ranks, shop, quiz, map, sounds ----------
+
+// Catch the same kind of bug 3 times and it levels up. Each level makes it stronger in battles.
+const CATCHES_PER_LEVEL = 3, MAX_LEVEL = 3, LEVEL_BONUS = { hp: 6, atk: 2 };
+const bugLevel = n => Math.min(MAX_LEVEL, 1 + Math.floor(n / CATCHES_PER_LEVEL));
+
+// Ranks go up with your points (coins you spend don't count against them)
+const RANKS = [
+  [0, "🌱", "Rookie"], [50, "🧭", "Explorer"], [150, "🎒", "Ranger"],
+  [300, "🦸", "Bug Hero"], [600, "🌲", "Forest Guardian"], [1000, "👑", "Invasive Legend"],
+];
+const rankOf = points => RANKS.filter(r => points >= r[0]).pop();
+
+// The item shop. Items are used up automatically the next time they can help.
+const ITEMS = [
+  { id: "supernet",  emoji: "🥅", name: "Super Net",  price: 30, desc: "Your next minigame gets 5 extra seconds." },
+  { id: "stickynet", emoji: "🍯", name: "Sticky Net", price: 40, desc: "Your next minigame needs only 2 taps." },
+  { id: "snack",     emoji: "🍃", name: "Bug Snack",  price: 25, desc: "In a battle, heal your bug all the way. Uses your turn." },
+];
+const SUPERNET_SECONDS = 5, STICKYNET_TAPS = 2;
+
+// The quiz: right answers earn points, up to a few a day
+const QUIZ_POINTS = 5, QUIZ_DAILY_MAX = 5;
+
+// The catch map: spots are rounded to 3 decimal places (about a city block) and saved only here
+const MAP_DECIMALS = 3;
+
 // ---------- saving ----------
 function loadGame() {
   let g = null;
   try { g = JSON.parse(localStorage.getItem(GAME_KEY)); } catch {}
-  return { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0, ...(g || {}) };
+  g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
+    items: {}, spots: [], useMap: false, muted: false, quiz: { day: null, right: 0 }, ...(g || {}) };
+  if (g.coins == null) g.coins = g.points;   // games saved before the shop existed
+  return g;
 }
 function saveGame(g) { try { localStorage.setItem(GAME_KEY, JSON.stringify(g)); } catch {} }
 
@@ -185,6 +215,8 @@ const gameSpecies = () => (window.PYINSECT_MODEL?.invasive || []).filter(s => SP
 const totalCaught = g => Object.values(g.caught).reduce((a, b) => a + b, 0);
 const kindsCaught = g => Object.keys(g.caught).length;
 const caughtRarity = (g, r) => Object.keys(g.caught).some(s => SPECIES_FACTS[s]?.rarity === r);
+// Points count toward your rank, and you get the same number of coins to spend in the shop
+const addPoints = (g, n) => { g.points += n; g.coins += n; };
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const todaysChallenge = () => {
   const d = new Date();
@@ -194,15 +226,19 @@ const todaysChallenge = () => {
 // After something happens (a catch, a native bug, a battle win), check the daily challenge and
 // the badges. Changes the saved game `g` and returns the messages to show.
 function progress(g, ev) {
-  const lines = [];
+  const lines = [], rankBefore = g.rankSeen ?? rankOf(g.points - (ev.pts || 0))[2];
   if (g.daily !== todayKey() && todaysChallenge().check(ev)) {
-    g.daily = todayKey(); g.dailyDone++; g.points += DAILY_REWARD;
+    g.daily = todayKey(); g.dailyDone++; addPoints(g, DAILY_REWARD);
     lines.push(`📅 Daily challenge done! +${DAILY_REWARD} points`);
   }
   const had = new Set(g.badges);
   const fresh = BADGES.filter(b => !had.has(b.id) && b.earned(g));
   g.badges.push(...fresh.map(b => b.id));
   lines.push(...fresh.map(b => `${b.emoji} New badge: ${b.name.replace(/!$/, "")}!`));
+  const rank = rankOf(g.points);
+  if (rank[2] !== rankBefore) lines.push(`${rank[1]} Rank up! You're now ${/^[AEIOU]/.test(rank[2]) ? "an" : "a"} ${rank[2]}!`);
+  g.rankSeen = rank[2];
+  if (lines.length) sound("badge");
   return lines;
 }
 
@@ -220,7 +256,7 @@ function factCard(species, caughtCount) {
   head.lastChild.append(el("strong", null, commonName(species)), el("span", "sci", sciName(species)));
   const tags = el("div", "tags");
   tags.append(rarityTag(species), el("span", "pts", `${RARITY[f.rarity].points} points`));
-  if (caughtCount) tags.append(el("span", "pts", `Caught ×${caughtCount}`));
+  if (caughtCount) tags.append(el("span", "pts", `Caught ×${caughtCount} · Lv ${bugLevel(caughtCount)}`));
   const facts = el("dl", "facts");
   for (const [k, v] of [["What it is", f.fact], ["Why it's a problem", f.harm], ["If you see one", f.todo]])
     facts.append(el("dt", null, k), el("dd", null, v));
@@ -232,6 +268,11 @@ function factCard(species, caughtCount) {
 function renderGame() {
   const g = loadGame(), all = gameSpecies();
   $("gamePoints").textContent = `${g.points} points`;
+  const rank = rankOf(g.points), next = RANKS[RANKS.indexOf(rank) + 1];
+  $("gameRank").textContent = `${rank[1]} ${rank[2]}${next ? ` · ${next[0] - g.points} to ${next[2]}` : ""}`;
+  $("gameCoins").textContent = `🪙 ${g.coins} coins`;
+  $("muteBtn").textContent = g.muted ? "🔇 Sound off" : "🔊 Sound on";
+  $("muteBtn").setAttribute("aria-pressed", g.muted);
   $("gameProgress").textContent = `${kindsCaught(g)} of ${all.length} caught`;
   $("gameProtector").textContent = `🛡️ ${g.protector} protector`;
   const doneToday = g.daily === todayKey();
@@ -245,7 +286,8 @@ function renderGame() {
     const slot = el("button", "dex-slot" + (n ? " caught" : ""));
     slot.type = "button";
     if (n) {
-      slot.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("strong", null, commonName(s)), rarityTag(s), el("span", "count", `×${n}`));
+      slot.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("strong", null, commonName(s)), rarityTag(s),
+        el("span", "count", `Lv ${bugLevel(n)} · ×${n}`));
       slot.onclick = () => showFact(s, n);
     } else {
       slot.append(el("span", "bug-emoji", "❓"), el("strong", null, "???"), el("span", "count", "Not caught yet"));
@@ -267,6 +309,8 @@ function renderGame() {
   for (const s of all) learn.append(factCard(s, g.caught[s] || 0));
 
   renderBattles(g);
+  renderShop(g);
+  renderMapPanel(g);
 }
 
 // The Battle tab: practice trainers, then the forest gyms
@@ -336,6 +380,9 @@ function showInstructions() {
     "Find a bug that isn't invasive? Leave it be, and get protector points!",
     "Do the daily challenge for bonus points. There's a new one every day.",
     "Open “Battle” to battle trainers with your caught bugs. Catch more kinds to open the forest gyms.",
+    "Catch the same bug 3 times and it levels up, which makes it stronger in battles.",
+    "Earn coins as you play, and spend them in the “Shop” on items like the Super Net.",
+    "Play the “Quiz” for bonus points, and turn on the “Map” to see where you caught your bugs.",
     "Open “Learn about species” to see every invasive bug, even ones you haven't caught yet.",
   ]) list.append(el("li", null, step));
   const safety = el("div", "safety");
@@ -362,11 +409,17 @@ function minigame(species, photo) {
     const img = el("img"); img.src = photo; img.alt = "";
     bug.append(img);
     arena.append(bug);
-    const info = el("p", "arena-info", `Tap it ${MINIGAME_TAPS} times! ${MINIGAME_SECONDS} seconds left`);
+    // Items from the shop are used up here, if you have them
+    const g = loadGame(), used = [];
+    let needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
+    if (g.items.stickynet > 0) { g.items.stickynet--; needTaps = STICKYNET_TAPS; used.push("🍯 Sticky Net: only 2 taps!"); }
+    if (g.items.supernet > 0) { g.items.supernet--; seconds += SUPERNET_SECONDS; used.push(`🥅 Super Net: +${SUPERNET_SECONDS} seconds!`); }
+    if (used.length) { saveGame(g); renderGame(); }
+    const info = el("p", "arena-info", `Tap it ${needTaps} times! ${seconds} seconds left`);
     const bar = el("div", "track"), fill = el("div", "fill");
     fill.style.width = "100%"; bar.append(fill);
 
-    let taps = 0, left = MINIGAME_SECONDS * 10, finished = false;
+    let taps = 0, left = seconds * 10, finished = false;
     const slow = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const hop = () => {
       bug.style.left = `${5 + Math.random() * 70}%`;
@@ -382,19 +435,21 @@ function minigame(species, photo) {
     bug.onclick = () => {
       taps++;
       bug.classList.remove("hit"); void bug.offsetWidth; bug.classList.add("hit");
-      if (taps >= MINIGAME_TAPS) return end(true);
-      info.textContent = `${MINIGAME_TAPS - taps} more tap${MINIGAME_TAPS - taps === 1 ? "" : "s"}!`;
+      sound("hit");
+      if (taps >= needTaps) return end(true);
+      info.textContent = `${needTaps - taps} more tap${needTaps - taps === 1 ? "" : "s"}!`;
       hop();
     };
     const timer = setInterval(() => {
       left--;
-      fill.style.width = `${left / (MINIGAME_SECONDS * 10) * 100}%`;
+      fill.style.width = `${left / (seconds * 10) * 100}%`;
       if (left <= 0) end(false);
     }, 100);
     const mover = setInterval(hop, slow ? 1800 : 900);
     hop();
 
-    openPopup([el("h2", null, `A wild ${commonName(species)} appeared!`), rarityTag(species), arena, bar, info],
+    sound("appear");
+    openPopup([el("h2", null, `A wild ${commonName(species)} appeared!`), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), arena, bar, info],
       [["Let it go", false, () => end(false)]]);
     $("gamePopupBox").querySelector(".actions button").onclick = () => end(false);
     popupDone = () => end(false);   // closing the pop-up (Escape) lets the bug go
@@ -411,15 +466,24 @@ function encounter(species, photo) {
   encounters = encounters.then(async () => {
     const won = await minigame(species, photo);
     if (!won) {
+      sound("lose");
       await new Promise(r => { popupDone = r; openPopup([el("h2", null, "It got away!"),
         el("p", null, "Don't worry, it was still reported. Find another one and try again.")], [["OK", true]]); });
       return;
     }
+    sound("catch");
+    const spot = await here();   // null unless the catch map is turned on
     const g = loadGame();
     const pts = RARITY[SPECIES_FACTS[species].rarity].points;
+    const before = bugLevel(g.caught[species] || 0);
     g.caught[species] = (g.caught[species] || 0) + 1;
-    g.points += pts;
-    const extra = progress(g, { type: "catch", species }).map(l => el("p", "new-badge", l));
+    addPoints(g, pts);
+    if (spot) g.spots.push({ species, ...spot, when: new Date().toLocaleDateString() });
+    const lines = [];
+    if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before) lines.push(`⬆️ Your ${commonName(species)} leveled up to Lv ${bugLevel(g.caught[species])}! It's stronger in battles now.`);
+    lines.push(...progress(g, { type: "catch", species, pts }));
+    if (spot) lines.push("📍 Saved on your catch map.");
+    const extra = lines.map(l => el("p", "new-badge", l));
     saveGame(g);
     renderGame();
 
@@ -443,7 +507,7 @@ function toast(lines) {
 function native(species, confidence) {
   if (confidence < NATIVE_MIN_CONFIDENCE) return;   // not sure what it is, so no points
   const g = loadGame();
-  g.protector++; g.points += PROTECTOR_POINTS;
+  g.protector++; addPoints(g, PROTECTOR_POINTS);
   const lines = [`🛡️ ${commonName(species)} isn't invasive. Leave it be! +${PROTECTOR_POINTS} protector points`, ...progress(g, { type: "native", species })];
   saveGame(g);
   renderGame();
@@ -457,9 +521,13 @@ function fakePhoto() {
 
 // ---------- battles against AI trainers ----------
 const wait = ms => new Promise(r => setTimeout(r, ms));
-const fighter = species => ({ species, ...STATS[SPECIES_FACTS[species].rarity], max: STATS[SPECIES_FACTS[species].rarity].hp });
+const fighter = (species, level = 1) => {
+  const base = STATS[SPECIES_FACTS[species].rarity], hp = base.hp + (level - 1) * LEVEL_BONUS.hp;
+  return { species, level, hp, max: hp, atk: base.atk + (level - 1) * LEVEL_BONUS.atk };
+};
 // Your team: up to 6 kinds you've caught, strongest first
-const myTeam = g => gameSpecies().filter(s => g.caught[s]).slice(0, TEAM_SIZE).map(fighter);
+const myTeam = g => gameSpecies().filter(s => g.caught[s])
+  .sort((a, b) => bugLevel(g.caught[b]) - bugLevel(g.caught[a])).slice(0, TEAM_SIZE).map(s => fighter(s, bugLevel(g.caught[s])));
 const nextAlive = (team, from) => { for (let i = 1; i <= team.length; i++) { const j = (from + i) % team.length; if (team[j].hp > 0) return j; } return -1; };
 const specialMove = f => SPECIAL_MOVES[SPECIES_FACTS[f.species].group];
 
@@ -484,7 +552,7 @@ function foeMove(level, team, now, target) {
 }
 
 function battle(foe, gym) {
-  const g = loadGame(), mine = myTeam(g), theirs = foe.team.filter(s => SPECIES_FACTS[s]).map(fighter);
+  const g = loadGame(), mine = myTeam(g), theirs = foe.team.filter(s => SPECIES_FACTS[s]).map(s => fighter(s));
   if (!mine.length || !theirs.length) return;
   const foeName = gym ? foe.leader : foe.name;
   let me = 0, them = 0, busy = false, over = false;
@@ -501,7 +569,7 @@ function battle(foe, gym) {
     const hp = el("div", "track"), fill = el("div", "fill" + (f.hp / f.max < 0.3 ? " low" : ""));
     fill.style.width = `${f.hp / f.max * 100}%`; hp.append(fill);
     box.append(el("span", "muted", label), el("span", "bug-emoji", SPECIES_FACTS[f.species].emoji),
-      el("strong", null, commonName(f.species)), hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${team.filter(t => t.hp > 0).length} of ${team.length} bug${team.length === 1 ? "" : "s"} left`));
+      el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · Lv ${f.level}` : ""}`), hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${team.filter(t => t.hp > 0).length} of ${team.length} bug${team.length === 1 ? "" : "s"} left`));
     return box;
   };
   const moves = el("div", "battle-moves");
@@ -509,6 +577,8 @@ function battle(foe, gym) {
   const tackle = btn("Tackle", () => turn("tackle"));
   const special = btn("", () => turn("special"));
   const swap = btn("Switch bug", () => turn("switch"));
+  const snack = btn("", () => turn("snack"));
+  const snacks = () => loadGame().items.snack || 0;
   tackle.classList.add("primary");
   const draw = () => {
     field.innerHTML = "";
@@ -516,6 +586,9 @@ function battle(foe, gym) {
     special.textContent = `${specialMove(mine[me])} (strong, can miss)`;
     for (const b of [tackle, special]) b.disabled = busy || over;
     swap.disabled = busy || over || nextAlive(mine, me) < 0 || nextAlive(mine, me) === me;
+    snack.textContent = `🍃 Bug Snack (${snacks()})`;
+    snack.hidden = !snacks();
+    snack.disabled = busy || over || mine[me].hp === mine[me].max;
   };
 
   // One attack. A special move hits harder but can miss.
@@ -524,6 +597,7 @@ function battle(foe, gym) {
     if (useSpecial && Math.random() > SPECIAL_HIT_CHANCE) return say(`${name} used ${move}… but missed!`);
     const dmg = Math.max(1, Math.round(useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)));
     d.hp = Math.max(0, d.hp - dmg);
+    sound("hit");
     say(`${name} used ${move}! It did ${dmg} damage.`);
   };
 
@@ -531,6 +605,11 @@ function battle(foe, gym) {
     if (busy || over) return;
     busy = true;
     if (kind === "switch") { me = nextAlive(mine, me); say(`Go, ${commonName(mine[me].species)}!`); }
+    else if (kind === "snack") {
+      const g = loadGame(); g.items.snack--; saveGame(g); renderGame();
+      mine[me].hp = mine[me].max; sound("heal");
+      say(`Your ${commonName(mine[me].species)} ate a Bug Snack and is all healed!`);
+    }
     else attack(mine[me], theirs[them], kind === "special", "Your");
     draw(); await wait(900); if (over) return;
     if (theirs[them].hp <= 0) {
@@ -566,13 +645,14 @@ function battle(foe, gym) {
     if (won) {
       const g = loadGame();
       const beatenBefore = gym && g.gyms.includes(foe.id), pts = beatenBefore ? 10 : foe.reward;
-      g.wins++; g.points += pts;
+      g.wins++; addPoints(g, pts);
       if (gym && !beatenBefore) g.gyms.push(foe.id);
       lines.push(...progress(g, { type: "win" }));
       saveGame(g); renderGame();
       title = `You beat ${foeName}! +${pts} points`;
     }
     const tipBug = foe.team[Math.floor(Math.random() * foe.team.length)];
+    sound(won ? "win" : "lose");
     const said = ran ? null : el("p", "speech", `${foe.emoji} ${foeName}: “${won ? foe.say.lose : foe.say.win}”`);
     openPopup([el("h2", null, title), ...(said ? [said] : []), ...lines.map(l => el("p", "new-badge", l)),
       el("p", "muted", `Did you know? ${commonName(tipBug)}: ${SPECIES_FACTS[tipBug].harm}`)], [["OK", true]]);
@@ -584,8 +664,163 @@ function battle(foe, gym) {
   tackle.focus();
 }
 
+// ---------- sounds ----------
+// Little beeps made by the browser, so there are no sound files to download
+let audio = null;
+const TUNES = {
+  appear: [[523, .08], [659, .08], [784, .12]],
+  hit:    [[880, .05]],
+  catch:  [[523, .1], [659, .1], [784, .1], [1047, .2]],
+  lose:   [[392, .15], [330, .15], [262, .25]],
+  win:    [[523, .12], [523, .12], [784, .12], [1047, .3]],
+  badge:  [[784, .1], [1047, .1], [1319, .2]],
+  heal:   [[440, .1], [554, .1], [659, .15]],
+  right:  [[659, .1], [880, .15]],
+  wrong:  [[220, .25]],
+  buy:    [[988, .08], [1319, .12]],
+};
+function sound(name) {
+  if (loadGame().muted || !TUNES[name]) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    let t = audio.currentTime;
+    for (const [freq, len] of TUNES[name]) {
+      const osc = audio.createOscillator(), vol = audio.createGain();
+      osc.type = "square"; osc.frequency.value = freq;
+      vol.gain.setValueAtTime(0.06, t); vol.gain.exponentialRampToValueAtTime(0.001, t + len);
+      osc.connect(vol).connect(audio.destination);
+      osc.start(t); osc.stop(t + len);
+      t += len;
+    }
+  } catch {}
+}
+
+// ---------- the shop ----------
+function renderShop(g) {
+  const list = $("shopList"); list.innerHTML = "";
+  for (const it of ITEMS) {
+    const row = el("div", "foe");
+    const who = el("div", "foe-who");
+    who.append(el("strong", null, `${it.name} · you have ${g.items[it.id] || 0}`), el("span", "muted", it.desc));
+    const b = el("button", "btn" + (g.coins >= it.price ? " primary" : ""), `🪙 ${it.price}`);
+    b.type = "button"; b.disabled = g.coins < it.price;
+    b.setAttribute("aria-label", `Buy ${it.name} for ${it.price} coins`);
+    b.onclick = () => buy(it.id);
+    row.append(el("span", "bug-emoji", it.emoji), who, b);
+    list.append(row);
+  }
+}
+function buy(id) {
+  const it = ITEMS.find(i => i.id === id), g = loadGame();
+  if (!it || g.coins < it.price) return;
+  g.coins -= it.price;
+  g.items[id] = (g.items[id] || 0) + 1;
+  saveGame(g); renderGame(); sound("buy");
+  toast([`${it.emoji} You bought a ${it.name}!`]);
+}
+
+// ---------- the quiz ----------
+// Shows a clue about one bug and four names to pick from. Clues come from the fact cards.
+const shuffle = list => list.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+function newQuestion() {
+  const all = gameSpecies(), answer = all[Math.floor(Math.random() * all.length)];
+  const kind = Math.random() < 0.5 ? "fact" : "harm";
+  const options = shuffle([answer, ...shuffle(all.filter(s => s !== answer)).slice(0, 3)]);
+  const box = $("quizBox"); box.innerHTML = "";
+  box.append(el("p", "quiz-q", kind === "fact" ? "Which bug is this?" : "Which bug causes this problem?"),
+    el("p", "speech", SPECIES_FACTS[answer][kind]));
+  const choices = el("div", "quiz-choices"), result = el("p", "quiz-result");
+  result.setAttribute("aria-live", "polite");
+  const next = el("button", "btn primary", "Next question");
+  next.type = "button"; next.hidden = true;
+  next.onclick = newQuestion;
+  for (const s of options) {
+    const b = el("button", "btn", commonName(s));
+    b.type = "button";
+    b.onclick = () => {
+      for (const c of choices.children) c.disabled = true;
+      const g = loadGame();
+      if (g.quiz.day !== todayKey()) g.quiz = { day: todayKey(), right: 0 };
+      if (s === answer) {
+        b.classList.add("right"); sound("right");
+        if (g.quiz.right < QUIZ_DAILY_MAX) {
+          g.quiz.right++; addPoints(g, QUIZ_POINTS);
+          const lines = progress(g, { type: "quiz", pts: QUIZ_POINTS });
+          result.textContent = [`✅ Right! +${QUIZ_POINTS} points (${g.quiz.right} of ${QUIZ_DAILY_MAX} today)`, ...lines].join("  ");
+        } else result.textContent = "✅ Right! You've earned all your quiz points for today. Keep practicing!";
+        saveGame(g); renderGame();
+      } else {
+        b.classList.add("wrong"); sound("wrong");
+        [...choices.children].find(c => c.textContent === commonName(answer))?.classList.add("right");
+        result.textContent = `Not quite. It's the ${commonName(answer)}.`;
+      }
+      next.hidden = false; next.focus();
+    };
+    choices.append(b);
+  }
+  box.append(choices, result, next);
+}
+
+// ---------- the catch map ----------
+// Asks the browser where you are, but only if you turned the map on. Gives up after 8 seconds.
+function here() {
+  if (!loadGame().useMap || !navigator.geolocation) return Promise.resolve(null);
+  return new Promise(resolve => navigator.geolocation.getCurrentPosition(
+    p => resolve({ lat: +p.coords.latitude.toFixed(MAP_DECIMALS), lon: +p.coords.longitude.toFixed(MAP_DECIMALS) }),
+    () => resolve(null), { timeout: 8000, maximumAge: 60000 }));
+}
+
+function renderMapPanel(g) {
+  $("mapToggle").checked = g.useMap;
+  $("mapCount").textContent = g.spots.length ? `${g.spots.length} catch${g.spots.length === 1 ? "" : "es"} on your map.` : "No catches on your map yet.";
+  if (map) drawSpots(g);
+}
+
+// The map library (Leaflet) and the map pictures (OpenStreetMap) load only when you open the Map tab
+let map = null, mapLayer = null, mapLoading = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  return mapLoading ??= new Promise((resolve, reject) => {
+    const css = document.createElement("link");
+    css.rel = "stylesheet"; css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+    const js = document.createElement("script");
+    js.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    js.onload = resolve; js.onerror = () => { mapLoading = null; reject(); };
+    document.head.append(css, js);
+  });
+}
+async function openMap() {
+  const g = loadGame();
+  if (!g.spots.length) return;
+  try { await loadLeaflet(); } catch { $("mapCount").textContent = "The map couldn't load. Check your internet."; return; }
+  $("catchMap").hidden = false;
+  if (!map) {
+    map = L.map("catchMap");
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(map);
+  }
+  map.invalidateSize();
+  drawSpots(g);
+}
+function drawSpots(g) {
+  if (!g.spots.length) return;
+  mapLayer?.remove();
+  mapLayer = L.layerGroup(g.spots.map(sp => L.marker([sp.lat, sp.lon], { title: commonName(sp.species) })
+    .bindPopup(`${SPECIES_FACTS[sp.species]?.emoji || "🐞"} ${commonName(sp.species)}<br>${sp.when}`))).addTo(map);
+  map.fitBounds(L.latLngBounds(g.spots.map(sp => [sp.lat, sp.lon])).pad(0.3), { maxZoom: 15 });
+}
+
 // ---------- wiring ----------
-for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => showTab(t.dataset.tab);
+for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => {
+  showTab(t.dataset.tab);
+  if (t.dataset.tab === "quiz" && !$("quizBox").children.length) newQuestion();
+  if (t.dataset.tab === "map") openMap();
+};
+$("muteBtn").onclick = () => { const g = loadGame(); g.muted = !g.muted; saveGame(g); renderGame(); };
+$("mapToggle").onchange = e => {
+  const g = loadGame(); g.useMap = e.target.checked; saveGame(g);
+  // Ask for permission now, so it doesn't pop up in the middle of a catch
+  if (g.useMap) navigator.geolocation?.getCurrentPosition(() => {}, () => toast(["📍 Location is blocked, so catches can't go on the map. You can allow it in your browser settings."]));
+};
 $("howToPlay").onclick = showInstructions;
 $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closePopup(); } });
 renderGame();

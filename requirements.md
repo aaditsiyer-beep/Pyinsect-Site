@@ -51,3 +51,32 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] Version 2: finish today's challenge and it says "Done! Come back tomorrow."
   - [ ] Version 2: a photo of a bug that isn't invasive gives protector points.
   - [ ] Version 2: an AI-made photo shows "doesn't count in the game".
+
+## Innvadex version 3: map, evolution, quiz, sounds, ranks, and shop
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-11
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** They want more things to do in the game, so it stays fun.
+- **Why it matters:** The longer people play, the more invasive bugs get found and reported,
+  and the more they learn about them.
+- **Our idea:**
+  - **Catch map:** a map of where you caught each bug. It starts **off**. You have to turn it on,
+    and the browser asks first. Spots are saved only on your device, rounded to about a city
+    block.
+  - **Bug evolution:** catch the same kind of bug 3 times and it levels up (up to level 3).
+    Higher levels are stronger in battles.
+  - **Bug quiz:** quick questions about the bugs. Right answers earn points (up to 5 a day).
+  - **Sounds:** sounds for catching, battles, and badges, made by the browser (no sound files),
+    with a mute button.
+  - **Ranks:** Rookie → Explorer → Ranger → Bug Hero → Forest Guardian → Invasive Legend.
+  - **Item shop:** spend **coins** (you earn one coin for every point) on items like a Super Net.
+    Spending coins never lowers your points or rank.
+- **Other ideas we talked about:** none yet.
+- **Done when:**
+  - [ ] Turn on the catch map, catch a bug, and it shows up on the map.
+  - [ ] Catch the same bug 3 times and it says it leveled up.
+  - [ ] Answer a quiz question right and get points.
+  - [ ] Sounds play, and the mute button stops them.
+  - [ ] Your rank goes up when you get enough points.
+  - [ ] Buy a Super Net in the shop, and the next minigame has more time.
