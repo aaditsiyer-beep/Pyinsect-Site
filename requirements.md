@@ -132,3 +132,26 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] Beating a gym plays a victory cutscene that says where to go next.
   - [ ] A tough gym leader heals a hurt bug during a battle.
   - [ ] Beating the Champion plays the ending.
+
+## Innvadex version 6: longer cutscenes, more ranks, more gyms
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-12
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Players want a bigger story and a longer adventure.
+- **Why it matters:** Longer cutscenes teach more about invasive bugs, and a longer adventure
+  keeps people finding and reporting them.
+- **Our idea:**
+  - **Longer cutscenes:** a new helper, Pip, a native western bumble bee. The intro is 13 slides,
+    each gym has 5 slides before (the place, the leader, their strongest bug, what to do if you
+    see one) and 6 after (badge, a real-world tip, where to go next). The ending is 8 slides.
+  - **More ranks:** 13 ranks, from Rookie to Guardian of Oregon (2500 points).
+  - **More gyms:** Umpqua River, Rogue-Siskiyou, Wallowa Canyon, and Malheur Mountain, for 12
+    gyms plus the Oregon Champion.
+- **Other ideas we talked about:** bug types, seasonal events, a Protector-dex, real-world
+  missions, a cutscene gallery, Spanish, French, and Hindi, and big-text mode. These are next.
+- **Done when:**
+  - [ ] The intro has Pip in it.
+  - [ ] The Battle tab lists 12 gyms and the Champion, in order.
+  - [ ] Gym cutscenes show the leader's strongest bug and a real-world tip.
+  - [ ] Reaching 25 points makes you a Bug Spotter.
