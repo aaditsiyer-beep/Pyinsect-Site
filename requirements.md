@@ -28,7 +28,9 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - Everything saves on your own device. No accounts, and reports still stay private.
 - **Version 2 (Building):**
   - **Battles against AI trainers:** your caught bugs are your team. Use Tackle or a special
-    move (stronger, but it can miss).
+    move (stronger, but it can miss). 8 trainers, from Easy to Hard. Harder trainers are
+    smarter: they finish you off with a sure hit and save hurt bugs by switching. Trainers
+    talk before, during, and after battles.
   - **Forests as gyms:** Forest Park, Tillamook, Willamette, and Mount Hood. Each one opens when
     you've caught enough kinds of bugs, and beating it earns a gym badge.
   - **Daily challenge:** a new challenge every day for bonus points.

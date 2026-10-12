@@ -132,23 +132,43 @@ const SPECIAL_MOVES = { beetle: "Wood Drill", ant: "Swarm", wasp: "Sting", moth:
 const SPECIAL_HIT_CHANCE = 0.7;
 const TEAM_SIZE = 6;
 
-// Practice battles: always open once you've caught a bug
+// AI trainers. `level` is how smart they are (1 = easy, 2 = medium, 3 = hard, see foeMove()).
+// `unlock` is how many kinds of bugs you need in your Innvadex to battle them.
+// `say` is what they say: before the battle, when they send out a new bug, when you win, when they win.
 const TRAINERS = [
-  { id: "sam", emoji: "🧒", name: "Bug Catcher Sam", reward: 15, team: ["pieris_rapae"] },
-  { id: "jo",  emoji: "🥾", name: "Hiker Jo",        reward: 15, team: ["harmonia_axyridis", "linepithema_humile"] },
-  { id: "lee", emoji: "🔬", name: "Scientist Lee",   reward: 20, team: ["halyomorpha_halys", "polistes_dominula", "popillia_japonica"] },
+  { id: "sam",   emoji: "🧒", name: "Bug Catcher Sam", level: 1, unlock: 1, reward: 15, team: ["pieris_rapae"],
+    say: { hi: "I just caught my first bug! Let's battle!", next: "Uh oh… go, buddy!", lose: "Wow, you're good! I'll keep practicing.", win: "Yay, I won! Good game!" } },
+  { id: "rosa",  emoji: "🌻", name: "Gardener Rosa",   level: 1, unlock: 1, reward: 15, team: ["exomala_orientalis", "pieris_rapae"],
+    say: { hi: "These pests keep eating my vegetables! Show me what you've got.", next: "Don't give up, little cabbage-muncher!", lose: "You're a great gardener's helper!", win: "My garden bugs are tougher than they look!" } },
+  { id: "jo",    emoji: "🥾", name: "Hiker Jo",        level: 1, unlock: 1, reward: 15, team: ["harmonia_axyridis", "linepithema_humile"],
+    say: { hi: "I found these on the trail. Ready?", next: "Here comes my next one!", lose: "Good battle! See you on the trail.", win: "Ha! Hiking makes you strong!" } },
+  { id: "ben",   emoji: "🚜", name: "Farmer Ben",      level: 2, unlock: 2, reward: 20, team: ["halyomorpha_halys", "popillia_japonica", "anisandrus_dispar"],
+    say: { hi: "These bugs damage my crops every year. Let's see if you can handle them!", next: "Next one's from the apple orchard!", lose: "You'd make a fine farmer!", win: "Farm work makes my bugs tough!" } },
+  { id: "lee",   emoji: "🔬", name: "Scientist Lee",   level: 2, unlock: 3, reward: 20, team: ["halyomorpha_halys", "polistes_dominula", "popillia_japonica"],
+    say: { hi: "I've studied these bugs for years. Let's test your skills!", next: "Interesting… try this one!", lose: "Fascinating! You've earned my respect.", win: "Science wins this time!" } },
+  { id: "ana",   emoji: "🍯", name: "Beekeeper Ana",   level: 2, unlock: 3, reward: 25, team: ["polistes_dominula", "linepithema_humile", "solenopsis_invicta"],
+    say: { hi: "These invaders bother my honeybees. Let's see how you do!", next: "Careful, this one stings!", lose: "My bees thank you!", win: "Buzz buzz, I win!" } },
+  { id: "kai",   emoji: "🌳", name: "Arborist Kai",    level: 3, unlock: 4, reward: 30, team: ["adelges_piceae", "xyleborus_monographus", "agrilus_planipennis"],
+    say: { hi: "I take care of trees. These bugs are the worst for them. Bring your best!", next: "Trees need protecting. Next!", lose: "You really know your tree pests!", win: "Learn more about tree pests and come back!" } },
+  { id: "hazel", emoji: "🎓", name: "Professor Hazel", level: 3, unlock: 6, reward: 40,
+    team: ["lymantria_dispar", "coptotermes_formosanus", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia"],
+    say: { hi: "I teach about invasive species. This is my final exam. Are you ready?", next: "Excellent. Now, try this one!", lose: "You pass with flying colors!", win: "Study the Learn about species page and try again!" } },
 ];
 
 // Gyms are named after real Oregon forests. Each one opens when your Innvadex has enough kinds of bugs.
 const GYMS = [
-  { id: "forestpark", emoji: "🌲", name: "Forest Park Gym",        leader: "Ranger Fern",   unlock: 1, reward: 50,
-    team: ["exomala_orientalis", "anisandrus_dispar"] },
-  { id: "tillamook",  emoji: "🌧️", name: "Tillamook Forest Gym",   leader: "Ranger Moss",   unlock: 3, reward: 50,
-    team: ["macrodactylus_subspinosus", "solenopsis_invicta", "adelges_piceae"] },
-  { id: "willamette", emoji: "🍄", name: "Willamette Forest Gym",  leader: "Ranger Cedar",  unlock: 5, reward: 75,
-    team: ["xyleborus_monographus", "lymantria_dispar", "coptotermes_formosanus", "popillia_japonica"] },
-  { id: "mthood",     emoji: "🏔️", name: "Mount Hood Forest Gym",  leader: "Ranger Summit", unlock: 8, reward: 100,
-    team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia"] },
+  { id: "forestpark", emoji: "🌲", name: "Forest Park Gym",        leader: "Ranger Fern",   level: 1, unlock: 1, reward: 50,
+    team: ["exomala_orientalis", "anisandrus_dispar"],
+    say: { hi: "Welcome to Forest Park! Let's see if you can protect it.", next: "The forest is counting on me!", lose: "You've earned the Forest Park Badge!", win: "Come back when you're stronger!" } },
+  { id: "tillamook",  emoji: "🌧️", name: "Tillamook Forest Gym",   leader: "Ranger Moss",   level: 2, unlock: 3, reward: 50,
+    team: ["macrodactylus_subspinosus", "solenopsis_invicta", "adelges_piceae"],
+    say: { hi: "Rain or shine, I'm ready to battle!", next: "A little rain won't stop me!", lose: "You've earned the Tillamook Badge!", win: "The rain is on my side today!" } },
+  { id: "willamette", emoji: "🍄", name: "Willamette Forest Gym",  leader: "Ranger Cedar",  level: 3, unlock: 5, reward: 75,
+    team: ["xyleborus_monographus", "lymantria_dispar", "coptotermes_formosanus", "popillia_japonica"],
+    say: { hi: "These are the bugs that worry us most in the Willamette. Show me what you know!", next: "My forest won't give up!", lose: "You've earned the Willamette Badge!", win: "Train a bit more, then come back!" } },
+  { id: "mthood",     emoji: "🏔️", name: "Mount Hood Forest Gym",  leader: "Ranger Summit", level: 3, unlock: 8, reward: 100,
+    team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia"],
+    say: { hi: "You made it to the top! My Legendary bugs are the toughest in Oregon.", next: "A Legendary bug never gives up!", lose: "Amazing! You've earned the Mount Hood Badge!", win: "The mountain wins this time. Keep training!" } },
 ];
 
 // ---------- saving ----------
@@ -257,9 +277,10 @@ function renderBattles(g) {
   const row = (foe, gym) => {
     const item = el("div", "foe" + (gym && g.gyms.includes(foe.id) ? " beaten" : ""));
     const who = el("div", "foe-who");
-    who.append(el("strong", null, foe.name), el("span", "muted", gym ? `Leader: ${foe.leader} · ${foe.team.length} bugs` : `${foe.team.length} bug${foe.team.length === 1 ? "" : "s"}`));
-    const locked = !kinds || (gym && kinds < foe.unlock);
-    const b = el("button", "btn" + (locked ? "" : " primary"), locked ? `🔒 Catch ${gym ? foe.unlock : 1} kind${(gym ? foe.unlock : 1) === 1 ? "" : "s"}` : gym && g.gyms.includes(foe.id) ? "✅ Battle again" : "Battle!");
+    const level = ["Easy", "Medium", "Hard"][foe.level - 1];
+    who.append(el("strong", null, foe.name), el("span", "muted", `${gym ? `Leader: ${foe.leader} · ` : ""}${foe.team.length} bug${foe.team.length === 1 ? "" : "s"} · ${"⭐".repeat(foe.level)} ${level}`));
+    const locked = kinds < foe.unlock;
+    const b = el("button", "btn" + (locked ? "" : " primary"), locked ? `🔒 Catch ${foe.unlock} kind${foe.unlock === 1 ? "" : "s"}` : gym && g.gyms.includes(foe.id) ? "✅ Battle again" : "Battle!");
     b.type = "button"; b.disabled = locked;
     b.onclick = () => battle(foe, gym);
     item.append(el("span", "bug-emoji", foe.emoji), who, b);
@@ -442,6 +463,26 @@ const myTeam = g => gameSpecies().filter(s => g.caught[s]).slice(0, TEAM_SIZE).m
 const nextAlive = (team, from) => { for (let i = 1; i <= team.length; i++) { const j = (from + i) % team.length; if (team[j].hp > 0) return j; } return -1; };
 const specialMove = f => SPECIAL_MOVES[SPECIES_FACTS[f.species].group];
 
+// The bug with the most HP left, not counting the one fighting now (-1 if none)
+const nextHealthiest = (team, now) => team.reduce((best, t, i) => i !== now && t.hp > 0 && (best < 0 || t.hp > team[best].hp) ? i : best, -1);
+
+// How the AI trainer picks its move. Smarter trainers think about more things:
+//   Easy (1):   picks Tackle or its special move at random.
+//   Medium (2): finishes your bug with Tackle when Tackle is sure to win (it never misses).
+//               Otherwise it uses its special move, which does more damage on average.
+//   Hard (3):   does all that, and also saves a badly hurt bug by switching to a healthier one.
+function foeMove(level, team, now, target) {
+  const f = team[now];
+  if (level <= 1) return Math.random() < 0.5 ? "special" : "tackle";
+  const tackleAlwaysKOs = target.hp <= f.atk - 2;
+  if (tackleAlwaysKOs) return "tackle";
+  if (level >= 3 && f.hp / f.max < 0.25) {
+    const other = nextHealthiest(team, now);
+    if (other >= 0 && team[other].hp / team[other].max > 0.5 && Math.random() < 0.7) return "switch";
+  }
+  return "special";
+}
+
 function battle(foe, gym) {
   const g = loadGame(), mine = myTeam(g), theirs = foe.team.filter(s => SPECIES_FACTS[s]).map(fighter);
   if (!mine.length || !theirs.length) return;
@@ -449,6 +490,9 @@ function battle(foe, gym) {
   let me = 0, them = 0, busy = false, over = false;
 
   const field = el("div", "battle-field");
+  const bubble = el("p", "speech");
+  const talk = text => { bubble.textContent = `${foe.emoji} ${foeName}: “${text}”`; };
+  talk(foe.say.hi);
   const log = el("p", "battle-log", `${foeName} wants to battle!`);
   log.setAttribute("aria-live", "polite");
   const say = text => { log.textContent = text; };
@@ -493,12 +537,17 @@ function battle(foe, gym) {
       say(`${foeName}'s ${commonName(theirs[them].species)} fainted!`); draw(); await wait(900); if (over) return;
       const n = nextAlive(theirs, them);
       if (n < 0) return finish(true);
-      them = n; say(`${foeName} sends out ${commonName(theirs[them].species)}!`);
+      them = n; say(`${foeName} sends out ${commonName(theirs[them].species)}!`); talk(foe.say.next);
       busy = false; return draw();
     }
-    // The AI trainer's turn: it finishes you off with Tackle when it can, otherwise it sometimes tries its special move
+    // The AI trainer's turn (see foeMove)
+    const choice = foeMove(foe.level, theirs, them, mine[me]);
+    if (choice === "switch") {
+      them = nextHealthiest(theirs, them);
+      say(`${foeName} switches to ${commonName(theirs[them].species)}!`); talk(foe.say.next);
+    }
     const f = theirs[them], p = mine[me];
-    attack(f, p, p.hp > f.atk + 2 && Math.random() < 0.5, `${foeName}'s`);
+    if (choice !== "switch") attack(f, p, choice === "special", `${foeName}'s`);
     draw(); await wait(900); if (over) return;
     if (p.hp <= 0) {
       say(`Your ${commonName(p.species)} fainted!`); draw(); await wait(900); if (over) return;
@@ -524,11 +573,12 @@ function battle(foe, gym) {
       title = `You beat ${foeName}! +${pts} points`;
     }
     const tipBug = foe.team[Math.floor(Math.random() * foe.team.length)];
-    openPopup([el("h2", null, title), ...lines.map(l => el("p", "new-badge", l)),
+    const said = ran ? null : el("p", "speech", `${foe.emoji} ${foeName}: “${won ? foe.say.lose : foe.say.win}”`);
+    openPopup([el("h2", null, title), ...(said ? [said] : []), ...lines.map(l => el("p", "new-badge", l)),
       el("p", "muted", `Did you know? ${commonName(tipBug)}: ${SPECIES_FACTS[tipBug].harm}`)], [["OK", true]]);
   }
 
-  openPopup([el("h2", null, `${foe.emoji} ${foe.name}`), field, log, moves], [["Run away", false]]);
+  openPopup([el("h2", null, `${foe.emoji} ${foe.name}`), bubble, field, log, moves], [["Run away", false]]);
   popupDone = () => finish(false, true);   // "Run away" or Escape
   draw();
   tackle.focus();
