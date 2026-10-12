@@ -385,8 +385,16 @@ function classify(file) {
       if (invasive) {
         // Photos from the in-page camera come straight from the camera; uploads are checked for AI labels
         const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file).catch(() => ({ verdict: "unknown", reasons: [] }));
-        if (ai.verdict === "ai") blockReport(card, ai);
-        else fileReport(bmp, top3[0].species, top3[0].confidence, top3, card);
+        if (ai.verdict === "ai") { blockReport(card, ai); window.Innvadex?.fakePhoto(); }
+        else {
+          fileReport(bmp, top3[0].species, top3[0].confidence, top3, card);
+          window.Innvadex?.encounter(top3[0].species, card.querySelector("img").src);   // the game (assets/game.js)
+        }
+      } else if (window.Innvadex) {
+        // Not invasive: protector points in the game, but only for real (not AI-made) photos
+        const ai = file.fromCamera ? { verdict: "camera" } : await checkAI(file).catch(() => ({ verdict: "unknown" }));
+        if (ai.verdict === "ai") window.Innvadex.fakePhoto();
+        else window.Innvadex.native(top3[0].species, top3[0].confidence);
       }
       bmp.close?.();
       setStatus(readyText(), "ready");
