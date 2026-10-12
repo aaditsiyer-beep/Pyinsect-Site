@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261012a">
+<link rel="stylesheet" href="assets/site.css?v=20261012b">
 </head>
 <body>
 <div class="wrap">
@@ -57,6 +57,7 @@
       <span class="game-score"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <span id="gameRank" class="status"></span> <span id="gameStreak" class="status" hidden></span> <span id="gamePoints" class="status">0 points</span> <span id="gameCoins" class="status"></span> <span id="gameProgress" class="status"></span> <span id="gameProtector" class="status"></span></span>
     </div>
     <div id="daily" class="daily"><span class="daily-label">📅 Today's challenge</span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
+    <p id="seasonText" class="season"></p>
     <div class="game-bar">
       <div class="game-tabs" role="tablist">
         <button class="tab" type="button" role="tab" data-tab="dex" aria-selected="true">My Innvadex</button>
@@ -65,9 +66,13 @@
         <button class="tab" type="button" role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
         <button class="tab" type="button" role="tab" data-tab="shop" aria-selected="false">Shop</button>
         <button class="tab" type="button" role="tab" data-tab="map" aria-selected="false">Map</button>
+        <button class="tab" type="button" role="tab" data-tab="protector" aria-selected="false">Protector-dex</button>
+        <button class="tab" type="button" role="tab" data-tab="missions" aria-selected="false">Missions</button>
+        <button class="tab" type="button" role="tab" data-tab="story" aria-selected="false">Story</button>
         <button class="tab" type="button" role="tab" data-tab="learn" aria-selected="false">Learn about species</button>
       </div>
       <span class="actions">
+        <button id="bigTextBtn" class="btn" type="button" aria-pressed="false">🔠 Big text</button>
         <button id="muteBtn" class="btn" type="button" aria-pressed="false">🔊 Sound on</button>
         <button id="howToPlay" class="btn" type="button">How to play</button>
         <button id="introBtn" class="btn" type="button">🎬 Watch intro</button>
@@ -86,6 +91,9 @@
         <div id="catchMap" class="catch-map" hidden></div>
       </div>
     </div>
+    <div id="tab-protector" role="tabpanel" hidden><p id="protectorCount" class="muted"></p><div id="protectorList" class="dex-grid"></div></div>
+    <div id="tab-missions" role="tabpanel" hidden><p id="missionCount" class="muted"></p><div id="missionList" class="battle-list"></div></div>
+    <div id="tab-story" role="tabpanel" hidden><div id="storyList" class="story-list"></div></div>
     <div id="tab-learn" role="tabpanel" hidden><div id="learnList" class="learn-list"></div></div>
   </section>
 
@@ -133,7 +141,7 @@
 <script src="assets/species.js?v=20261010g"></script>
 <script src="assets/models/pyinsect-2.8.js?v=20261010g"></script>
 <script src="assets/aicheck.js?v=20261010g"></script>
-<script src="assets/app.js?v=20261012a"></script>
-<script src="assets/game.js?v=20261012a"></script>
+<script src="assets/app.js?v=20261012b"></script>
+<script src="assets/game.js?v=20261012b"></script>
 </body>
 </html>

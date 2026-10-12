@@ -155,3 +155,28 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] The Battle tab lists 12 gyms and the Champion, in order.
   - [ ] Gym cutscenes show the leader's strongest bug and a real-world tip.
   - [ ] Reaching 25 points makes you a Bug Spotter.
+
+## Innvadex version 7: bug types, seasons, Protector-dex, missions, story gallery, big text
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-12
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Players want more ways to play, learn, and help in real life.
+- **Why it matters:** Missions and seasons connect the game to real forests, and big text makes
+  it easier for more people to play.
+- **Our idea:**
+  - **Bug types:** beetle, ant, wasp, moth & butterfly, true bug, and termite. Some types are
+    strong against others (1.5× damage), like wasps against moths.
+  - **Seasonal events:** each season, some groups of bugs give double points.
+  - **Protector-dex:** a collection of bugs you found that aren't invasive.
+  - **Real-world missions:** 8 things to do with a grown-up, like checking where firewood comes from.
+  - **Story gallery:** watch any cutscene you've unlocked again.
+  - **Big-text mode:** makes the game bigger and easier to read.
+- **Other ideas we talked about:** Spanish, French, and Hindi versions (next).
+- **Done when:**
+  - [ ] A wasp attacking a moth says "It's super effective!"
+  - [ ] The season banner shows the right season.
+  - [ ] A bug that isn't invasive shows up in the Protector-dex.
+  - [ ] Finishing a mission gives 10 points, once.
+  - [ ] The Story tab replays the intro.
+  - [ ] Big text makes the game bigger.

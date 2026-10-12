@@ -403,3 +403,13 @@ input[type=file] { display: none; }
   .cs-stage { transition: none; }
   .fighter.fainted .bug-emoji { opacity: .3; }
 }
+
+/* Innvadex version 7: seasons, types, story gallery, big text */
+.season { margin: 0; padding: 10px 16px; border-radius: 18px; background: var(--accent-soft); font-size: 14px; }
+.type-tag { grid-area: hp; justify-self: start; font-family: var(--mono); font-size: 11px; opacity: .8; margin-top: -2px; }
+.fighter { grid-template-areas: "emoji label" "emoji name" "emoji type" "emoji hp" "emoji num"; }
+.fighter .type-tag { grid-area: type; }
+.story-list { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.story-list p { margin: 4px 0 0; }
+#tab-protector .muted, #tab-missions .muted { margin: 0 0 10px; }
+.big-text .wrap, .big-text .game-popup-box, .big-text .cs-box, .big-text .game-toast { zoom: 1.25; }

@@ -98,10 +98,12 @@ const BADGES = [
   { id: "points100", emoji: "💯", name: "Point Pro",         desc: "Score 100 points.",                earned: g => g.points >= 100 },
   { id: "half",      emoji: "📗", name: "Halfway There",     desc: "Fill half your Innvadex.",         earned: g => kindsCaught(g) >= Math.ceil(gameSpecies().length / 2) },
   { id: "all",       emoji: "🏆", name: "Innvadex Master",   desc: "Catch every kind of bug.",         earned: g => kindsCaught(g) >= gameSpecies().length },
-  { id: "protector", emoji: "🛡️", name: "Nature Protector",  desc: "Find 5 native bugs.",              earned: g => g.protector >= 5 },
+  { id: "protector", emoji: "🛡️", name: "Nature Protector",  desc: "Find 5 bugs that aren't invasive.",              earned: g => g.protector >= 5 },
   { id: "trainer",   emoji: "⚔️", name: "Battle Buddy",      desc: "Win a battle against a trainer.",  earned: g => g.wins >= 1 },
   { id: "daily",     emoji: "📅", name: "Challenge Champ",   desc: "Finish a daily challenge.",        earned: g => g.dailyDone >= 1 },
   { id: "streak3",   emoji: "🔥", name: "On a Roll",         desc: "Play 3 days in a row.",            earned: g => g.streak.count >= 3 },
+  { id: "natives10", emoji: "🌼", name: "Friend of Natives", desc: "Find 10 kinds of bugs that aren't invasive.", earned: g => Object.keys(g.protectorDex).length >= 10 },
+  { id: "missions",  emoji: "🌍", name: "Mission Master",    desc: "Finish every real-world mission.", earned: g => g.missions.length >= MISSIONS.length },
   { id: "streak7",   emoji: "📆", name: "Week Warrior",      desc: "Play 7 days in a row.",            earned: g => g.streak.count >= 7 },
 ];
 
@@ -117,7 +119,7 @@ const DAILY_REWARD = 20;
 const CHALLENGES = [
   { text: "Catch any invasive bug.",              check: ev => ev.type === "catch" },
   { text: "Catch a beetle.",                      check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].group === "beetle" },
-  { text: "Find a native bug (and leave it be!).", check: ev => ev.type === "native" },
+  { text: "Find a bug that isn't invasive (and leave it be!).", check: ev => ev.type === "native" },
   { text: "Win a battle against a trainer.",      check: ev => ev.type === "win" },
   { text: "Catch a Rare or Legendary bug.",       check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].rarity !== "common" },
   { text: "Catch a bug that stings or bites (an ant or wasp).", check: ev => ev.type === "catch" && ["ant", "wasp"].includes(SPECIES_FACTS[ev.species].group) },
@@ -400,13 +402,56 @@ function checkUnlocks(g) {
   }
 }
 
+// ---------- version 7: bug types, seasons, missions ----------
+
+// Bug types. Each group is strong against some others: its attacks do 1.5× damage to them,
+// and 0.67× (two thirds) the other way around.
+const TYPES = {
+  beetle: "🪲 Beetle", ant: "🐜 Ant", wasp: "🐝 Wasp", moth: "🦋 Moth & butterfly", bug: "🦗 True bug", termite: "🪵 Termite",
+};
+const STRONG_AGAINST = {
+  wasp: ["moth", "bug"],       // wasps hunt caterpillars and other soft bugs
+  ant: ["termite", "moth"],    // ants raid termite nests and carry off caterpillars
+  beetle: ["ant", "wasp"],     // a hard shell stops bites and stings
+  bug: ["beetle"],             // a stinky smell scares beetles away
+  termite: ["bug"],            // a big colony crowds them out
+  moth: ["termite"],           // flying over the termites' heads
+};
+const typeBoost = (attacker, defender) => {
+  const a = SPECIES_FACTS[attacker].group, d = SPECIES_FACTS[defender].group;
+  return STRONG_AGAINST[a]?.includes(d) ? 1.5 : STRONG_AGAINST[d]?.includes(a) ? 0.67 : 1;
+};
+
+// Seasonal events: some groups of bugs give double points at certain times of the year
+const SEASONS = [
+  { months: [2, 3, 4],  emoji: "🌸", name: "Spring Hatch",      groups: ["moth"],          text: "Caterpillars are hatching! Moths and butterflies give double points." },
+  { months: [5, 6, 7],  emoji: "☀️", name: "Beetle Summer",     groups: ["beetle"],        text: "Beetles are busy in the summer heat! Beetles give double points." },
+  { months: [8, 9, 10], emoji: "🍂", name: "Stink Bug Season",  groups: ["bug", "wasp"],   text: "In fall, stink bugs crawl into houses and wasps are everywhere. True bugs and wasps give double points." },
+  { months: [11, 0, 1], emoji: "❄️", name: "Winter Watch",      groups: ["ant", "termite"], text: "Ants and termites move indoors to stay warm. They give double points." },
+];
+const season = () => SEASONS.find(se => se.months.includes(new Date().getMonth()));
+
+// Real-world missions (on your honor, with a grown-up)
+const MISSION_POINTS = 10;
+const MISSIONS = [
+  { id: "firewood", emoji: "🪵", text: "Ask a grown-up where your firewood comes from.",       why: "Buy it where you burn it! Moving firewood spreads tree-killing bugs." },
+  { id: "ash",      emoji: "🌳", text: "Check an ash tree for small D-shaped holes.",          why: "D-shaped holes can be a sign of the emerald ash borer." },
+  { id: "boots",    emoji: "🥾", text: "Brush off your shoes after a hike.",                  why: "Seeds and tiny bugs hitchhike on shoes." },
+  { id: "leaves",   emoji: "🍃", text: "Look under 5 leaves in a garden for bugs.",           why: "Lots of bugs hide under leaves. Just look, don't touch!" },
+  { id: "teach",    emoji: "🗣️", text: "Tell a friend or family member what an invasive species is.", why: "The more people know, the more eyes are watching." },
+  { id: "flowers",  emoji: "🌼", text: "Visit or plant a native flower for bees like Pip.",    why: "Native flowers feed native bees and butterflies." },
+  { id: "learn",    emoji: "📚", text: "Read 3 fact cards in Learn about species.",           why: "Knowing your bugs makes you a better Bug Ranger." },
+  { id: "car",      emoji: "🚗", text: "Help check a car or bike for egg patches before a trip.", why: "Spotted lanternflies lay mud-like egg patches on cars and outdoor stuff." },
+];
+
 // ---------- saving ----------
 function loadGame() {
   let g = null;
   try { g = JSON.parse(localStorage.getItem(GAME_KEY)); } catch {}
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     items: {}, spots: [], useMap: false, muted: false, quiz: { day: null, right: 0 },
-    trainer: { name: "", avatar: AVATARS[0] }, streak: { last: null, count: 0 }, unlockSeen: null, ...(g || {}) };
+    trainer: { name: "", avatar: AVATARS[0] }, streak: { last: null, count: 0 }, unlockSeen: null,
+    protectorDex: {}, missions: [], bigText: false, ...(g || {}) };
   // Gyms that were already open before gym cutscenes existed don't need one
   if (!g.unlockSeen) g.unlockSeen = GYMS.filter(gym => gymOpen(g, gym)).map(gym => gym.id);
   if (g.coins == null) g.coins = g.points;   // games saved before the shop existed
@@ -474,10 +519,12 @@ function factCard(species, caughtCount) {
   head.append(el("span", "bug-emoji", f.emoji), el("div", null));
   head.lastChild.append(el("strong", null, commonName(species)), el("span", "sci", sciName(species)));
   const tags = el("div", "tags");
-  tags.append(rarityTag(species), el("span", "pts", `${RARITY[f.rarity].points} points`));
+  const strong = STRONG_AGAINST[f.group].map(t => TYPES[t]).join(", ");
+  tags.append(rarityTag(species), el("span", "pts", TYPES[f.group]), el("span", "pts", `${RARITY[f.rarity].points} points`));
+  tags.title = `Strong against: ${strong}`;
   if (caughtCount) tags.append(el("span", "pts", `Caught ×${caughtCount} · Lv ${bugLevel(caughtCount)}`));
   const facts = el("dl", "facts");
-  for (const [k, v] of [["What it is", f.fact], ["Why it's a problem", f.harm], ["If you see one", f.todo]])
+  for (const [k, v] of [["What it is", f.fact], ["Why it's a problem", f.harm], ["If you see one", f.todo], ["Battle type", `${TYPES[f.group]}. Strong against: ${strong}.`]])
     facts.append(el("dt", null, k), el("dd", null, v));
   card.append(head, tags, facts);
   return card;
@@ -503,6 +550,13 @@ function renderGame() {
   $("dailyText").textContent = todaysChallenge().text;
   $("dailyState").textContent = doneToday ? "✅ Done! Come back tomorrow." : `+${DAILY_REWARD} points`;
   $("daily").classList.toggle("done", doneToday);
+  const se = season();
+  $("seasonText").textContent = `${se.emoji} ${se.name}: ${se.text}`;
+  renderProtectorDex(g);
+  renderMissions(g);
+  renderStory(g);
+  applyBigText(g);
+  $("bigTextBtn").setAttribute("aria-pressed", !!g.bigText);
 
   const dex = $("dexGrid"); dex.innerHTML = "";
   for (const s of all) {
@@ -613,6 +667,9 @@ function showInstructions() {
     "Earn coins as you play, and spend them in the “Shop” on items like the Super Net.",
     "Play the “Quiz” for bonus points, and turn on the “Map” to see where you caught your bugs.",
     "Play on days in a row to build a 🔥 streak for bonus points.",
+    "Each bug has a type. Some types are strong against others, like wasps against moths. Check the fact cards!",
+    "Watch for seasonal events: some bugs give double points at certain times of the year.",
+    "Try the real-world “Missions” with a grown-up, and see bugs you left be in the “Protector-dex”.",
     "Open “Learn about species” to see every invasive bug, even ones you haven't caught yet.",
   ]) list.append(el("li", null, step));
   const safety = el("div", "safety");
@@ -713,7 +770,8 @@ function encounter(species, photo) {
     sound("catch");
     const spot = await here();   // null unless the catch map is turned on
     const g = loadGame();
-    const pts = RARITY[SPECIES_FACTS[species].rarity].points;
+    const se = season(), seasonal = se.groups.includes(SPECIES_FACTS[species].group);
+    const pts = RARITY[SPECIES_FACTS[species].rarity].points * (seasonal ? 2 : 1);
     const before = bugLevel(g.caught[species] || 0), firstEver = totalCaught(g) === 0;
     const firstLegend = SPECIES_FACTS[species].rarity === "legendary" && !caughtRarity(g, "legendary");
     g.caught[species] = (g.caught[species] || 0) + 1;
@@ -722,7 +780,7 @@ function encounter(species, photo) {
     // Story cutscenes for big moments (they play after the pop-up, in this order)
     if (firstEver) queueScene(FIRST_CATCH);
     if (firstLegend) queueScene(FIRST_LEGENDARY.map(sl => ({ ...sl, text: sl.text.replace("{bug}", commonName(species)) })));
-    const lines = [];
+    const lines = seasonal ? [`${se.emoji} ${se.name}: double points!`] : [];
     if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before) lines.push(`⬆️ Your ${commonName(species)} leveled up to Lv ${bugLevel(g.caught[species])}! It's stronger in battles now.`);
     lines.push(...progress(g, { type: "catch", species, pts }));
     if (spot) lines.push("📍 Saved on your catch map.");
@@ -756,10 +814,12 @@ function native(species, confidence) {
   if (confidence < NATIVE_MIN_CONFIDENCE) return;   // not sure what it is, so no points
   const g = loadGame();
   g.protector++; addPoints(g, PROTECTOR_POINTS);
+  g.protectorDex[species] = (g.protectorDex[species] || 0) + 1;
   const lines = [`🛡️ ${commonName(species)} isn't invasive. Leave it be! +${PROTECTOR_POINTS} protector points`, ...progress(g, { type: "native", species })];
   saveGame(g);
   renderGame();
   toast(lines);
+  playQueued();
 }
 
 // Called by app.js when a photo looks AI-made: it doesn't count in the game
@@ -818,7 +878,8 @@ function battle(foe, gym) {
     const hp = el("div", "track"), fill = el("div", "fill" + (f.hp / f.max < 0.3 ? " low" : ""));
     fill.style.width = `${f.hp / f.max * 100}%`; hp.append(fill);
     box.append(el("span", "muted", label), el("span", "bug-emoji", SPECIES_FACTS[f.species].emoji),
-      el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · Lv ${f.level}` : ""}`), hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${team.filter(t => t.hp > 0).length} of ${team.length} bug${team.length === 1 ? "" : "s"} left`));
+      el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · Lv ${f.level}` : ""}`),
+      el("span", "type-tag", TYPES[SPECIES_FACTS[f.species].group]), hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${team.filter(t => t.hp > 0).length} of ${team.length} bug${team.length === 1 ? "" : "s"} left`));
     return box;
   };
   const moves = el("div", "battle-moves");
@@ -853,11 +914,12 @@ function battle(foe, gym) {
     const move = useSpecial ? specialMove(a) : "Tackle", name = `${owner} ${commonName(a.species)}`;
     const target = d === mine[me] ? "you" : "them";
     if (useSpecial && Math.random() > SPECIAL_HIT_CHANCE) { fx = { target, text: "Miss!" }; return say(`${name} used ${move}… but missed!`); }
-    const dmg = Math.max(1, Math.round(useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)));
+    const boost = typeBoost(a.species, d.species);
+    const dmg = Math.max(1, Math.round((useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)) * boost));
     d.hp = Math.max(0, d.hp - dmg);
     fx = { target, text: `-${dmg}`, hit: true };
     sound("hit");
-    say(`${name} used ${move}! It did ${dmg} damage.`);
+    say(`${name} used ${move}! It did ${dmg} damage.${boost > 1 ? " It's super effective!" : boost < 1 ? " It's not very effective…" : ""}`);
   };
 
   async function turn(kind) {
@@ -1203,6 +1265,69 @@ function editTrainer(first) {
   });
 }
 
+// ---------- version 7: protector-dex, missions, story gallery, big text ----------
+
+// The Protector-dex: bugs you found that aren't invasive (you leave them be)
+function renderProtectorDex(g) {
+  const list = $("protectorList"); list.innerHTML = "";
+  const found = Object.entries(g.protectorDex).sort((a, b) => commonName(a[0]).localeCompare(commonName(b[0])));
+  $("protectorCount").textContent = found.length
+    ? `You've found ${found.length} kind${found.length === 1 ? "" : "s"} of bugs that aren't invasive. Thanks for leaving them be!`
+    : "No bugs here yet. When a photo shows a bug that isn't invasive, it shows up here.";
+  for (const [s, n] of found) {
+    const slot = el("div", "dex-slot caught");
+    slot.append(el("span", "bug-emoji", "🌼"), el("strong", null, commonName(s)), el("span", "sci", sciName(s)), el("span", "count", `Found ×${n}`));
+    list.append(slot);
+  }
+}
+
+// Real-world missions: things to do outside the game, on your honor
+function renderMissions(g) {
+  const list = $("missionList"); list.innerHTML = "";
+  $("missionCount").textContent = `${g.missions.length} of ${MISSIONS.length} missions done. Always do missions with a grown-up!`;
+  for (const m of MISSIONS) {
+    const done = g.missions.includes(m.id);
+    const row = el("div", "foe" + (done ? " beaten" : ""));
+    const who = el("div", "foe-who");
+    who.append(el("strong", null, m.text), el("span", "muted", m.why));
+    const b = el("button", "btn" + (done ? "" : " primary"), done ? "✅ Done" : `I did it! +${MISSION_POINTS}`);
+    b.type = "button"; b.disabled = done;
+    b.onclick = () => {
+      const g = loadGame();
+      if (g.missions.includes(m.id)) return;
+      g.missions.push(m.id); addPoints(g, MISSION_POINTS);
+      const lines = [`${m.emoji} Mission done! +${MISSION_POINTS} points`, ...progress(g, { type: "mission", pts: MISSION_POINTS })];
+      saveGame(g); renderGame(); toast(lines); playQueued();
+    };
+    row.append(el("span", "bug-emoji", m.emoji), who, b);
+    list.append(row);
+  }
+}
+
+// The story gallery: watch any cutscene you've unlocked again
+function storyScenes(g) {
+  const list = [{ name: "🎬 The beginning", slides: INTRO }];
+  if (totalCaught(g)) list.push({ name: "🫙 Your first catch", slides: FIRST_CATCH });
+  if (caughtRarity(g, "legendary")) list.push({ name: "👑 Your first Legendary", slides: FIRST_LEGENDARY.map(sl => ({ ...sl, text: sl.text.replace("the {bug}", "a Legendary bug") })) });
+  for (const gym of GYMS) {
+    if (gymOpen(g, gym) || g.gyms.includes(gym.id)) list.push({ name: `${gym.emoji} Arriving at ${gym.place}`, slides: gymIntroScenes(gym) });
+    if (g.gyms.includes(gym.id) && gym.champion) list.push({ name: "🏆 The ending", slides: FINALE });
+  }
+  return list;
+}
+function renderStory(g) {
+  const list = $("storyList"); list.innerHTML = "";
+  for (const sc of storyScenes(g)) {
+    const b = el("button", "btn", `▶ ${sc.name}`);
+    b.type = "button";
+    b.onclick = () => cutscene(sc.slides);
+    list.append(b);
+  }
+  list.append(el("p", "muted", "Keep playing to unlock more of the story!"));
+}
+
+function applyBigText(g) { document.documentElement.classList.toggle("big-text", !!g.bigText); }
+
 // ---------- wiring ----------
 for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => {
   showTab(t.dataset.tab);
@@ -1210,6 +1335,7 @@ for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = 
   if (t.dataset.tab === "map") openMap();
 };
 $("muteBtn").onclick = () => { const g = loadGame(); g.muted = !g.muted; saveGame(g); renderGame(); };
+$("bigTextBtn").onclick = () => { const g = loadGame(); g.bigText = !g.bigText; saveGame(g); renderGame(); };
 $("mapToggle").onchange = e => {
   const g = loadGame(); g.useMap = e.target.checked; saveGame(g);
   // Ask for permission now, so it doesn't pop up in the middle of a catch
