@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261011a">
+<link rel="stylesheet" href="assets/site.css?v=20261011b">
 </head>
 <body>
 <div class="wrap">
@@ -54,18 +54,21 @@
   <section class="game" id="game" aria-label="Innvadex game">
     <div class="ledger-head">
       <h2>Innvadex</h2>
-      <span class="game-score"><span id="gamePoints" class="status">0 points</span> <span id="gameProgress" class="status"></span></span>
+      <span class="game-score"><span id="gamePoints" class="status">0 points</span> <span id="gameProgress" class="status"></span> <span id="gameProtector" class="status"></span></span>
     </div>
+    <div id="daily" class="daily"><span class="daily-label">📅 Today's challenge</span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
     <div class="game-bar">
       <div class="game-tabs" role="tablist">
         <button class="tab" type="button" role="tab" data-tab="dex" aria-selected="true">My Innvadex</button>
         <button class="tab" type="button" role="tab" data-tab="badges" aria-selected="false">Badges</button>
+        <button class="tab" type="button" role="tab" data-tab="battle" aria-selected="false">Battle</button>
         <button class="tab" type="button" role="tab" data-tab="learn" aria-selected="false">Learn about species</button>
       </div>
       <button id="howToPlay" class="btn" type="button">How to play</button>
     </div>
     <div id="tab-dex" role="tabpanel"><div id="dexGrid" class="dex-grid"></div></div>
     <div id="tab-badges" role="tabpanel" hidden><div id="badgeList" class="badge-list"></div></div>
+    <div id="tab-battle" role="tabpanel" hidden><div id="battleList" class="battle-list"></div></div>
     <div id="tab-learn" role="tabpanel" hidden><div id="learnList" class="learn-list"></div></div>
   </section>
 
@@ -103,6 +106,7 @@
   <div id="viewerCaption" class="caption"></div>
 </div>
 
+<div id="gameToast" class="game-toast" role="status" hidden></div>
 <div id="gamePopup" class="game-popup" role="dialog" aria-modal="true" aria-label="Innvadex" hidden>
   <div id="gamePopupBox" class="game-popup-box"></div>
 </div>
@@ -112,7 +116,7 @@
 <script src="assets/species.js?v=20261010g"></script>
 <script src="assets/models/pyinsect-2.8.js?v=20261010g"></script>
 <script src="assets/aicheck.js?v=20261010g"></script>
-<script src="assets/app.js?v=20261011a"></script>
-<script src="assets/game.js?v=20261011a"></script>
+<script src="assets/app.js?v=20261011b"></script>
+<script src="assets/game.js?v=20261011b"></script>
 </body>
 </html>

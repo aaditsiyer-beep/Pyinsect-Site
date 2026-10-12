@@ -26,8 +26,14 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - An **Instructions** menu that explains how to play.
   - A **Learn about species** page with every invasive bug, even ones you haven't caught yet.
   - Everything saves on your own device. No accounts, and reports still stay private.
-- **Saved for version 2:** battles against AI trainers, forests as gyms, a daily challenge,
-  protector points for native bugs, and only counting real photos using the AI checker.
+- **Version 2 (Building):**
+  - **Battles against AI trainers:** your caught bugs are your team. Use Tackle or a special
+    move (stronger, but it can miss).
+  - **Forests as gyms:** Forest Park, Tillamook, Willamette, and Mount Hood. Each one opens when
+    you've caught enough kinds of bugs, and beating it earns a gym badge.
+  - **Daily challenge:** a new challenge every day for bonus points.
+  - **Protector points:** find a bug that isn't invasive, leave it be, and earn points.
+  - **Real photos only:** photos that look AI-made don't count in the game.
 - **Other ideas we talked about:**
   - Battles against real players: needs a server, accounts, and safety rules for kids. We chose
     AI trainers instead.
@@ -38,3 +44,8 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] Catch your first bug, and you get the "First Catch!" badge.
   - [ ] The Instructions menu opens and explains how to play.
   - [ ] The Learn about species page lists every invasive bug with a fact card.
+  - [ ] Version 2: beat a trainer in a battle and get points and the "Battle Buddy" badge.
+  - [ ] Version 2: a forest gym stays locked until you've caught enough kinds of bugs.
+  - [ ] Version 2: finish today's challenge and it says "Done! Come back tomorrow."
+  - [ ] Version 2: a photo of a bug that isn't invasive gives protector points.
+  - [ ] Version 2: an AI-made photo shows "doesn't count in the game".
