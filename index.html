@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261011c">
+<link rel="stylesheet" href="assets/site.css?v=20261012d">
 </head>
 <body>
 <div class="wrap">
@@ -21,7 +21,9 @@
     <span id="status" class="status busy"><span class="dot"></span><span id="statusText">Loading model…</span></span>
   </header>
 
-  <section id="tray" class="tray" aria-label="Add photos">
+  <div id="choices" class="choices">
+  <section id="tray" class="tray" aria-labelledby="trayTitle">
+    <h2 id="trayTitle">📷 Report a bug or damage</h2>
     <p>Take a photo of an insect, drop photos here, or choose photos. Photos are identified on this device. When a photo shows an invasive species, a report with a reduced copy of the photo is sent to the Pyinsect team.</p>
     <div class="actions">
       <button id="openCamera" class="btn primary" type="button" disabled>
@@ -37,17 +39,59 @@
     <input id="captureInput" type="file" accept="image/*" capture="environment">
   </section>
 
+  <!-- Filled in from the tree settings (assets/trees/*.js) by assets/treecheck.js -->
+  <section id="treeStart" class="tray" aria-labelledby="treeStartTitle" hidden>
+    <h2 id="treeStartTitle"></h2>
+    <p id="treeStartText"></p>
+    <div class="actions">
+      <button id="startTreeCheck" class="btn primary" type="button">Start</button>
+    </div>
+  </section>
+  </div>
+
+  <section id="treeCheck" class="tree-check" aria-label="Tree check" hidden>
+    <div id="treeStep" class="tree-step"></div>
+    <div class="tree-nav">
+      <button id="treeBack" class="btn" type="button">Back</button>
+      <button id="treeStartOver" class="btn" type="button" hidden>Start over</button>
+      <button id="treeClose" class="btn" type="button">Close</button>
+    </div>
+  </section>
+
   <section id="camera" class="camera" aria-label="Camera" hidden>
     <div class="viewfinder">
       <video id="cameraVideo" playsinline muted autoplay></video>
       <div id="cameraFlash" class="flash"></div>
+      <div id="focusRing" class="focus-ring" hidden></div>
       <p id="cameraMsg" class="camera-msg" hidden></p>
+    </div>
+    <div id="zoomBar" class="zoom-bar" hidden>
+      <label for="zoom">Zoom</label>
+      <input id="zoom" type="range" min="1" max="4" step="0.1" value="1">
+      <output id="zoomValue" for="zoom">1×</output>
     </div>
     <div class="camera-bar">
       <button id="closeCamera" class="btn" type="button">Close</button>
       <button id="shutter" class="shutter" type="button" aria-label="Take photo" disabled></button>
       <button id="switchCamera" class="btn" type="button" hidden>Switch camera</button>
       <button id="useCameraApp" class="btn" type="button" hidden>Use camera app</button>
+    </div>
+  </section>
+
+  <section id="crop" class="crop" aria-label="Zoom in on the bug" hidden>
+    <p class="hint">Drag the box or its corners (or pinch) around the bug or damage. Or just tap <strong>Check it</strong> to check the whole photo.</p>
+    <div id="cropStage" class="crop-stage">
+      <img id="cropImg" alt="Your photo">
+      <div id="cropBox" class="crop-box" tabindex="0" role="group" aria-label="Zoom box. Arrow keys move it. Plus and minus make it bigger or smaller.">
+        <span class="handle" data-edge="nw"></span><span class="handle" data-edge="ne"></span>
+        <span class="handle" data-edge="sw"></span><span class="handle" data-edge="se"></span>
+      </div>
+    </div>
+    <div class="crop-bar">
+      <button id="cropCancel" class="btn" type="button">Cancel</button>
+      <button id="cropRetake" class="btn" type="button">Retake</button>
+      <button id="cropWhole" class="btn" type="button">Whole photo</button>
+      <button id="checkIt" class="btn primary" type="button" disabled>Check it</button>
     </div>
   </section>
 
@@ -132,7 +176,9 @@
 <script src="assets/species.js?v=20261010g"></script>
 <script src="assets/models/pyinsect-2.8.js?v=20261010g"></script>
 <script src="assets/aicheck.js?v=20261010g"></script>
-<script src="assets/app.js?v=20261011c"></script>
+<script src="assets/app.js?v=20261012d"></script>
+<script src="assets/trees/ash.js?v=20261012d"></script>
+<script src="assets/treecheck.js?v=20261012d"></script>
 <script src="assets/game.js?v=20261011c"></script>
 </body>
 </html>
