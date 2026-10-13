@@ -690,19 +690,19 @@ function showInstructions() {
 }
 
 // ---------- the Innva-Orb ----------
-// Our catching ball: a glowing orb, green on top and purple on the bottom, with a shining button.
+// Our catching orb: a glowing crystal ball where green and purple swirl together, with a glowing leaf inside.
 const ORB_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true">
   <defs>
-    <radialGradient id="orbTop" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#c8ffd8"/><stop offset=".45" stop-color="#3ddc84"/><stop offset="1" stop-color="#127a43"/></radialGradient>
-    <radialGradient id="orbBottom" cx="45%" cy="85%" r="80%"><stop offset="0" stop-color="#e6c8ff"/><stop offset=".5" stop-color="#9b5de5"/><stop offset="1" stop-color="#4b1d8f"/></radialGradient>
-    <radialGradient id="orbCore" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#e9fff1"/><stop offset="1" stop-color="#b98cff"/></radialGradient>
+    <linearGradient id="orbGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cf0a0"/><stop offset=".5" stop-color="#3fb4a8"/><stop offset="1" stop-color="#8e4fe0"/></linearGradient>
+    <radialGradient id="orbShade" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#2a0f55" stop-opacity=".55"/></radialGradient>
   </defs>
-  <path d="M3 20 a17 17 0 0 1 34 0z" fill="url(#orbTop)"/>
-  <path d="M3 20 a17 17 0 0 0 34 0z" fill="url(#orbBottom)"/>
-  <rect x="3" y="18.3" width="34" height="3.4" fill="#1d1033" opacity=".85"/>
-  <circle cx="20" cy="20" r="6" fill="#1d1033"/>
-  <circle class="orb-core" cx="20" cy="20" r="4.2" fill="url(#orbCore)"/>
-  <ellipse cx="13" cy="10" rx="5" ry="2.6" fill="#fff" opacity=".55" transform="rotate(-30 13 10)"/>
+  <circle cx="20" cy="20" r="17" fill="url(#orbGlass)"/>
+  <path d="M6 24 C 12 14, 22 30, 34 15" stroke="#c9a6ff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
+  <path d="M7 15 C 15 22, 25 8, 33 25" stroke="#b8ffd6" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".6"/>
+  <circle cx="20" cy="20" r="17" fill="url(#orbShade)"/>
+  <path class="orb-core" d="M20 12 C 26 15, 26 24, 20 28 C 14 24, 14 15, 20 12 Z M20 14 L20 27" fill="#f2fff6" stroke="#1d7a4a" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M28 7 l1 2.5 2.5 1 -2.5 1 -1 2.5 -1 -2.5 -2.5 -1 2.5 -1z" fill="#fff" opacity=".9"/>
+  <circle cx="11" cy="29" r="1.2" fill="#fff" opacity=".8"/>
 </svg>`;
 function makeOrb() {
   const o = el("span", "innva-orb");
