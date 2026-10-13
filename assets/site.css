@@ -23,9 +23,9 @@
     radial-gradient(30rem 26rem at 45% 52%, rgba(150, 225, 205, .45), transparent 65%),
     linear-gradient(160deg, #eef6ef 0%, #f3f1ea 100%);
 
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --display: "Bricolage Grotesque", "Noto Sans Devanagari", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Noto Sans Devanagari", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Noto Sans Devanagari", ui-monospace, Consolas, monospace;
   --surface: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
@@ -413,3 +413,11 @@ input[type=file] { display: none; }
 .story-list p { margin: 4px 0 0; }
 #tab-protector .muted, #tab-missions .muted { margin: 0 0 10px; }
 .big-text .wrap, .big-text .game-popup-box, .big-text .cs-box, .big-text .game-toast { zoom: 1.25; }
+
+/* Innvadex languages */
+.lang-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.lang-pick select { font: 500 14px var(--body); color: var(--ink); padding: 9px 12px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass-strong); cursor: pointer; }
+.lang-pick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Hindi uses the Devanagari script */
+:lang(hi) .cs-box p, :lang(hi) .speech { line-height: 1.7; }

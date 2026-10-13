@@ -180,3 +180,19 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] Finishing a mission gives 10 points, once.
   - [ ] The Story tab replays the intro.
   - [ ] Big text makes the game bigger.
+
+## Innvadex in Spanish, French, and Hindi
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-12
+- **Who it's for:** People in Oregon (and anywhere) who read Spanish, French, or Hindi better than English.
+- **Problem:** The game was only in English.
+- **Why it matters:** More people can play, learn about invasive bugs, and report them.
+- **Our idea:** A language menu (🌐) in the Innvadex with English, Español, Français, and हिन्दी.
+  Every sentence in the game is translated in `assets/game-i18n.js`. Bug names and people's
+  names stay the same. The bug-photo part of the website is still English for now.
+- **Other ideas we talked about:** translating the whole website (maybe later).
+- **Done when:**
+  - [ ] Picking a language changes the whole game, including cutscenes and battles.
+  - [ ] The language is remembered after a reload.
+  - [ ] Someone who speaks each language has checked the translations.

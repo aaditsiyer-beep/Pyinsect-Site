@@ -255,7 +255,7 @@ const GYMS = [
     say: { hi: "You beat every gym. Now face me, with my Level 4 bugs! This is the final battle!", next: "A Champion never gives up!", lose: "Incredible! You are the new Oregon Champion!", win: "Not yet! Train hard and come back, Bug Ranger." } },
 ];
 // One badge per gym
-BADGES.push(...GYMS.map(gym => ({ id: `gym-${gym.id}`, emoji: gym.emoji, name: gym.badge, desc: `Beat the ${gym.name}.`, earned: g => g.gyms.includes(gym.id) })));
+BADGES.push(...GYMS.map(gym => ({ id: `gym-${gym.id}`, emoji: gym.emoji, name: gym.badge, desc: "Beat the {gym}.", gym: gym.name, earned: g => g.gyms.includes(gym.id) })));
 const gymBefore = gym => GYMS[GYMS.indexOf(gym) - 1];
 const gymOpen = (g, gym) => kindsCaught(g) >= gym.unlock && (!gymBefore(gym) || g.gyms.includes(gymBefore(gym).id));
 // A gym's strongest bug, for its cutscene
@@ -265,10 +265,10 @@ function gymIntroScenes(gym) {
   return [
     gym.champion
       ? { scene: gym.id, ...HAZEL, text: "This is it, {name}. The Champion's Hall. Everything you've learned comes down to this." }
-      : { scene: gym.id, ...HAZEL, text: `Here we are, {name}: ${gym.place}! ${gym.story}` },
+      : { scene: gym.id, ...HAZEL, text: "Here we are, {name}: {place}! {story}", vars: { place: t(gym.place), story: t(gym.story) } },
     { scene: gym.id, who: gym.face, name: gym.leader, text: gym.intro },
-    { scene: gym.id, who: f.emoji, name: `${gym.leader}'s ${commonName(bug)}`, text: `Watch out for my ${commonName(bug)}! ${f.harm}` },
-    { scene: gym.id, ...PIP, text: `Bzz… if you ever see a real ${commonName(bug)}: ${f.todo}` },
+    { scene: gym.id, who: f.emoji, name: commonName(bug), text: "Watch out for my {bug}! {harm}", vars: { bug: commonName(bug), harm: t(f.harm) } },
+    { scene: gym.id, ...PIP, text: "Bzz… if you ever see a real {bug}: {todo}", vars: { bug: commonName(bug), todo: t(f.todo) } },
     { scene: gym.id, who: gym.face, name: gym.leader, text: gym.say.hi },
   ];
 }
@@ -347,7 +347,7 @@ const INTRO = [
   { scene: "lab",    ...HAZEL, text: "That's where you come in, {name}! Here's your very own Innvadex." },
   { scene: "lab",    ...HAZEL, text: "Snap photos of bugs. If one is invasive, catch it! If it isn't, leave it be." },
   { scene: "forest", ...HAZEL, text: "Every invasive bug you find is reported, so experts know where to set traps. Real photos help real forests!" },
-  { scene: "mthood", ...HAZEL, text: `Battle trainers, beat the ${GYMS.length - 1} forest gyms, and face the Oregon Champion.` },
+  { scene: "mthood", ...HAZEL, text: "Battle trainers, beat the {n} forest gyms, and face the Oregon Champion.", vars: { n: GYMS.length - 1 } },
   { scene: "forest", ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
 const FIRST_CATCH = [
@@ -396,9 +396,9 @@ function checkUnlocks(g) {
     if (!gymOpen(g, gym) || g.unlockSeen.includes(gym.id)) continue;
     g.unlockSeen.push(gym.id);
     if (g.gyms.includes(gym.id)) continue;   // already beaten, no need to invite you
-    queueScene([{ scene: gym.id, who: gym.face, name: gym.leader, text: gym.champion
-      ? `So you have all ${GYMS.length - 1} gym badges, {name}? I'm Juniper, the Oregon Champion. Come find me in the Battle tab!`
-      : `I'm ${gym.leader}. The ${gym.name} is open now, {name}! Come battle me when you're ready.` }]);
+    queueScene([gym.champion
+      ? { scene: gym.id, who: gym.face, name: gym.leader, text: "So you have all {n} gym badges, {name}? I'm Juniper, the Oregon Champion. Come find me in the Battle tab!", vars: { n: GYMS.length - 1 } }
+      : { scene: gym.id, who: gym.face, name: gym.leader, text: "I'm {leader}. The {gym} is open now, {name}! Come battle me when you're ready.", vars: { leader: gym.leader, gym: t(gym.name) } }]);
   }
 }
 
@@ -485,21 +485,21 @@ function progress(g, ev) {
     if (g.streak.count > 1) {
       const bonus = STREAK_BONUS * Math.min(g.streak.count, STREAK_MAX);
       addPoints(g, bonus);
-      lines.push(`🔥 ${g.streak.count}-day streak! +${bonus} points`);
+      lines.push(t("🔥 {n}-day streak! +{pts} points", { n: g.streak.count, pts: bonus }));
     }
   }
   if (g.daily !== todayKey() && todaysChallenge().check(ev)) {
     g.daily = todayKey(); g.dailyDone++; addPoints(g, DAILY_REWARD);
-    lines.push(`📅 Daily challenge done! +${DAILY_REWARD} points`);
+    lines.push(t("📅 Daily challenge done! +{pts} points", { pts: DAILY_REWARD }));
   }
   const had = new Set(g.badges);
   const fresh = BADGES.filter(b => !had.has(b.id) && b.earned(g));
   g.badges.push(...fresh.map(b => b.id));
-  lines.push(...fresh.map(b => `${b.emoji} New badge: ${b.name.replace(/!$/, "")}!`));
+  lines.push(...fresh.map(b => `${b.emoji} ${t("New badge: {badge}", { badge: t(b.name) })}`));
   const rank = rankOf(g.points);
   if (rank[2] !== rankBefore) {
-    lines.push(`${rank[1]} Rank up! You're now ${/^[AEIOU]/.test(rank[2]) ? "an" : "a"} ${rank[2]}!`);
-    if (RANK_TALK[rank[2]]) queueScene([{ scene: "victory", ...HAZEL, text: `${rank[1]} ${RANK_TALK[rank[2]]}` }]);
+    lines.push(`${rank[1]} ${t("Rank up! Your new rank: {rank}", { rank: t(rank[2]) })}`);
+    if (RANK_TALK[rank[2]]) queueScene([{ scene: "victory", ...HAZEL, text: RANK_TALK[rank[2]] }]);
   }
   g.rankSeen = rank[2];
   if (lines.length) { sound("badge"); confetti(); }
@@ -509,7 +509,7 @@ function progress(g, ev) {
 // ---------- building blocks ----------
 function rarityTag(species) {
   const r = SPECIES_FACTS[species].rarity;
-  return el("span", `rarity ${r}`, RARITY[r].label);
+  return el("span", `rarity ${r}`, t(RARITY[r].label));
 }
 
 function factCard(species, caughtCount) {
@@ -519,13 +519,14 @@ function factCard(species, caughtCount) {
   head.append(el("span", "bug-emoji", f.emoji), el("div", null));
   head.lastChild.append(el("strong", null, commonName(species)), el("span", "sci", sciName(species)));
   const tags = el("div", "tags");
-  const strong = STRONG_AGAINST[f.group].map(t => TYPES[t]).join(", ");
-  tags.append(rarityTag(species), el("span", "pts", TYPES[f.group]), el("span", "pts", `${RARITY[f.rarity].points} points`));
-  tags.title = `Strong against: ${strong}`;
-  if (caughtCount) tags.append(el("span", "pts", `Caught ×${caughtCount} · Lv ${bugLevel(caughtCount)}`));
+  const strong = STRONG_AGAINST[f.group].map(ty => t(TYPES[ty])).join(", ");
+  tags.append(rarityTag(species), el("span", "pts", t(TYPES[f.group])), el("span", "pts", t("{pts} points", { pts: RARITY[f.rarity].points })));
+  tags.title = t("Strong against: {types}", { types: strong });
+  if (caughtCount) tags.append(el("span", "pts", t("Caught ×{n} · Lv {lv}", { n: caughtCount, lv: bugLevel(caughtCount) })));
   const facts = el("dl", "facts");
-  for (const [k, v] of [["What it is", f.fact], ["Why it's a problem", f.harm], ["If you see one", f.todo], ["Battle type", `${TYPES[f.group]}. Strong against: ${strong}.`]])
-    facts.append(el("dt", null, k), el("dd", null, v));
+  for (const [k, v] of [["What it is", t(f.fact)], ["Why it's a problem", t(f.harm)], ["If you see one", t(f.todo)],
+    ["Battle type", t("{type}. Strong against: {types}.", { type: t(TYPES[f.group]), types: strong })]])
+    facts.append(el("dt", null, t(k)), el("dd", null, v));
   card.append(head, tags, facts);
   return card;
 }
@@ -534,24 +535,25 @@ function factCard(species, caughtCount) {
 let justCaught = null;   // the bug you just caught gets a little "pop" animation
 function renderGame() {
   const g = loadGame(), all = gameSpecies();
-  $("gamePoints").textContent = `${g.points} points`;
+  setLanguage(g.lang);
+  $("gamePoints").textContent = t("{pts} points", { pts: g.points });
   const rank = rankOf(g.points), next = RANKS[RANKS.indexOf(rank) + 1];
-  $("gameRank").textContent = `${rank[1]} ${rank[2]}${next ? ` · ${next[0] - g.points} to ${next[2]}` : ""}`;
-  $("gameCoins").textContent = `🪙 ${g.coins} coins`;
+  $("gameRank").textContent = `${rank[1]} ${t(rank[2])}${next ? ` · ${t("{n} to {rank}", { n: next[0] - g.points, rank: t(next[2]) })}` : ""}`;
+  $("gameCoins").textContent = `🪙 ${t("{n} coins", { n: g.coins })}`;
   const streakOn = g.streak.count > 0 && [todayKey(), dayKey(-1)].includes(g.streak.last);
-  $("gameStreak").textContent = `🔥 ${g.streak.count}-day streak`;
+  $("gameStreak").textContent = `🔥 ${t("{n}-day streak", { n: g.streak.count })}`;
   $("gameStreak").hidden = !streakOn;
-  $("trainerBtn").textContent = g.trainer.name ? `${g.trainer.avatar} ${g.trainer.name}` : `${g.trainer.avatar} Make your trainer card`;
-  $("muteBtn").textContent = g.muted ? "🔇 Sound off" : "🔊 Sound on";
+  $("trainerBtn").textContent = `${g.trainer.avatar} ${g.trainer.name || t("Make your trainer card")}`;
+  $("muteBtn").textContent = g.muted ? `🔇 ${t("Sound off")}` : `🔊 ${t("Sound on")}`;
   $("muteBtn").setAttribute("aria-pressed", g.muted);
-  $("gameProgress").textContent = `${kindsCaught(g)} of ${all.length} caught`;
-  $("gameProtector").textContent = `🛡️ ${g.protector} protector`;
+  $("gameProgress").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: all.length });
+  $("gameProtector").textContent = `🛡️ ${t("{n} protector", { n: g.protector })}`;
   const doneToday = g.daily === todayKey();
-  $("dailyText").textContent = todaysChallenge().text;
-  $("dailyState").textContent = doneToday ? "✅ Done! Come back tomorrow." : `+${DAILY_REWARD} points`;
+  $("dailyText").textContent = t(todaysChallenge().text);
+  $("dailyState").textContent = doneToday ? t("✅ Done! Come back tomorrow.") : t("+{pts} points", { pts: DAILY_REWARD });
   $("daily").classList.toggle("done", doneToday);
   const se = season();
-  $("seasonText").textContent = `${se.emoji} ${se.name}: ${se.text}`;
+  $("seasonText").textContent = `${se.emoji} ${t(se.name)}: ${t(se.text)}`;
   renderProtectorDex(g);
   renderMissions(g);
   renderStory(g);
@@ -565,10 +567,10 @@ function renderGame() {
     slot.type = "button";
     if (n) {
       slot.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("strong", null, commonName(s)), rarityTag(s),
-        el("span", "count", `Lv ${bugLevel(n)} · ×${n}`));
+        el("span", "count", t("Lv {lv} · ×{n}", { lv: bugLevel(n), n })));
       slot.onclick = () => showFact(s, n);
     } else {
-      slot.append(el("span", "bug-emoji", "❓"), el("strong", null, "???"), el("span", "count", "Not caught yet"));
+      slot.append(el("span", "bug-emoji", "❓"), el("strong", null, "???"), el("span", "count", t("Not caught yet")));
       slot.disabled = true;
     }
     dex.append(slot);
@@ -578,8 +580,9 @@ function renderGame() {
   for (const b of BADGES) {
     const has = g.badges.includes(b.id);
     const item = el("div", "badge" + (has ? " earned" : ""));
-    item.title = b.desc;
-    item.append(el("span", "badge-emoji", has ? b.emoji : "🔒"), el("strong", null, b.name), el("span", null, b.desc));
+    const desc = t(b.desc, { gym: b.gym && t(b.gym) });
+    item.title = desc;
+    item.append(el("span", "badge-emoji", has ? b.emoji : "🔒"), el("strong", null, t(b.name)), el("span", null, desc));
     badges.append(item);
   }
 
@@ -595,17 +598,18 @@ function renderGame() {
 function renderBattles(g) {
   const list = $("battleList"); list.innerHTML = "";
   const kinds = kindsCaught(g);
-  if (!kinds) list.append(el("p", "empty", "Catch your first invasive bug to start battling. Your caught bugs are your battle team!"));
+  if (!kinds) list.append(el("p", "empty", t("Catch your first invasive bug to start battling. Your caught bugs are your battle team!")));
   const row = (foe, gym) => {
     const item = el("div", "foe" + (gym && g.gyms.includes(foe.id) ? " beaten" : ""));
     const who = el("div", "foe-who");
-    const level = foe.champion ? "👑 Champion" : `${"⭐".repeat(foe.level)} ${["Easy", "Medium", "Hard"][foe.level - 1]}`;
-    const bugs = `${foe.team.length} bug${foe.team.length === 1 ? "" : "s"}${foe.bugLevel > 1 ? ` (Lv ${foe.bugLevel})` : ""}`;
-    who.append(el("strong", null, foe.name), el("span", "muted", `${gym ? `Leader: ${foe.leader} · ` : ""}${bugs} · ${level}`));
+    const level = foe.champion ? `👑 ${t("Champion")}` : `${"⭐".repeat(foe.level)} ${t(["Easy", "Medium", "Hard"][foe.level - 1])}`;
+    const bugs = `${t(foe.team.length === 1 ? "{n} bug" : "{n} bugs", { n: foe.team.length })}${foe.bugLevel > 1 ? ` (${t("Lv {lv}", { lv: foe.bugLevel })})` : ""}`;
+    who.append(el("strong", null, gym ? t(foe.name) : foe.name), el("span", "muted", `${gym ? `${t("Leader: {leader}", { leader: foe.leader })} · ` : ""}${bugs} · ${level}`));
     const needKinds = kinds < foe.unlock, needGym = gym && !needKinds && !gymOpen(g, foe);
     const locked = needKinds || needGym;
     const b = el("button", "btn" + (locked ? "" : " primary"),
-      needKinds ? `🔒 Catch ${foe.unlock} kind${foe.unlock === 1 ? "" : "s"}` : needGym ? `🔒 Beat ${gymBefore(foe).leader} first` : gym && g.gyms.includes(foe.id) ? "✅ Battle again" : "Battle!");
+      needKinds ? `🔒 ${t(foe.unlock === 1 ? "Catch {n} kind" : "Catch {n} kinds", { n: foe.unlock })}` : needGym ? `🔒 ${t("Beat {leader} first", { leader: gymBefore(foe).leader })}`
+        : gym && g.gyms.includes(foe.id) ? `✅ ${t("Battle again")}` : t("Battle!"));
     b.type = "button"; b.disabled = locked;
     b.onclick = () => gym && !g.gyms.includes(foe.id)
       ? cutscene(gymIntroScenes(foe)).then(() => battle(foe, gym))
@@ -613,9 +617,9 @@ function renderBattles(g) {
     item.append(el("span", "bug-emoji", foe.emoji), who, b);
     list.append(item);
   };
-  list.append(el("h3", null, "Trainers"));
-  TRAINERS.forEach(t => row(t, false));
-  list.append(el("h3", null, "Forest gyms (beat them in order)"));
+  list.append(el("h3", null, t("Trainers")));
+  TRAINERS.forEach(tr => row(tr, false));
+  list.append(el("h3", null, t("Forest gyms (beat them in order)")));
   GYMS.forEach(gym => row(gym, true));
 }
 
@@ -634,7 +638,7 @@ function openPopup(content, buttons) {
   box.append(...content);
   const bar = el("div", "actions");
   for (const [text, primary, onClick] of buttons) {
-    const b = el("button", "btn" + (primary ? " primary" : ""), text);
+    const b = el("button", "btn" + (primary ? " primary" : ""), t(text));
     b.type = "button";
     b.onclick = () => { closePopup(); onClick?.(); };
     bar.append(b);
@@ -662,7 +666,7 @@ function showInstructions() {
     "Earn badges, like “First Catch!”, as you play.",
     "Find a bug that isn't invasive? Leave it be, and get protector points!",
     "Do the daily challenge for bonus points. There's a new one every day.",
-    `Open “Battle” to battle trainers with your caught bugs. Beat the ${GYMS.length - 1} forest gyms in order, then face the Oregon Champion!`,
+    "Open “Battle” to battle trainers with your caught bugs. Beat the {n} forest gyms in order, then face the Oregon Champion!",
     "Catch the same bug 3 times and it levels up, which makes it stronger in battles.",
     "Earn coins as you play, and spend them in the “Shop” on items like the Super Net.",
     "Play the “Quiz” for bonus points, and turn on the “Map” to see where you caught your bugs.",
@@ -671,18 +675,18 @@ function showInstructions() {
     "Watch for seasonal events: some bugs give double points at certain times of the year.",
     "Try the real-world “Missions” with a grown-up, and see bugs you left be in the “Protector-dex”.",
     "Open “Learn about species” to see every invasive bug, even ones you haven't caught yet.",
-  ]) list.append(el("li", null, step));
+  ]) list.append(el("li", null, t(step, { n: GYMS.length - 1 })));
   const safety = el("div", "safety");
-  safety.append(el("strong", null, "Stay safe"));
+  safety.append(el("strong", null, t("Stay safe")));
   const tips = el("ul");
   for (const tip of [
     "Don't touch bugs with bare hands. Some sting or bite.",
     "Never carry an invasive bug (or firewood) to a new place.",
     "Bring a grown-up, and watch where you walk.",
-  ]) tips.append(el("li", null, tip));
+  ]) tips.append(el("li", null, t(tip)));
   safety.append(tips);
-  const why = el("p", "muted", "Every invasive bug you find is also reported to the Pyinsect team, so experts can learn where invasive bugs are and where to put traps.");
-  openPopup([el("h2", null, "How to play"), list, safety, why], [["Let's go!", true]]);
+  const why = el("p", "muted", t("Every invasive bug you find is also reported to the Pyinsect team, so experts can learn where invasive bugs are and where to put traps."));
+  openPopup([el("h2", null, t("How to play")), list, safety, why], [["Let's go!", true]]);
 }
 
 // ---------- the minigame ----------
@@ -692,17 +696,17 @@ function minigame(species, photo) {
     const arena = el("div", "arena");
     const bug = el("button", "wild-bug");
     bug.type = "button";
-    bug.setAttribute("aria-label", `Catch the ${commonName(species)}`);
+    bug.setAttribute("aria-label", t("Catch the {bug}", { bug: commonName(species) }));
     const img = el("img"); img.src = photo; img.alt = "";
     bug.append(img);
     arena.append(bug);
     // Items from the shop are used up here, if you have them
     const g = loadGame(), used = [];
     let needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
-    if (g.items.stickynet > 0) { g.items.stickynet--; needTaps = STICKYNET_TAPS; used.push("🍯 Sticky Net: only 2 taps!"); }
-    if (g.items.supernet > 0) { g.items.supernet--; seconds += SUPERNET_SECONDS; used.push(`🥅 Super Net: +${SUPERNET_SECONDS} seconds!`); }
+    if (g.items.stickynet > 0) { g.items.stickynet--; needTaps = STICKYNET_TAPS; used.push(`🍯 ${t("Sticky Net: only 2 taps!")}`); }
+    if (g.items.supernet > 0) { g.items.supernet--; seconds += SUPERNET_SECONDS; used.push(`🥅 ${t("Super Net: +{n} seconds!", { n: SUPERNET_SECONDS })}`); }
     if (used.length) { saveGame(g); renderGame(); }
-    const info = el("p", "arena-info", `Tap it ${needTaps} times! ${seconds} seconds left`);
+    const info = el("p", "arena-info", t("Tap it {taps} times! {s} seconds left", { taps: needTaps, s: seconds }));
     const bar = el("div", "track"), fill = el("div", "fill");
     fill.style.width = "100%"; bar.append(fill);
 
@@ -724,8 +728,8 @@ function minigame(species, photo) {
       jar.style.left = bug.style.left; jar.style.top = bug.style.top;
       arena.append(jar);
       arena.classList.add("catching");
-      info.textContent = "Gotcha…?";
-      setTimeout(() => { info.textContent = "Gotcha!"; }, 1300);
+      info.textContent = t("Gotcha…?");
+      setTimeout(() => { info.textContent = t("Gotcha!"); }, 1300);
       setTimeout(close, 1700);
     };
     bug.onclick = () => {
@@ -733,7 +737,7 @@ function minigame(species, photo) {
       bug.classList.remove("hit"); void bug.offsetWidth; bug.classList.add("hit");
       sound("hit");
       if (taps >= needTaps) return end(true);
-      info.textContent = `${needTaps - taps} more tap${needTaps - taps === 1 ? "" : "s"}!`;
+      info.textContent = t(needTaps - taps === 1 ? "{n} more tap!" : "{n} more taps!", { n: needTaps - taps });
       hop();
     };
     const timer = setInterval(() => {
@@ -745,7 +749,7 @@ function minigame(species, photo) {
     hop();
 
     sound("appear");
-    openPopup([el("h2", null, `A wild ${commonName(species)} appeared!`), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), arena, bar, info],
+    openPopup([el("h2", null, t("A wild {bug} appeared!", { bug: commonName(species) })), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), arena, bar, info],
       [["Let it go", false, () => end(false)]]);
     $("gamePopupBox").querySelector(".actions button").onclick = () => end(false);
     popupDone = () => end(false);   // closing the pop-up (Escape) lets the bug go
@@ -763,8 +767,8 @@ function encounter(species, photo) {
     const won = await minigame(species, photo);
     if (!won) {
       sound("lose");
-      await new Promise(r => { popupDone = r; openPopup([el("h2", null, "It got away!"),
-        el("p", null, "Don't worry, it was still reported. Find another one and try again.")], [["OK", true]]); });
+      await new Promise(r => { popupDone = r; openPopup([el("h2", null, t("It got away!")),
+        el("p", null, t("Don't worry, it was still reported. Find another one and try again."))], [["OK", true]]); });
       return;
     }
     sound("catch");
@@ -779,11 +783,12 @@ function encounter(species, photo) {
     if (spot) g.spots.push({ species, ...spot, when: new Date().toLocaleDateString() });
     // Story cutscenes for big moments (they play after the pop-up, in this order)
     if (firstEver) queueScene(FIRST_CATCH);
-    if (firstLegend) queueScene(FIRST_LEGENDARY.map(sl => ({ ...sl, text: sl.text.replace("{bug}", commonName(species)) })));
-    const lines = seasonal ? [`${se.emoji} ${se.name}: double points!`] : [];
-    if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before) lines.push(`⬆️ Your ${commonName(species)} leveled up to Lv ${bugLevel(g.caught[species])}! It's stronger in battles now.`);
+    if (firstLegend) queueScene(FIRST_LEGENDARY.map(sl => ({ ...sl, vars: { bug: commonName(species) } })));
+    const lines = seasonal ? [`${se.emoji} ${t("{season}: double points!", { season: t(se.name) })}`] : [];
+    if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before)
+      lines.push(`⬆️ ${t("Your {bug} leveled up to Lv {lv}! It's stronger in battles now.", { bug: commonName(species), lv: bugLevel(g.caught[species]) })}`);
     lines.push(...progress(g, { type: "catch", species, pts }));
-    if (spot) lines.push("📍 Saved on your catch map.");
+    if (spot) lines.push(`📍 ${t("Saved on your catch map.")}`);
     checkUnlocks(g);
     const extra = lines.map(l => el("p", "new-badge", l));
     saveGame(g);
@@ -792,7 +797,7 @@ function encounter(species, photo) {
     justCaught = null;
     confetti();
 
-    await new Promise(r => { popupDone = r; openPopup([el("h2", null, `Gotcha! +${pts} points`), ...extra, factCard(species, g.caught[species])],
+    await new Promise(r => { popupDone = r; openPopup([el("h2", null, t("Gotcha! +{pts} points", { pts })), ...extra, factCard(species, g.caught[species])],
       [["Open Innvadex", true, () => { showTab("dex"); $("game").scrollIntoView({ behavior: "smooth" }); }], ["Keep playing", false]]); });
     await playQueued();
   });
@@ -815,7 +820,7 @@ function native(species, confidence) {
   const g = loadGame();
   g.protector++; addPoints(g, PROTECTOR_POINTS);
   g.protectorDex[species] = (g.protectorDex[species] || 0) + 1;
-  const lines = [`🛡️ ${commonName(species)} isn't invasive. Leave it be! +${PROTECTOR_POINTS} protector points`, ...progress(g, { type: "native", species })];
+  const lines = [`🛡️ ${t("{bug} isn't invasive. Leave it be! +{pts} protector points", { bug: commonName(species), pts: PROTECTOR_POINTS })}`, ...progress(g, { type: "native", species })];
   saveGame(g);
   renderGame();
   toast(lines);
@@ -824,7 +829,7 @@ function native(species, confidence) {
 
 // Called by app.js when a photo looks AI-made: it doesn't count in the game
 function fakePhoto() {
-  toast(["🤖 That photo looks AI-made, so it doesn't count in the game. Real photos only!"]);
+  toast([`🤖 ${t("That photo looks AI-made, so it doesn't count in the game. Real photos only!")}`]);
 }
 
 // ---------- battles against AI trainers ----------
@@ -864,29 +869,31 @@ function battle(foe, gym) {
   if (!mine.length || !theirs.length) return;
   const foeName = gym ? foe.leader : foe.name;
   let me = 0, them = 0, busy = false, over = false, fx = null, heals = foe.heals || 0;
-  const youLabel = `${g.trainer.avatar} ${g.trainer.name || "You"}`;
+  const youLabel = `${g.trainer.avatar} ${g.trainer.name || t("You")}`;
 
   const field = el("div", "battle-field");
   const bubble = el("p", "speech");
-  const talk = text => { bubble.textContent = `${foe.emoji} ${foeName}: “${text}”`; };
+  const talk = text => { bubble.textContent = `${foe.emoji} ${foeName}: “${t(text)}”`; };
   talk(foe.say.hi);
-  const log = el("p", "battle-log", `${foeName} wants to battle!`);
+  const log = el("p", "battle-log", t("{foe} wants to battle!", { foe: foeName }));
   log.setAttribute("aria-live", "polite");
   const say = text => { log.textContent = text; };
   const side = (team, i, label, cls) => {
     const f = team[i], box = el("div", `fighter ${cls}${f.hp <= 0 ? " fainted" : ""}`);
     const hp = el("div", "track"), fill = el("div", "fill" + (f.hp / f.max < 0.3 ? " low" : ""));
     fill.style.width = `${f.hp / f.max * 100}%`; hp.append(fill);
+    const left = team.filter(tm => tm.hp > 0).length;
     box.append(el("span", "muted", label), el("span", "bug-emoji", SPECIES_FACTS[f.species].emoji),
-      el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · Lv ${f.level}` : ""}`),
-      el("span", "type-tag", TYPES[SPECIES_FACTS[f.species].group]), hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${team.filter(t => t.hp > 0).length} of ${team.length} bug${team.length === 1 ? "" : "s"} left`));
+      el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · ${t("Lv {lv}", { lv: f.level })}` : ""}`),
+      el("span", "type-tag", t(TYPES[SPECIES_FACTS[f.species].group])),
+      hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${t(team.length === 1 ? "{n} of {total} bug left" : "{n} of {total} bugs left", { n: left, total: team.length })}`));
     return box;
   };
   const moves = el("div", "battle-moves");
   const btn = (text, onClick) => { const b = el("button", "btn", text); b.type = "button"; b.onclick = onClick; moves.append(b); return b; };
-  const tackle = btn("Tackle", () => turn("tackle"));
+  const tackle = btn(t("Tackle"), () => turn("tackle"));
   const special = btn("", () => turn("special"));
-  const swap = btn("Switch bug", () => turn("switch"));
+  const swap = btn(t("Switch bug"), () => turn("switch"));
   const snack = btn("", () => turn("snack"));
   const snacks = () => loadGame().items.snack || 0;
   tackle.classList.add("primary");
@@ -901,43 +908,44 @@ function battle(foe, gym) {
       hit.append(el("span", "dmg" + (fx.hit ? "" : " miss"), fx.text));
       fx = null;
     }
-    special.textContent = `${specialMove(mine[me])} (strong, can miss)`;
+    special.textContent = t("{move} (strong, can miss)", { move: t(specialMove(mine[me])) });
     for (const b of [tackle, special]) b.disabled = busy || over;
     swap.disabled = busy || over || nextAlive(mine, me) < 0 || nextAlive(mine, me) === me;
-    snack.textContent = `🍃 Bug Snack (${snacks()})`;
+    snack.textContent = `🍃 ${t("Bug Snack")} (${snacks()})`;
     snack.hidden = !snacks();
     snack.disabled = busy || over || mine[me].hp === mine[me].max;
   };
 
   // One attack. A special move hits harder but can miss.
   const attack = (a, d, useSpecial, owner) => {
-    const move = useSpecial ? specialMove(a) : "Tackle", name = `${owner} ${commonName(a.species)}`;
+    const move = t(useSpecial ? specialMove(a) : "Tackle"), bug = commonName(a.species);
+    const who = owner ? t("{owner}'s {bug}", { owner, bug }) : t("Your {bug}", { bug });
     const target = d === mine[me] ? "you" : "them";
-    if (useSpecial && Math.random() > SPECIAL_HIT_CHANCE) { fx = { target, text: "Miss!" }; return say(`${name} used ${move}… but missed!`); }
+    if (useSpecial && Math.random() > SPECIAL_HIT_CHANCE) { fx = { target, text: t("Miss!") }; return say(t("{who} used {move}… but missed!", { who, move })); }
     const boost = typeBoost(a.species, d.species);
     const dmg = Math.max(1, Math.round((useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)) * boost));
     d.hp = Math.max(0, d.hp - dmg);
     fx = { target, text: `-${dmg}`, hit: true };
     sound("hit");
-    say(`${name} used ${move}! It did ${dmg} damage.${boost > 1 ? " It's super effective!" : boost < 1 ? " It's not very effective…" : ""}`);
+    say(`${t("{who} used {move}! It did {dmg} damage.", { who, move, dmg })}${boost > 1 ? ` ${t("It's super effective!")}` : boost < 1 ? ` ${t("It's not very effective…")}` : ""}`);
   };
 
   async function turn(kind) {
     if (busy || over) return;
     busy = true;
-    if (kind === "switch") { me = nextAlive(mine, me); say(`Go, ${commonName(mine[me].species)}!`); }
+    if (kind === "switch") { me = nextAlive(mine, me); say(t("Go, {bug}!", { bug: commonName(mine[me].species) })); }
     else if (kind === "snack") {
       const g = loadGame(); g.items.snack--; saveGame(g); renderGame();
       mine[me].hp = mine[me].max; sound("heal");
-      say(`Your ${commonName(mine[me].species)} ate a Bug Snack and is all healed!`);
+      say(t("Your {bug} ate a Bug Snack and is all healed!", { bug: commonName(mine[me].species) }));
     }
-    else attack(mine[me], theirs[them], kind === "special", "Your");
+    else attack(mine[me], theirs[them], kind === "special", null);
     draw(); await wait(900); if (over) return;
     if (theirs[them].hp <= 0) {
-      say(`${foeName}'s ${commonName(theirs[them].species)} fainted!`); draw(); await wait(900); if (over) return;
+      say(t("{owner}'s {bug} fainted!", { owner: foeName, bug: commonName(theirs[them].species) })); draw(); await wait(900); if (over) return;
       const n = nextAlive(theirs, them);
       if (n < 0) return finish(true);
-      them = n; say(`${foeName} sends out ${commonName(theirs[them].species)}!`); talk(foe.say.next);
+      them = n; say(t("{foe} sends out {bug}!", { foe: foeName, bug: commonName(theirs[them].species) })); talk(foe.say.next);
       busy = false; return draw();
     }
     // The AI trainer's turn (see foeMove)
@@ -946,19 +954,19 @@ function battle(foe, gym) {
     if (heals > 0 && theirs[them].hp / theirs[them].max < 0.3) { choice = "heal"; heals--; }
     if (choice === "heal") {
       theirs[them].hp = theirs[them].max; sound("heal");
-      say(`${foeName} gave ${commonName(theirs[them].species)} a Bug Snack. It's all healed!`);
+      say(t("{foe} gave {bug} a Bug Snack. It's all healed!", { foe: foeName, bug: commonName(theirs[them].species) }));
     } else if (choice === "switch") {
       them = nextHealthiest(theirs, them);
-      say(`${foeName} switches to ${commonName(theirs[them].species)}!`); talk(foe.say.next);
+      say(t("{foe} switches to {bug}!", { foe: foeName, bug: commonName(theirs[them].species) })); talk(foe.say.next);
     }
     const f = theirs[them], p = mine[me];
-    if (choice === "tackle" || choice === "special") attack(f, p, choice === "special", `${foeName}'s`);
+    if (choice === "tackle" || choice === "special") attack(f, p, choice === "special", foeName);
     draw(); await wait(900); if (over) return;
     if (p.hp <= 0) {
-      say(`Your ${commonName(p.species)} fainted!`); draw(); await wait(900); if (over) return;
+      say(t("Your {bug} fainted!", { bug: commonName(p.species) })); draw(); await wait(900); if (over) return;
       const n = nextAlive(mine, me);
       if (n < 0) return finish(false);
-      me = n; say(`Go, ${commonName(mine[me].species)}!`);
+      me = n; say(t("Go, {bug}!", { bug: commonName(mine[me].species) }));
     }
     busy = false; draw();
   }
@@ -968,7 +976,7 @@ function battle(foe, gym) {
     if (over) return;
     over = true; popupDone = null;
     const lines = [];
-    let title = ran ? "You ran away." : "You lost this time. Catch more bugs and try again!";
+    let title = t(ran ? "You ran away." : "You lost this time. Catch more bugs and try again!");
     if (won) {
       const g = loadGame();
       const beatenBefore = gym && g.gyms.includes(foe.id), pts = beatenBefore ? 10 : foe.reward;
@@ -978,15 +986,15 @@ function battle(foe, gym) {
       lines.push(...progress(g, { type: "win", pts }));
       checkUnlocks(g);
       saveGame(g); renderGame();
-      title = `You beat ${foeName}! +${pts} points`;
+      title = t("You beat {foe}! +{pts} points", { foe: foeName, pts });
     }
     const tipBug = foe.team[Math.floor(Math.random() * foe.team.length)];
     sound(won ? "win" : "lose");
-    const said = ran ? null : el("p", "speech", `${foe.emoji} ${foeName}: “${won ? foe.say.lose : foe.say.win}”`);
+    const said = ran ? null : el("p", "speech", `${foe.emoji} ${foeName}: “${t(won ? foe.say.lose : foe.say.win)}”`);
     const result = () => {
       if (won) confetti();
       openPopup([el("h2", null, title), ...(said ? [said] : []), ...lines.map(l => el("p", "new-badge", l)),
-        el("p", "muted", `Did you know? ${commonName(tipBug)}: ${SPECIES_FACTS[tipBug].harm}`)], [["OK", true]]);
+        el("p", "muted", t("Did you know? {bug}: {harm}", { bug: commonName(tipBug), harm: t(SPECIES_FACTS[tipBug].harm) }))], [["OK", true]]);
       popupDone = playQueued;
     };
     if (!(won && firstGymWin)) return result();
@@ -996,17 +1004,18 @@ function battle(foe, gym) {
     const next = GYMS[GYMS.indexOf(foe) + 1];
     cutscene([
       { scene: foe.id, who: foe.face, name: foe.leader, text: foe.say.lose },
-      { scene: foe.id, who: foe.face, name: foe.leader, text: `Here, {name}. You've earned this.` },
-      { scene: "victory", who: foe.emoji, name: foe.badge, text: `You got the ${foe.badge}! That's ${loadGame().gyms.filter(id => GYMS.some(gy => gy.id === id && !gy.champion)).length} of ${GYMS.length - 1} gym badges.` },
-      { scene: foe.id, who: foe.face, name: foe.leader, text: `One more thing, a real-world tip: ${foe.tip}` },
+      { scene: foe.id, who: foe.face, name: foe.leader, text: "Here, {name}. You've earned this." },
+      { scene: "victory", who: foe.emoji, name: foe.badge, text: "You got the {badge}! That's {n} of {total} gym badges.",
+        vars: { badge: t(foe.badge), n: loadGame().gyms.filter(id => GYMS.some(gy => gy.id === id && !gy.champion)).length, total: GYMS.length - 1 } },
+      { scene: foe.id, who: foe.face, name: foe.leader, text: "One more thing, a real-world tip: {tip}", vars: { tip: t(foe.tip) } },
       { scene: next.id, ...PIP, text: "Bzz! You did it! I knew you could!" },
-      { scene: next.id, ...HAZEL, text: next.champion
-        ? `You have all ${GYMS.length - 1} gym badges! There's only one battle left: the Oregon Champion.`
-        : `Next stop: ${next.place}. ${next.leader} is waiting for you there!` },
+      next.champion
+        ? { scene: next.id, ...HAZEL, text: "You have all {n} gym badges! There's only one battle left: the Oregon Champion.", vars: { n: GYMS.length - 1 } }
+        : { scene: next.id, ...HAZEL, text: "Next stop: {place}. {leader} is waiting for you there!", vars: { place: t(next.place), leader: next.leader } },
     ]).then(result);
   }
 
-  openPopup([el("h2", null, `${foe.emoji} ${foe.name}`), bubble, field, log, moves], [["Run away", false]]);
+  openPopup([el("h2", null, `${foe.emoji} ${gym ? t(foe.name) : foe.name}`), bubble, field, log, moves], [["Run away", false]]);
   popupDone = () => finish(false, true);   // "Run away" or Escape
   draw();
   tackle.focus();
@@ -1049,10 +1058,10 @@ function renderShop(g) {
   for (const it of ITEMS) {
     const row = el("div", "foe");
     const who = el("div", "foe-who");
-    who.append(el("strong", null, `${it.name} · you have ${g.items[it.id] || 0}`), el("span", "muted", it.desc));
+    who.append(el("strong", null, `${t(it.name)} · ${t("you have {n}", { n: g.items[it.id] || 0 })}`), el("span", "muted", t(it.desc)));
     const b = el("button", "btn" + (g.coins >= it.price ? " primary" : ""), `🪙 ${it.price}`);
     b.type = "button"; b.disabled = g.coins < it.price;
-    b.setAttribute("aria-label", `Buy ${it.name} for ${it.price} coins`);
+    b.setAttribute("aria-label", t("Buy {item} for {n} coins", { item: t(it.name), n: it.price }));
     b.onclick = () => buy(it.id);
     row.append(el("span", "bug-emoji", it.emoji), who, b);
     list.append(row);
@@ -1064,7 +1073,7 @@ function buy(id) {
   g.coins -= it.price;
   g.items[id] = (g.items[id] || 0) + 1;
   saveGame(g); renderGame(); sound("buy");
-  toast([`${it.emoji} You bought a ${it.name}!`]);
+  toast([`${it.emoji} ${t("You bought: {item}!", { item: t(it.name) })}`]);
 }
 
 // ---------- the quiz ----------
@@ -1075,11 +1084,11 @@ function newQuestion() {
   const kind = Math.random() < 0.5 ? "fact" : "harm";
   const options = shuffle([answer, ...shuffle(all.filter(s => s !== answer)).slice(0, 3)]);
   const box = $("quizBox"); box.innerHTML = "";
-  box.append(el("p", "quiz-q", kind === "fact" ? "Which bug is this?" : "Which bug causes this problem?"),
-    el("p", "speech", SPECIES_FACTS[answer][kind]));
+  box.append(el("p", "quiz-q", t(kind === "fact" ? "Which bug is this?" : "Which bug causes this problem?")),
+    el("p", "speech", t(SPECIES_FACTS[answer][kind])));
   const choices = el("div", "quiz-choices"), result = el("p", "quiz-result");
   result.setAttribute("aria-live", "polite");
-  const next = el("button", "btn primary", "Next question");
+  const next = el("button", "btn primary", t("Next question"));
   next.type = "button"; next.hidden = true;
   next.onclick = newQuestion;
   for (const s of options) {
@@ -1094,13 +1103,13 @@ function newQuestion() {
         if (g.quiz.right < QUIZ_DAILY_MAX) {
           g.quiz.right++; addPoints(g, QUIZ_POINTS);
           const lines = progress(g, { type: "quiz", pts: QUIZ_POINTS });
-          result.textContent = [`✅ Right! +${QUIZ_POINTS} points (${g.quiz.right} of ${QUIZ_DAILY_MAX} today)`, ...lines].join("  ");
-        } else result.textContent = "✅ Right! You've earned all your quiz points for today. Keep practicing!";
+          result.textContent = [`✅ ${t("Right! +{pts} points ({n} of {max} today)", { pts: QUIZ_POINTS, n: g.quiz.right, max: QUIZ_DAILY_MAX })}`, ...lines].join("  ");
+        } else result.textContent = `✅ ${t("Right! You've earned all your quiz points for today. Keep practicing!")}`;
         saveGame(g); renderGame(); playQueued();
       } else {
         b.classList.add("wrong"); sound("wrong");
         [...choices.children].find(c => c.textContent === commonName(answer))?.classList.add("right");
-        result.textContent = `Not quite. It's the ${commonName(answer)}.`;
+        result.textContent = t("Not quite. It's the {bug}.", { bug: commonName(answer) });
       }
       next.hidden = false; next.focus();
     };
@@ -1120,7 +1129,7 @@ function here() {
 
 function renderMapPanel(g) {
   $("mapToggle").checked = g.useMap;
-  $("mapCount").textContent = g.spots.length ? `${g.spots.length} catch${g.spots.length === 1 ? "" : "es"} on your map.` : "No catches on your map yet.";
+  $("mapCount").textContent = g.spots.length ? t(g.spots.length === 1 ? "{n} catch on your map." : "{n} catches on your map.", { n: g.spots.length }) : t("No catches on your map yet.");
   if (map) drawSpots(g);
 }
 
@@ -1140,7 +1149,7 @@ function loadLeaflet() {
 async function openMap() {
   const g = loadGame();
   if (!g.spots.length) return;
-  try { await loadLeaflet(); } catch { $("mapCount").textContent = "The map couldn't load. Check your internet."; return; }
+  try { await loadLeaflet(); } catch { $("mapCount").textContent = t("The map couldn't load. Check your internet."); return; }
   $("catchMap").hidden = false;
   if (!map) {
     map = L.map("catchMap");
@@ -1184,13 +1193,14 @@ function confetti() {
 // becomes the player's nickname. Tap, Enter or Space goes to the next slide. Skip or Escape ends it.
 function cutscene(slides) {
   return new Promise(resolve => {
-    const nick = loadGame().trainer.name || "Ranger";
+    const nick = loadGame().trainer.name || t("Ranger");
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const wrap = el("div", "cutscene");
-    wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-label", "Story");
+    wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-label", t("Story"));
+    wrap.lang = gameLang;
     const stage = el("div", "cs-stage"), decor = el("div", "cs-decor"), actor = el("div", "cs-actor");
-    const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary", "Next ▶");
-    const skip = el("button", "btn cs-skip", "Skip ⏭");
+    const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary");
+    const skip = el("button", "btn cs-skip", `${t("Skip")} ⏭`);
     next.type = skip.type = "button";
     text.setAttribute("aria-live", "polite");
     box.append(who, text, next);
@@ -1207,9 +1217,9 @@ function cutscene(slides) {
       decor.textContent = sc.decor;
       actor.textContent = s.who;
       actor.classList.remove("enter"); void actor.offsetWidth; actor.classList.add("enter");
-      who.textContent = s.name;
-      full = s.text.replaceAll("{name}", nick);
-      next.textContent = i === slides.length - 1 ? "Done ✔" : "Next ▶";
+      who.textContent = t(s.name);
+      full = t(s.text, s.vars).replaceAll("{name}", nick);
+      next.textContent = i === slides.length - 1 ? `${t("Done")} ✔` : `${t("Next")} ▶`;
       if (calm) return finishTyping();
       text.textContent = "";
       let c = 0;
@@ -1239,10 +1249,10 @@ function editTrainer(first) {
   return new Promise(resolve => {
     const g = loadGame();
     let avatar = g.trainer.avatar;
-    const label = el("label", "trainer-label", "Nickname");
+    const label = el("label", "trainer-label", t("Nickname"));
     const input = el("input", "trainer-input");
     input.type = "text"; input.maxLength = NAME_MAX; input.value = g.trainer.name;
-    input.placeholder = "Like BugBuster or LeafNinja"; input.id = "trainerName"; label.htmlFor = "trainerName";
+    input.placeholder = t("Like BugBuster or LeafNinja"); input.id = "trainerName"; label.htmlFor = "trainerName";
     const picks = el("div", "avatar-picks");
     for (const a of AVATARS) {
       const b = el("button", "avatar-pick", a);
@@ -1256,9 +1266,9 @@ function editTrainer(first) {
       saveGame(g); renderGame();
     };
     popupDone = resolve;
-    openPopup([el("h2", null, "Your trainer card"),
-      el("p", "muted", "Pick a nickname. Don't use your real name, so you stay safe online. It's saved only on this device."),
-      label, input, el("p", "trainer-label", "Pick your avatar"), picks],
+    openPopup([el("h2", null, t("Your trainer card")),
+      el("p", "muted", t("Pick a nickname. Don't use your real name, so you stay safe online. It's saved only on this device.")),
+      label, input, el("p", "trainer-label", t("Pick your avatar")), picks],
       [["Save", true, save], ...(first ? [] : [["Cancel", false]])]);
     input.onkeydown = e => { if (e.key === "Enter") { save(); closePopup(); } };
     input.focus();
@@ -1272,11 +1282,11 @@ function renderProtectorDex(g) {
   const list = $("protectorList"); list.innerHTML = "";
   const found = Object.entries(g.protectorDex).sort((a, b) => commonName(a[0]).localeCompare(commonName(b[0])));
   $("protectorCount").textContent = found.length
-    ? `You've found ${found.length} kind${found.length === 1 ? "" : "s"} of bugs that aren't invasive. Thanks for leaving them be!`
-    : "No bugs here yet. When a photo shows a bug that isn't invasive, it shows up here.";
+    ? t(found.length === 1 ? "You've found {n} kind of bug that isn't invasive. Thanks for leaving it be!" : "You've found {n} kinds of bugs that aren't invasive. Thanks for leaving them be!", { n: found.length })
+    : t("No bugs here yet. When a photo shows a bug that isn't invasive, it shows up here.");
   for (const [s, n] of found) {
     const slot = el("div", "dex-slot caught");
-    slot.append(el("span", "bug-emoji", "🌼"), el("strong", null, commonName(s)), el("span", "sci", sciName(s)), el("span", "count", `Found ×${n}`));
+    slot.append(el("span", "bug-emoji", "🌼"), el("strong", null, commonName(s)), el("span", "sci", sciName(s)), el("span", "count", t("Found ×{n}", { n })));
     list.append(slot);
   }
 }
@@ -1284,19 +1294,19 @@ function renderProtectorDex(g) {
 // Real-world missions: things to do outside the game, on your honor
 function renderMissions(g) {
   const list = $("missionList"); list.innerHTML = "";
-  $("missionCount").textContent = `${g.missions.length} of ${MISSIONS.length} missions done. Always do missions with a grown-up!`;
+  $("missionCount").textContent = t("{n} of {total} missions done. Always do missions with a grown-up!", { n: g.missions.length, total: MISSIONS.length });
   for (const m of MISSIONS) {
     const done = g.missions.includes(m.id);
     const row = el("div", "foe" + (done ? " beaten" : ""));
     const who = el("div", "foe-who");
-    who.append(el("strong", null, m.text), el("span", "muted", m.why));
-    const b = el("button", "btn" + (done ? "" : " primary"), done ? "✅ Done" : `I did it! +${MISSION_POINTS}`);
+    who.append(el("strong", null, t(m.text)), el("span", "muted", t(m.why)));
+    const b = el("button", "btn" + (done ? "" : " primary"), done ? `✅ ${t("Done")}` : t("I did it! +{pts}", { pts: MISSION_POINTS }));
     b.type = "button"; b.disabled = done;
     b.onclick = () => {
       const g = loadGame();
       if (g.missions.includes(m.id)) return;
       g.missions.push(m.id); addPoints(g, MISSION_POINTS);
-      const lines = [`${m.emoji} Mission done! +${MISSION_POINTS} points`, ...progress(g, { type: "mission", pts: MISSION_POINTS })];
+      const lines = [`${m.emoji} ${t("Mission done! +{pts} points", { pts: MISSION_POINTS })}`, ...progress(g, { type: "mission", pts: MISSION_POINTS })];
       saveGame(g); renderGame(); toast(lines); playQueued();
     };
     row.append(el("span", "bug-emoji", m.emoji), who, b);
@@ -1306,12 +1316,13 @@ function renderMissions(g) {
 
 // The story gallery: watch any cutscene you've unlocked again
 function storyScenes(g) {
-  const list = [{ name: "🎬 The beginning", slides: INTRO }];
-  if (totalCaught(g)) list.push({ name: "🫙 Your first catch", slides: FIRST_CATCH });
-  if (caughtRarity(g, "legendary")) list.push({ name: "👑 Your first Legendary", slides: FIRST_LEGENDARY.map(sl => ({ ...sl, text: sl.text.replace("the {bug}", "a Legendary bug") })) });
+  const list = [{ name: `🎬 ${t("The beginning")}`, slides: INTRO }];
+  if (totalCaught(g)) list.push({ name: `🫙 ${t("Your first catch")}`, slides: FIRST_CATCH });
+  const legend = gameSpecies().find(sp => g.caught[sp] && SPECIES_FACTS[sp].rarity === "legendary");
+  if (legend) list.push({ name: `👑 ${t("Your first Legendary")}`, slides: FIRST_LEGENDARY.map(sl => ({ ...sl, vars: { bug: commonName(legend) } })) });
   for (const gym of GYMS) {
-    if (gymOpen(g, gym) || g.gyms.includes(gym.id)) list.push({ name: `${gym.emoji} Arriving at ${gym.place}`, slides: gymIntroScenes(gym) });
-    if (g.gyms.includes(gym.id) && gym.champion) list.push({ name: "🏆 The ending", slides: FINALE });
+    if (gymOpen(g, gym) || g.gyms.includes(gym.id)) list.push({ name: `${gym.emoji} ${t("Arriving at {place}", { place: t(gym.place) })}`, slides: gymIntroScenes(gym) });
+    if (g.gyms.includes(gym.id) && gym.champion) list.push({ name: `🏆 ${t("The ending")}`, slides: FINALE });
   }
   return list;
 }
@@ -1323,7 +1334,7 @@ function renderStory(g) {
     b.onclick = () => cutscene(sc.slides);
     list.append(b);
   }
-  list.append(el("p", "muted", "Keep playing to unlock more of the story!"));
+  list.append(el("p", "muted", t("Keep playing to unlock more of the story!")));
 }
 
 function applyBigText(g) { document.documentElement.classList.toggle("big-text", !!g.bigText); }
@@ -1335,11 +1346,21 @@ for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = 
   if (t.dataset.tab === "map") openMap();
 };
 $("muteBtn").onclick = () => { const g = loadGame(); g.muted = !g.muted; saveGame(g); renderGame(); };
+for (const [code, label] of Object.entries(GAME_LANGS)) {
+  const o = document.createElement("option");
+  o.value = code; o.textContent = label;
+  $("langSelect").append(o);
+}
+$("langSelect").onchange = e => {
+  const g = loadGame(); g.lang = e.target.value; saveGame(g);
+  renderGame();
+  if ($("quizBox").children.length) newQuestion();   // re-ask the quiz in the new language
+};
 $("bigTextBtn").onclick = () => { const g = loadGame(); g.bigText = !g.bigText; saveGame(g); renderGame(); };
 $("mapToggle").onchange = e => {
   const g = loadGame(); g.useMap = e.target.checked; saveGame(g);
   // Ask for permission now, so it doesn't pop up in the middle of a catch
-  if (g.useMap) navigator.geolocation?.getCurrentPosition(() => {}, () => toast(["📍 Location is blocked, so catches can't go on the map. You can allow it in your browser settings."]));
+  if (g.useMap) navigator.geolocation?.getCurrentPosition(() => {}, () => toast([`📍 ${t("Location is blocked, so catches can't go on the map. You can allow it in your browser settings.")}`]));
 };
 $("howToPlay").onclick = showInstructions;
 $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closePopup(); } });
