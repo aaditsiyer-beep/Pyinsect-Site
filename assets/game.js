@@ -689,6 +689,46 @@ function showInstructions() {
   openPopup([el("h2", null, t("How to play")), list, safety, why], [["Let's go!", true]]);
 }
 
+// ---------- the Innva-Orb ----------
+// Our catching ball: a glowing orb, green on top and purple on the bottom, with a shining button.
+const ORB_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true">
+  <defs>
+    <radialGradient id="orbTop" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#c8ffd8"/><stop offset=".45" stop-color="#3ddc84"/><stop offset="1" stop-color="#127a43"/></radialGradient>
+    <radialGradient id="orbBottom" cx="45%" cy="85%" r="80%"><stop offset="0" stop-color="#e6c8ff"/><stop offset=".5" stop-color="#9b5de5"/><stop offset="1" stop-color="#4b1d8f"/></radialGradient>
+    <radialGradient id="orbCore" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#e9fff1"/><stop offset="1" stop-color="#b98cff"/></radialGradient>
+  </defs>
+  <path d="M3 20 a17 17 0 0 1 34 0z" fill="url(#orbTop)"/>
+  <path d="M3 20 a17 17 0 0 0 34 0z" fill="url(#orbBottom)"/>
+  <rect x="3" y="18.3" width="34" height="3.4" fill="#1d1033" opacity=".85"/>
+  <circle cx="20" cy="20" r="6" fill="#1d1033"/>
+  <circle class="orb-core" cx="20" cy="20" r="4.2" fill="url(#orbCore)"/>
+  <ellipse cx="13" cy="10" rx="5" ry="2.6" fill="#fff" opacity=".55" transform="rotate(-30 13 10)"/>
+</svg>`;
+function makeOrb() {
+  const o = el("span", "innva-orb");
+  o.innerHTML = ORB_SVG;
+  return o;
+}
+function throwOrb(arena, x, y, keep) {
+  const j = makeOrb(), w = arena.clientWidth, h = arena.clientHeight;
+  const sx = w / 2, sy = h - 24, mx = (sx + x) / 2, my = Math.min(sy, y) - 70;
+  arena.append(j);
+  const fly = j.animate([
+    { transform: `translate(${sx}px, ${sy}px) rotate(0deg) scale(.7)` },
+    { transform: `translate(${mx}px, ${my}px) rotate(400deg) scale(.95)`, offset: .55 },
+    { transform: `translate(${x}px, ${y}px) rotate(720deg) scale(1)` },
+  ], { duration: 380, easing: "cubic-bezier(.3,.6,.4,1)", fill: "forwards" });
+  return fly.finished.then(() => {
+    if (!keep) { j.animate([{ opacity: 1 }, { opacity: 0, transform: `translate(${x}px, ${y + 30}px) rotate(760deg) scale(.8)` }], { duration: 250 }).finished.then(() => j.remove()); }
+    return j;
+  });
+}
+// Where the bug is right now, in the arena's own coordinates
+const bugCenter = (arena, bug) => {
+  const a = arena.getBoundingClientRect(), b = bug.getBoundingClientRect();
+  return [b.left - a.left + b.width / 2, b.top - a.top + b.height / 2];
+};
+
 // ---------- the minigame ----------
 // The bug (the player's own photo) hops around the box. Tap it 3 times before time runs out.
 function minigame(species, photo) {
@@ -722,21 +762,35 @@ function minigame(species, photo) {
       clearInterval(timer); clearInterval(mover);
       const close = () => { popupDone = () => resolve(won); closePopup(); };
       if (!won || slow) return close();
-      // The catch animation: the bug shrinks into a jar, and the jar wobbles
+      // The catch: the last orb flies at the bug, the bug shrinks inside, the orb wobbles 3 times, then click!
       bug.disabled = true;
-      const jar = el("span", "jar", "🫙");
-      jar.style.left = bug.style.left; jar.style.top = bug.style.top;
-      arena.append(jar);
-      arena.classList.add("catching");
-      info.textContent = t("Gotcha…?");
-      setTimeout(() => { info.textContent = t("Gotcha!"); }, 1300);
-      setTimeout(close, 1700);
+      const [x, y] = bugCenter(arena, bug);
+      throwOrb(arena, x, y, true).then(async jar => {
+        jar.getAnimations().forEach(a => a.cancel());
+        jar.style.left = `${x}px`; jar.style.top = `${y}px`;
+        jar.classList.add("landed");
+        arena.classList.add("catching");
+        info.textContent = t("Gotcha…?");
+        await wait(450);
+        for (let k = 0; k < 3; k++) {
+          jar.classList.remove("wobble"); void jar.offsetWidth; jar.classList.add("wobble");
+          sound("tick");
+          await wait(520);
+        }
+        jar.classList.add("clicked");
+        sound("click");
+        info.textContent = t("Gotcha!");
+        await wait(700);
+        close();
+      });
     };
     bug.onclick = () => {
       taps++;
+      if (taps >= needTaps) return end(true);
+      // Throw an Innva-Orb: it bonks the bug, which shakes and hops away
+      if (!slow) { const [x, y] = bugCenter(arena, bug); throwOrb(arena, x, y, false); }
       bug.classList.remove("hit"); void bug.offsetWidth; bug.classList.add("hit");
       sound("hit");
-      if (taps >= needTaps) return end(true);
       info.textContent = t(needTaps - taps === 1 ? "{n} more tap!" : "{n} more taps!", { n: needTaps - taps });
       hop();
     };
@@ -749,7 +803,9 @@ function minigame(species, photo) {
     hop();
 
     sound("appear");
-    openPopup([el("h2", null, t("A wild {bug} appeared!", { bug: commonName(species) })), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), arena, bar, info],
+    const hint = el("p", "muted orb-hint");
+    hint.append(makeOrb(), t("Tap the bug to throw your Innva-Orb!"));
+    openPopup([el("h2", null, t("A wild {bug} appeared!", { bug: commonName(species) })), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), hint, arena, bar, info],
       [["Let it go", false, () => end(false)]]);
     $("gamePopupBox").querySelector(".actions button").onclick = () => end(false);
     popupDone = () => end(false);   // closing the pop-up (Escape) lets the bug go
@@ -1035,6 +1091,8 @@ const TUNES = {
   right:  [[659, .1], [880, .15]],
   wrong:  [[220, .25]],
   buy:    [[988, .08], [1319, .12]],
+  tick:   [[660, .04]],
+  click:  [[1568, .05], [2093, .12]],
 };
 function sound(name) {
   if (loadGame().muted || !TUNES[name]) return;
@@ -1198,7 +1256,8 @@ function cutscene(slides) {
     const wrap = el("div", "cutscene");
     wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-label", t("Story"));
     wrap.lang = gameLang;
-    const stage = el("div", "cs-stage"), decor = el("div", "cs-decor"), actor = el("div", "cs-actor");
+    const stage = el("div", "cs-stage"), decor = el("div", "cs-decor"), actor = el("div", "cs-actor"), face = el("span", "cs-face");
+    actor.append(face);
     const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary");
     const skip = el("button", "btn cs-skip", `${t("Skip")} ⏭`);
     next.type = skip.type = "button";
@@ -1208,17 +1267,25 @@ function cutscene(slides) {
     wrap.append(stage, box, skip);
 
     let i = -1, typing = null, full = "";
-    const finishTyping = () => { clearInterval(typing); typing = null; text.textContent = full; };
+    const finishTyping = () => { clearInterval(typing); typing = null; text.textContent = full; face.classList.remove("talking"); };
+    let fromLeft = true;
     function show(n) {
       i = n;
       if (i >= slides.length) return done();
       const s = slides[i], sc = SCENES[s.scene] || SCENES.forest;
       stage.style.background = sc.bg;
       decor.textContent = sc.decor;
-      actor.textContent = s.who;
-      actor.classList.remove("enter"); void actor.offsetWidth; actor.classList.add("enter");
       who.textContent = t(s.name);
       full = t(s.text, s.vars).replaceAll("{name}", nick);
+      // How the character moves: a new speaker walks in from one side (then the other side next time).
+      // The same speaker reacts to what they say: jump for "!", tilt for "?", spin for a win, or sway.
+      const newSpeaker = i === 0 || slides[i - 1].who !== s.who;
+      const move = newSpeaker ? (fromLeft ? "enter-left" : "enter-right")
+        : s.scene === "victory" ? "spin" : /[!！]$/.test(full) ? "jump" : /[?？]$/.test(full) ? "tilt" : "sway";
+      if (newSpeaker) fromLeft = !fromLeft;
+      face.textContent = s.who;
+      actor.className = "cs-actor"; void actor.offsetWidth; actor.classList.add(move);
+      face.classList.add("talking");
       next.textContent = i === slides.length - 1 ? `${t("Done")} ✔` : `${t("Next")} ▶`;
       if (calm) return finishTyping();
       text.textContent = "";

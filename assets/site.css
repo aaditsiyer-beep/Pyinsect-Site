@@ -421,3 +421,45 @@ input[type=file] { display: none; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Hindi uses the Devanagari script */
 :lang(hi) .cs-box p, :lang(hi) .speech { line-height: 1.7; }
+
+/* The Innva-Orb: a glowing green-and-purple ball */
+.innva-orb { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; pointer-events: none; z-index: 2; border-radius: 50%;
+  filter: drop-shadow(0 0 6px rgba(61, 220, 132, .9)) drop-shadow(0 0 12px rgba(155, 93, 229, .8)); animation: orb-glow 1.2s ease-in-out infinite alternate; }
+.innva-orb svg { width: 100%; height: 100%; display: block; }
+@keyframes orb-glow { to { filter: drop-shadow(0 0 10px rgba(61, 220, 132, 1)) drop-shadow(0 0 20px rgba(155, 93, 229, 1)); } }
+.innva-orb .orb-core { animation: core-pulse .9s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes core-pulse { to { opacity: .6; transform: scale(.8); } }
+.innva-orb.landed { width: 64px; height: 64px; margin: -32px 0 0 -32px; transform-origin: 50% 90%; }
+.innva-orb.landed::before { content: ""; position: absolute; inset: -30%; border-radius: 50%; background: radial-gradient(circle, rgba(61, 220, 132, .7), rgba(155, 93, 229, .4) 50%, transparent 70%); animation: orb-flash .6s ease-out forwards; }
+@keyframes orb-flash { from { opacity: 1; scale: .3; } to { opacity: 0; scale: 1.6; } }
+.innva-orb.wobble { animation: orb-wobble .5s ease-in-out, orb-glow 1.2s ease-in-out infinite alternate; }
+@keyframes orb-wobble { 25% { rotate: -20deg; } 60% { rotate: 15deg; } 85% { rotate: -5deg; } }
+.innva-orb.clicked { animation: orb-click .5s ease-out, orb-glow 1.2s ease-in-out infinite alternate; }
+.innva-orb.clicked::after { content: "✨"; position: absolute; left: 50%; top: -10px; font-size: 26px; translate: -50% 0; animation: sparkle .7s ease-out forwards; }
+@keyframes orb-click { 40% { scale: 1.2; } }
+@keyframes sparkle { from { opacity: 1; scale: .4; } to { opacity: 0; scale: 1.8; translate: -50% -20px; } }
+.orb-hint { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 14px; }
+.orb-hint .innva-orb { position: static; width: 26px; height: 26px; margin: 0; animation: none; filter: drop-shadow(0 0 3px rgba(61, 220, 132, .8)); }
+
+/* Cutscene characters: walking in, talking, and reacting */
+.cs-actor { position: relative; display: inline-block; }
+.cs-actor::after { content: ""; position: absolute; left: 15%; right: 15%; bottom: -6px; height: 10px; border-radius: 50%; background: rgba(0, 0, 0, .18); filter: blur(2px); z-index: -1; }
+.cs-face { display: inline-block; transform-origin: 50% 100%; }
+.cs-face.talking { animation: talk .28s ease-in-out infinite alternate; }
+@keyframes talk { from { transform: scale(1, 1); } to { transform: scale(1.03, .96); } }
+.cs-actor.enter-left { animation: walk-in-left .7s ease-out, bob 2.4s ease-in-out .7s infinite; }
+.cs-actor.enter-right { animation: walk-in-right .7s ease-out, bob 2.4s ease-in-out .7s infinite; }
+@keyframes walk-in-left { 0% { transform: translateX(-45vw) rotate(-6deg); opacity: 0; } 25% { transform: translateX(-30vw) translateY(-12px) rotate(6deg); opacity: 1; } 50% { transform: translateX(-15vw) rotate(-6deg); } 75% { transform: translateX(-4vw) translateY(-12px) rotate(4deg); } 100% { transform: none; } }
+@keyframes walk-in-right { 0% { transform: translateX(45vw) scaleX(-1) rotate(6deg); opacity: 0; } 25% { transform: translateX(30vw) translateY(-12px) scaleX(-1) rotate(-6deg); opacity: 1; } 50% { transform: translateX(15vw) scaleX(-1) rotate(6deg); } 75% { transform: translateX(4vw) translateY(-12px) scaleX(-1) rotate(-4deg); } 100% { transform: scaleX(1); } }
+.cs-actor.jump { animation: cs-jump .6s cubic-bezier(.3, 1.6, .5, 1), bob 2.4s ease-in-out .6s infinite; }
+@keyframes cs-jump { 0% { transform: scale(1, .85); } 40% { transform: translateY(-50px) scale(.95, 1.08); } 70% { transform: translateY(0) scale(1.08, .92); } 100% { transform: none; } }
+.cs-actor.tilt { animation: cs-tilt 1.2s ease-in-out, bob 2.4s ease-in-out 1.2s infinite; }
+@keyframes cs-tilt { 30%, 70% { transform: rotate(-14deg) translateX(-6px); } }
+.cs-actor.sway { animation: cs-sway 2.4s ease-in-out infinite; }
+@keyframes cs-sway { 25% { transform: rotate(-5deg) translateX(-8px); } 75% { transform: rotate(5deg) translateX(8px); } }
+.cs-actor.spin { animation: cs-spin .9s ease-in-out, bob 2.4s ease-in-out .9s infinite; }
+@keyframes cs-spin { 0% { transform: none; } 50% { transform: translateY(-40px) rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .cs-actor, .cs-actor[class*=" "], .cs-face.talking, .innva-orb, .innva-orb.wobble, .innva-orb.clicked, .innva-orb .orb-core, .innva-orb.landed::before { animation: none !important; }
+  .innva-orb.clicked::after { display: none; }
+}

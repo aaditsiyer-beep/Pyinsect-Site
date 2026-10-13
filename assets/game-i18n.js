@@ -95,6 +95,7 @@ const GAME_I18N = {
   "Sticky Net: only 2 taps!": ["Red Pegajosa: ¡solo 2 toques!", "Filet Collant : seulement 2 touches !", "चिपचिपा जाल: बस 2 टैप!"],
   "Super Net: +{n} seconds!": ["Súper Red: ¡+{n} segundos!", "Super Filet : +{n} secondes !", "सुपर जाल: +{n} सेकंड!"],
   "Tap it {taps} times! {s} seconds left": ["¡Tócalo {taps} veces! Quedan {s} segundos", "Touche-le {taps} fois ! Il reste {s} secondes", "इसे {taps} बार टैप करो! {s} सेकंड बचे हैं"],
+  "Tap the bug to throw your Innva-Orb!": ["¡Toca el insecto para lanzar tu Innva-Orb!", "Touche l'insecte pour lancer ton Innva-Orb !", "अपना Innva-Orb फेंकने के लिए कीड़े पर टैप करो!"],
   "Gotcha…?": ["¿Te atrapé…?", "Attrapé… ?", "पकड़ लिया…?"],
   "Gotcha!": ["¡Te atrapé!", "Attrapé !", "पकड़ लिया!"],
   "{n} more tap!": ["¡{n} toque más!", "Encore {n} touche !", "{n} टैप और!"],
