@@ -384,7 +384,7 @@ function classify(file) {
       }
       if (invasive) {
         // Photos from the in-page camera come straight from the camera; uploads are checked for AI labels
-        const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file).catch(() => ({ verdict: "unknown", reasons: [] }));
+        const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown", reasons: [] }));
         if (ai.verdict === "ai") { blockReport(card, ai); window.Innvadex?.fakePhoto(); }
         else {
           fileReport(bmp, top3[0].species, top3[0].confidence, top3, card);
@@ -392,7 +392,7 @@ function classify(file) {
         }
       } else if (window.Innvadex) {
         // Not invasive: protector points in the game, but only for real (not AI-made) photos
-        const ai = file.fromCamera ? { verdict: "camera" } : await checkAI(file).catch(() => ({ verdict: "unknown" }));
+        const ai = file.fromCamera ? { verdict: "camera" } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown" }));
         if (ai.verdict === "ai") window.Innvadex.fakePhoto();
         else window.Innvadex.native(top3[0].species, top3[0].confidence);
       }
@@ -407,12 +407,15 @@ function classify(file) {
   });
 }
 
-function handleFiles(list) {
+// source = where the photos came from ("pick", "drop", "capture" = the phone's camera app).
+// One photo goes to the crop step first; many photos are checked straight away.
+function handleFiles(list, source) {
   if (!session) return;
   const files = [...list].filter(f => EXT.test(f.name)).sort((a, b) =>
     (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name));
   if (!files.length) { setStatus("No supported images found (jpg, png, bmp, webp).", "error"); return; }
-  files.forEach(classify);
+  if (files.length === 1) showCrop(files[0], source);
+  else files.forEach(classify);
 }
 
 // ---------- camera ----------
@@ -439,6 +442,8 @@ async function startCamera() {
     await video.play();
     video.classList.toggle("mirror", facing === "user");
     cameraMessage("");
+    setupZoom();
+    setupFocus();
     $("shutter").disabled = false;
     $("useCameraApp").hidden = true;
     const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
@@ -459,6 +464,137 @@ function stopStream() {
   if (stream) stream.getTracks().forEach(t => t.stop());
   stream = null;
   $("cameraVideo").srcObject = null;
+  resetZoom();
+  resetFocus();
+}
+
+// ---------- camera zoom ----------
+// Pinch the viewfinder, use the slider, or pinch a laptop trackpad. When the browser lets us
+// control the camera's own zoom, we use it (sharpest). Otherwise we use "digital zoom": the
+// preview is enlarged and takePhoto keeps only the middle of the picture.
+const DIGITAL_ZOOM_MAX = 4, REAL_ZOOM_MAX = 10;   // past these, photos get too blurry to identify
+let zoom = 1, realZoom = null;   // realZoom = the camera's own zoom range, when it has one
+
+function setupZoom() {
+  if (!$("zoom")) return;   // pages without the zoom slider (like 2.7/)
+  const track = stream.getVideoTracks()[0];
+  const range = track.getCapabilities?.().zoom;
+  realZoom = range && range.max > range.min ? range : null;
+  const slider = $("zoom");
+  slider.min = realZoom ? realZoom.min : 1;
+  slider.max = realZoom ? Math.min(realZoom.max, REAL_ZOOM_MAX) : DIGITAL_ZOOM_MAX;
+  slider.step = realZoom?.step || 0.1;
+  $("cameraVideo").style.setProperty("--zoom", 1);
+  setZoom(realZoom ? track.getSettings().zoom ?? realZoom.min : 1);
+  $("zoomBar").hidden = false;
+}
+
+function resetZoom() {
+  zoom = 1; realZoom = null;
+  $("cameraVideo").style.removeProperty("--zoom");
+  if ($("zoomBar")) $("zoomBar").hidden = true;
+}
+
+function setZoom(value) {
+  if (!stream || !$("zoom")) return;
+  const slider = $("zoom");
+  zoom = Math.min(Math.max(value, +slider.min), +slider.max);
+  slider.value = zoom;
+  $("zoomValue").textContent = `${+zoom.toFixed(1)}×`;
+  if (realZoom) applyRealZoom();
+  else $("cameraVideo").style.setProperty("--zoom", zoom);
+}
+
+// Asking the camera to zoom takes a moment. While it's busy, only the newest zoom is kept,
+// so a fast pinch doesn't pile up dozens of requests.
+let zoomBusy = false;
+async function applyRealZoom() {
+  if (zoomBusy) return;
+  zoomBusy = true;
+  let done = null;
+  while (stream && realZoom && done !== zoom) {
+    done = zoom;
+    try { await stream.getVideoTracks()[0].applyConstraints({ advanced: [{ zoom: done }] }); }
+    catch { break; }
+  }
+  zoomBusy = false;
+}
+
+// ---------- tap to focus ----------
+// Some phones (mostly Android with Chrome) let a website choose where the camera focuses.
+// Tap the bug, a ring shows where, and a few seconds later the camera goes back to focusing by
+// itself. On other phones tapping does nothing, and no ring shows, so it never pretends to work.
+let focusModes = [], focusTimer = 0, ringTimer = 0;
+
+function setupFocus() {
+  if (!$("focusRing")) return;
+  const modes = stream.getVideoTracks()[0].getCapabilities?.().focusMode || [];
+  const canAim = navigator.mediaDevices.getSupportedConstraints?.().pointsOfInterest;
+  focusModes = canAim && (modes.includes("single-shot") || modes.includes("continuous")) ? modes : [];
+}
+
+function resetFocus() {
+  focusModes = [];
+  clearTimeout(focusTimer); clearTimeout(ringTimer);
+  if ($("focusRing")) $("focusRing").hidden = true;
+}
+
+// x, y = where the tap was on the screen
+function focusAt(x, y) {
+  const video = $("cameraVideo"), box = document.querySelector(".viewfinder").getBoundingClientRect();
+  if (!stream || !focusModes.length || !video.videoWidth) return;
+  // The video is scaled to cover the box (object-fit: cover), then digitally zoomed around the
+  // middle, and maybe mirrored. Undo each of those to find the spot in the camera's own picture,
+  // where 0 is the left/top edge and 1 is the right/bottom edge.
+  const fit = Math.max(box.width / video.videoWidth, box.height / video.videoHeight);
+  const z = realZoom ? 1 : zoom, clamp = n => Math.min(Math.max(n, 0), 1);
+  let fx = (x - box.left - box.width / 2) / z / (video.videoWidth * fit) + 0.5;
+  const fy = (y - box.top - box.height / 2) / z / (video.videoHeight * fit) + 0.5;
+  if (video.classList.contains("mirror")) fx = 1 - fx;
+
+  const ring = $("focusRing");
+  ring.hidden = true; void ring.offsetWidth;   // restart the ring's animation
+  ring.style.left = `${x - box.left}px`; ring.style.top = `${y - box.top}px`;
+  ring.hidden = false;
+  clearTimeout(ringTimer); ringTimer = setTimeout(() => { ring.hidden = true; }, 1200);
+
+  const track = stream.getVideoTracks()[0], once = focusModes.includes("single-shot");
+  track.applyConstraints({ advanced: [{ pointsOfInterest: [{ x: clamp(fx), y: clamp(fy) }], focusMode: once ? "single-shot" : "continuous" }] }).catch(() => {});
+  clearTimeout(focusTimer);
+  if (once && focusModes.includes("continuous")) {
+    focusTimer = setTimeout(() => { if (stream) track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {}); }, 5000);
+  }
+}
+
+if ($("zoom")) {
+  $("zoom").oninput = e => setZoom(+e.target.value);
+  // Two-finger pinch: zoom grows or shrinks by how much the fingers spread apart.
+  // One quick finger tap that doesn't slide: focus there.
+  const viewfinder = document.querySelector(".viewfinder"), fingers = new Map();
+  let pinch = null, tap = null;
+  const spread = () => { const [a, b] = [...fingers.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+  viewfinder.addEventListener("pointerdown", e => {
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    tap = fingers.size === 1 ? { id: e.pointerId, x: e.clientX, y: e.clientY, at: Date.now() } : null;
+    if (fingers.size === 2) pinch = { spread: spread(), zoom };
+  });
+  viewfinder.addEventListener("pointermove", e => {
+    if (!fingers.has(e.pointerId)) return;
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10) tap = null;
+    if (pinch && fingers.size === 2) setZoom(pinch.zoom * spread() / pinch.spread);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(t => viewfinder.addEventListener(t, e => {
+    if (t === "pointerup" && tap?.id === e.pointerId && Date.now() - tap.at < 500) focusAt(tap.x, tap.y);
+    if (fingers.delete(e.pointerId)) tap = null;
+    if (fingers.size < 2) pinch = null;
+  }));
+  // Laptop trackpads send a pinch as a mouse wheel with the Ctrl key held
+  viewfinder.addEventListener("wheel", e => {
+    if (!e.ctrlKey || !stream) return;
+    e.preventDefault();
+    setZoom(zoom * Math.exp(-e.deltaY / 100));
+  }, { passive: false });
 }
 
 function openCamera() {
@@ -477,9 +613,12 @@ function closeCamera() {
 function takePhoto() {
   const video = $("cameraVideo");
   if (!stream || !video.videoWidth) return;
+  // Digital zoom: keep only the middle part. (The camera's own zoom is already in the picture.)
+  const z = realZoom ? 1 : zoom, vw = video.videoWidth, vh = video.videoHeight;
+  const w = Math.round(vw / z), h = Math.round(vh / z);
   const c = document.createElement("canvas");
-  c.width = video.videoWidth; c.height = video.videoHeight;
-  c.getContext("2d").drawImage(video, 0, 0);
+  c.width = w; c.height = h;
+  c.getContext("2d").drawImage(video, (vw - w) / 2, (vh - h) / 2, w, h, 0, 0, w, h);
   $("cameraFlash").classList.remove("go"); void $("cameraFlash").offsetWidth; $("cameraFlash").classList.add("go");
   c.toBlob(blob => {
     if (!blob) return;
@@ -488,9 +627,149 @@ function takePhoto() {
     closeCamera();
     const photo = new File([blob], name, { type: "image/jpeg" });
     photo.fromCamera = true;
-    classify(photo);
-    $("cards").scrollIntoView({ behavior: "smooth", block: "start" });
+    showCrop(photo, "camera");
   }, "image/jpeg", 0.92);
+}
+
+// ---------- crop ----------
+// After one photo is taken or picked, it shows with a box. Drag the box or its corners (or pinch)
+// to frame just the bug, then tap "Check it": the AI sees the bug bigger and guesses better.
+// Leaving the box alone checks the whole photo, like before. The original photo is never changed.
+const MIN_CROP = 224;   // smallest box, in photo pixels: the AI looks at 224×224, so smaller is just blurry
+let cropFile = null, cropSource = "", box = null, minBox = null;   // box and minBox are fractions of the photo
+
+function showCrop(file, source) {
+  if (!$("crop")) {   // pages without the crop step (like 2.7/): check it right away, as before
+    classify(file);
+    if (source === "camera") $("cards").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  cropFile = file; cropSource = source;
+  const img = $("cropImg");
+  if (img.src) URL.revokeObjectURL(img.src);
+  $("checkIt").disabled = true;
+  img.onload = () => {
+    minBox = { w: Math.min(1, MIN_CROP / img.naturalWidth), h: Math.min(1, MIN_CROP / img.naturalHeight) };
+    setBox({ x: 0, y: 0, w: 1, h: 1 });
+    $("checkIt").disabled = false;
+    $("checkIt").focus({ preventScroll: true });
+  };
+  img.onerror = () => { hideCrop(); classify(file); };   // classify shows "Couldn't read this image"
+  img.src = URL.createObjectURL(file);
+  $("cropRetake").textContent = source === "camera" || source === "capture" ? "Retake" : "Choose another";
+  $("crop").hidden = false;
+  $("crop").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function hideCrop() {
+  const img = $("cropImg");
+  $("crop").hidden = true;
+  if (img.src) { URL.revokeObjectURL(img.src); img.removeAttribute("src"); }
+  cropFile = null;
+}
+
+// Keeps the box inside the photo and no smaller than minBox, then draws it
+function setBox(b) {
+  const w = Math.min(Math.max(b.w, minBox.w), 1), h = Math.min(Math.max(b.h, minBox.h), 1);
+  box = { w, h, x: Math.min(Math.max(b.x, 0), 1 - w), y: Math.min(Math.max(b.y, 0), 1 - h) };
+  Object.assign($("cropBox").style, { left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.w * 100}%`, height: `${box.h * 100}%` });
+}
+
+// Grows or shrinks the box around its middle (scale < 1 = smaller box = more zoomed in)
+function scaleBox(from, scale) {
+  const w = Math.min(Math.max(from.w * scale, minBox.w), 1), h = Math.min(Math.max(from.h * scale, minBox.h), 1);
+  setBox({ w, h, x: from.x + (from.w - w) / 2, y: from.y + (from.h - h) / 2 });
+}
+
+async function checkCrop() {
+  const file = cropFile, b = box;
+  if (!file) return;
+  hideCrop();
+  $("cards").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (b.w > 0.999 && b.h > 0.999) { classify(file); return; }   // box untouched: the whole photo
+  try {
+    const bmp = await createImageBitmap(file);
+    const sx = Math.round(b.x * bmp.width), sy = Math.round(b.y * bmp.height);
+    const sw = Math.round(b.w * bmp.width), sh = Math.round(b.h * bmp.height);
+    const c = document.createElement("canvas");
+    c.width = sw; c.height = sh;
+    c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, sw, sh);
+    bmp.close?.();
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.92));
+    if (!blob) throw new Error("couldn't make the zoomed photo");
+    const zoomed = new File([blob], file.name.replace(/\.[^.]+$/, "") + "-zoomed.jpg", { type: "image/jpeg" });
+    zoomed.fromCamera = file.fromCamera;
+    zoomed.original = file;   // the AI-photo check reads labels that only the original file has
+    classify(zoomed);
+  } catch (e) {
+    console.error(e);
+    classify(file);   // zooming failed: check the whole photo instead
+  }
+}
+
+function retake() {
+  const source = cropSource;
+  hideCrop();
+  if (source === "camera") openCamera();
+  else if (source === "capture") $("captureInput").click();
+  else $("photoInput").click();
+}
+
+if ($("crop")) {
+  $("checkIt").onclick = checkCrop;
+  $("cropCancel").onclick = hideCrop;
+  $("cropRetake").onclick = retake;
+  $("cropWhole").onclick = () => setBox({ x: 0, y: 0, w: 1, h: 1 });
+
+  // Drag the box to move it, drag a corner to resize it, or pinch with two fingers anywhere
+  const stage = $("cropStage"), fingers = new Map();
+  let drag = null, pinch = null;
+  const spread = () => { const [a, b] = [...fingers.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+  stage.addEventListener("pointerdown", e => {
+    if (!box) return;
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.size === 2) { drag = null; pinch = { spread: spread(), box: { ...box } }; return; }
+    const edge = e.target.dataset?.edge || (e.target === $("cropBox") ? "move" : null);
+    if (!edge) return;
+    e.preventDefault();
+    try { stage.setPointerCapture(e.pointerId); } catch {}   // keeps the drag going if the finger slides off the photo
+    drag = { id: e.pointerId, edge, x: e.clientX, y: e.clientY, box: { ...box } };
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!fingers.has(e.pointerId)) return;
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && fingers.size === 2) { scaleBox(pinch.box, pinch.spread / spread()); return; }
+    if (!drag || drag.id !== e.pointerId) return;
+    const r = stage.getBoundingClientRect(), s = drag.box;
+    const dx = (e.clientX - drag.x) / r.width, dy = (e.clientY - drag.y) / r.height;
+    if (drag.edge === "move") { setBox({ ...s, x: s.x + dx, y: s.y + dy }); return; }
+    // Corners: the opposite corner stays put
+    let { x, y, w, h } = s;
+    const right = s.x + s.w, bottom = s.y + s.h;
+    if (drag.edge.includes("w")) { x = Math.min(Math.max(s.x + dx, 0), right - minBox.w); w = right - x; }
+    if (drag.edge.includes("e")) w = Math.min(Math.max(s.w + dx, minBox.w), 1 - s.x);
+    if (drag.edge.includes("n")) { y = Math.min(Math.max(s.y + dy, 0), bottom - minBox.h); h = bottom - y; }
+    if (drag.edge.includes("s")) h = Math.min(Math.max(s.h + dy, minBox.h), 1 - s.y);
+    setBox({ x, y, w, h });
+  });
+  ["pointerup", "pointercancel"].forEach(t => stage.addEventListener(t, e => {
+    fingers.delete(e.pointerId);
+    if (drag?.id === e.pointerId) drag = null;
+    if (fingers.size < 2) pinch = null;
+  }));
+
+  // Keyboard: arrows move the box (Shift = faster), + and - resize it, Enter checks the photo
+  $("cropBox").addEventListener("keydown", e => {
+    if (!box) return;
+    const step = e.shiftKey ? 0.1 : 0.02;
+    const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+    if (moves[e.key]) setBox({ ...box, x: box.x + moves[e.key][0], y: box.y + moves[e.key][1] });
+    else if (e.key === "+" || e.key === "=") scaleBox(box, 1.1);
+    else if (e.key === "-" || e.key === "_") scaleBox(box, 0.9);
+    else if (e.key === "Enter") checkCrop();
+    else return;
+    e.preventDefault();
+  });
 }
 
 $("openCamera").onclick = openCamera;
@@ -498,7 +777,7 @@ $("closeCamera").onclick = closeCamera;
 $("shutter").onclick = takePhoto;
 $("switchCamera").onclick = () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); };
 $("useCameraApp").onclick = () => { closeCamera(); $("captureInput").click(); };
-$("captureInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
+$("captureInput").onchange = e => { handleFiles(e.target.files, "capture"); e.target.value = ""; };
 // Don't keep the camera running in a background tab
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) stopStream();
@@ -507,15 +786,15 @@ document.addEventListener("visibilitychange", () => {
 
 // ---------- wiring ----------
 $("pickPhotos").onclick = () => $("photoInput").click();
-$("photoInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
+$("photoInput").onchange = e => { handleFiles(e.target.files, "pick"); e.target.value = ""; };
 if ($("pickFolder")) {  // only on pages that have the folder button
   $("pickFolder").onclick = () => $("folderInput").click();
-  $("folderInput").onchange = e => { handleFiles(e.target.files); e.target.value = ""; };
+  $("folderInput").onchange = e => { handleFiles(e.target.files, "pick"); e.target.value = ""; };
 }
 const tray = $("tray");
 ["dragenter", "dragover"].forEach(t => tray.addEventListener(t, e => { e.preventDefault(); tray.classList.add("drag"); }));
 ["dragleave", "drop"].forEach(t => tray.addEventListener(t, e => { e.preventDefault(); tray.classList.remove("drag"); }));
-tray.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+tray.addEventListener("drop", e => handleFiles(e.dataTransfer.files, "drop"));
 
 $("retryReports").onclick = () => sendPending();
 window.addEventListener("online", () => sendPending());
