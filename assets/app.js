@@ -154,18 +154,40 @@ function reportPhoto(bmp) {
   return c.toDataURL("image/jpeg", 0.8).split(",")[1];
 }
 
-function buildReport(bmp, species, confidence, top3) {
+// A new report's id (UTC time + random letters) and its local time with the time zone
+function reportIdAndTime() {
   const now = new Date(), pad = n => String(n).padStart(2, "0");
   const id = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}-${Math.random().toString(16).slice(2, 6)}`;
   const offset = -now.getTimezoneOffset(), sign = offset >= 0 ? "+" : "-";
-  const local = new Date(now.getTime() + offset * 60000).toISOString().slice(0, 19)
+  const timestamp = new Date(now.getTime() + offset * 60000).toISOString().slice(0, 19)
     + `${sign}${pad(Math.floor(Math.abs(offset) / 60))}:${pad(Math.abs(offset) % 60)}`;
+  return { id, timestamp };
+}
+const APP_VERSION = "web-1.2";
+const reportTop3 = top3 => top3.map(t => ({ species: t.species, name: commonName(t.species), confidence: Math.round(t.confidence * 100) / 100 }));
+
+function buildReport(bmp, species, confidence, top3) {
+  const { id, timestamp } = reportIdAndTime();
   return {
     report: {
-      id, timestamp: local, species, name: commonName(species), ...(MODEL.scientific ? { scientific: sciName(species) } : {}),
+      id, timestamp, species, name: commonName(species), ...(MODEL.scientific ? { scientific: sciName(species) } : {}),
       confidence: Math.round(confidence * 100) / 100,
-      top3: top3.map(t => ({ species: t.species, name: commonName(t.species), confidence: Math.round(t.confidence * 100) / 100 })),
-      photo: `${id}.jpg`, model: MODEL_NAME, app_version: "web-1.1",
+      top3: reportTop3(top3),
+      photo: `${id}.jpg`, model: MODEL_NAME, app_version: APP_VERSION,
+    },
+    photo: reportPhoto(bmp),
+  };
+}
+
+// A photo from the tree check (assets/treecheck.js). tree = { id, signs, name, signsText }.
+// The relay makes its own name from the tree and signs; ours is only for this device.
+function buildTreeReport(bmp, tree, top3) {
+  const { id, timestamp } = reportIdAndTime();
+  return {
+    report: {
+      id, timestamp, kind: "tree", tree: tree.id, signs: tree.signs, name: tree.name,
+      top3: reportTop3(top3),   // the bug model's guesses, as extra help for the team
+      photo: `${id}.jpg`, model: MODEL_NAME, app_version: APP_VERSION,
     },
     photo: reportPhoto(bmp),
   };
@@ -192,6 +214,7 @@ function sendPending() {
         dropPending(report.id);
         sent++;
         markReport(report.id, "Reported", "sent ok");
+        updateMine(report.id, { level: "unchecked" });
       } catch (e) {
         if (e.rejected) {   // would fail forever; drop it so later reports still go out
           dropPending(report.id);
@@ -209,14 +232,54 @@ function sendPending() {
   return sending;
 }
 
-function fileReport(bmp, species, confidence, top3, card) {
+// ---------- rough area ----------
+// Reports can carry a rough area for the reports map: the middle of a grid square about 1 km wide.
+// The exact spot never leaves the phone. The relay rounds it to the same grid again (roughArea in
+// relay/worker.js must stay the same as this).
+const AREA_KEY = "pyinsect.shareArea", AREA_DEG = 0.01;   // 0.01° of latitude ≈ 1.1 km
+function roughArea(lat, lon) {
+  const row = Math.floor(lat / AREA_DEG), rowLat = (row + 0.5) * AREA_DEG;
+  const lonStep = AREA_DEG / Math.max(0.2, Math.cos(rowLat * Math.PI / 180));   // squares stay ~1 km wide
+  const col = Math.floor(lon / lonStep);
+  return { lat: +rowLat.toFixed(4), lon: +((col + 0.5) * lonStep).toFixed(4) };
+}
+// Ticked unless they unticked it. Pages without the checkbox (like 2.7/) never send an area.
+const shareArea = () => !!document.querySelector(".area-box") && store.get(AREA_KEY, true);
+let areaCache = null;   // { area, at }: one location ask is reused for 10 minutes
+
+// The rough area, or null (box unticked, location blocked, or no answer within 10 seconds)
+function getArea() {
+  if (!shareArea() || !navigator.geolocation) return Promise.resolve(null);
+  if (areaCache && Date.now() - areaCache.at < 600000) return Promise.resolve(areaCache.area);
+  return new Promise(resolve => navigator.geolocation.getCurrentPosition(
+    pos => { areaCache = { area: roughArea(pos.coords.latitude, pos.coords.longitude), at: Date.now() }; resolve(areaCache.area); },
+    () => resolve(null),
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }));
+}
+
+// Every "rough area" checkbox on the page (camera screen, "Check it" screen) shows the same setting
+function wireAreaBox(box) {
+  box.checked = shareArea();
+  box.onchange = () => {
+    store.set(AREA_KEY, box.checked);
+    document.querySelectorAll(".area-box").forEach(b => { b.checked = box.checked; });
+  };
+}
+document.querySelectorAll(".area-box").forEach(wireAreaBox);
+
+// r = a report from buildReport or buildTreeReport. detail = the small line under it in "Your reports".
+// The rough area is added first (the browser may ask about location the first time).
+async function fileReport(r, card, detail) {
   const line = el("span", "sent", "");
   card.querySelector(".info").append(line);
   if (!RELAY_URL) { line.textContent = "Not reported: the report server isn't set up yet."; return; }
-  const r = buildReport(bmp, species, confidence, top3);
+  line.textContent = shareArea() ? "Adding your rough area…" : "Sending report…";
+  const area = await getArea();
+  if (area) r.report.area = area;
+  card.querySelector(".info").append(el("span", "area-line", area ? "📍 Rough area added (about 1 km)" : "📍 Sent without an area, so it won't show on the map"));
   line.dataset.report = r.report.id;
   line.textContent = "Sending report…";
-  addMine(r);
+  addMine(r, detail);
   const list = store.get(PENDING_KEY, []);
   list.push(r);
   if (!store.set(PENDING_KEY, list)) { markReport(r.report.id, "Not reported: this browser's storage is full.", "sent bad"); return; }
@@ -259,24 +322,54 @@ function blockReport(card, ai) {
   info.append(el("span", "sent bad", "Not reported: this photo looks AI-generated. " + ai.reasons[0]));
 }
 
-// ---------- your reports (this tab) ----------
-// Reports sent from this tab, newest first, kept in sessionStorage so they survive a reload.
+// ---------- your reports (this phone) ----------
+// Reports sent from this phone, newest first, kept in localStorage so they're still there next
+// time. Only a small copy of each photo is kept (storage is about 5 MB, shared with the game).
+const MINE_MAX = 50, MINE_PHOTO = 320;   // newest 50 reports; photos 320 px on the long side
 const mine = {
-  get() { try { return JSON.parse(sessionStorage.getItem(MINE_KEY)) || []; } catch { return []; } },
+  get() { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } },
   set(list) {
     // Photos are the big part; if storage is full, drop the oldest photos first
     for (let keep = list.length; keep >= 0; keep--) {
-      try { sessionStorage.setItem(MINE_KEY, JSON.stringify(list.map((m, i) => i < keep ? m : { ...m, photo: null }))); return; } catch {}
+      try { localStorage.setItem(MINE_KEY, JSON.stringify(list.map((m, i) => i < keep ? m : { ...m, photo: null }))); return; } catch {}
     }
   },
 };
+// Reports from before this was saved on the phone (only kept while the tab was open): move them over
+try {
+  const old = JSON.parse(sessionStorage.getItem(MINE_KEY) || "[]");
+  if (old.length) {
+    const have = new Set(mine.get().map(m => m.id));
+    mine.set([...old.filter(m => !have.has(m.id)), ...mine.get()].sort((a, b) => b.id.localeCompare(a.id)).slice(0, MINE_MAX));
+    sessionStorage.removeItem(MINE_KEY);
+  }
+} catch {}
 
-function addMine({ report, photo }) {
-  const list = mine.get();
-  list.unshift({ id: report.id, name: report.name, scientific: report.scientific || "", confidence: report.confidence,
-    timestamp: report.timestamp, model: report.model, photo, status: "Sending report…", ok: false });
-  mine.set(list.slice(0, 30));
+// A small copy of a report photo (base64 JPEG) for "Your reports"
+function smallPhoto(base64) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MINE_PHOTO / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.75).split(",")[1]);
+    };
+    img.onerror = () => resolve(null);
+    img.src = "data:image/jpeg;base64," + base64;
+  });
+}
+
+// detail = the small line under the name, like "Agrilus planipennis · 91.2%" or the signs seen
+// Added right away (so its "Reported" status can't get lost); the small photo follows a moment later
+function addMine({ report, photo }, detail) {
+  const list = mine.get().filter(m => m.id !== report.id);
+  list.unshift({ id: report.id, name: report.name, detail: detail || mineDetail(report), kind: report.kind || "invasive",
+    area: report.area || null, timestamp: report.timestamp, model: report.model, photo: null, status: "Sending report…", ok: false });
+  mine.set(list.slice(0, MINE_MAX));
   renderMine();
+  if (photo) smallPhoto(photo).then(small => { if (small) updateMine(report.id, { photo: small }); });
 }
 
 function updateMine(id, change) {
@@ -287,6 +380,26 @@ function updateMine(id, change) {
   renderMine();
 }
 
+// Check levels for this phone's reports: asks the relay about their ids only (GET /status?ids=...)
+const MINE_LEVELS = { unchecked: "⚪ Not checked yet", ai: "🔵 AI checked", verified: "🟢 Verified by our team", not_match: "✗ Not a match" };
+async function refreshLevels() {
+  const sent = mine.get().filter(m => m.ok).slice(0, 50);
+  if (!RELAY_URL || !sent.length) return;
+  try {
+    const res = await fetch(`${RELAY_URL.replace(/\/$/, "")}/status?ids=${sent.map(m => m.id).join(",")}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const levels = (await res.json()).levels || {};
+    const all = mine.get();
+    let changed = false;
+    for (const m of all) if (levels[m.id] && m.level !== levels[m.id]) { m.level = levels[m.id]; changed = true; }
+    if (changed) { mine.set(all); renderMine(); }
+  } catch {}   // offline or an older relay: try again next time
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshLevels(); });
+
+// Older saved entries have scientific + confidence instead of detail
+const mineDetail = m => m.detail ?? [m.scientific, `${Number(m.confidence).toFixed(1)}%`].filter(Boolean).join(" · ");
+
 function renderMine() {
   const list = mine.get(), box = $("mine");
   $("mineSection").hidden = !list.length;
@@ -295,14 +408,16 @@ function renderMine() {
   for (const m of list) {
     const row = el("div", "row"), img = el("img"), what = el("div", "what"), side = el("div", "when");
     img.alt = ""; if (m.photo) img.src = "data:image/jpeg;base64," + m.photo;
-    what.append(el("strong", null, m.name), el("span", "muted", [m.scientific, `${Number(m.confidence).toFixed(1)}%`].filter(Boolean).join(" · ")));
-    const t = new Date(m.timestamp);
+    what.append(el("strong", null, m.name), el("span", "muted", mineDetail(m)));
+    if (m.ok) what.append(el("span", "mine-level " + (m.level || "unchecked"), MINE_LEVELS[m.level || "unchecked"]));
+    // Today: just the time. Earlier days: the date (the list stays for days now)
+    const t = new Date(m.timestamp), today = !isNaN(t) && t.toDateString() === new Date().toDateString();
     side.append(el("span", "state " + (m.ok ? "on" : /^Sending/.test(m.status) ? "" : "warn"), m.ok ? "Reported" : m.status),
-      el("span", null, isNaN(t) ? "" : t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })));
+      el("span", null, isNaN(t) ? "" : today ? t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : t.toLocaleDateString([], { month: "short", day: "numeric" })));
     row.append(img, what, side);
     if (m.photo) {
-      row.tabIndex = 0; row.setAttribute("role", "button"); row.title = "Show the whole photo";
-      const open = () => openViewer(img.src, m.name, [m.scientific, `${Number(m.confidence).toFixed(1)}%`,
+      row.tabIndex = 0; row.setAttribute("role", "button"); row.title = "Show the photo";
+      const open = () => openViewer(img.src, m.name, [mineDetail(m),
         isNaN(t) ? "" : t.toLocaleString(), m.ok ? "Reported" : m.status].filter(Boolean).join(" · "));
       row.onclick = open;
       row.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } };
@@ -378,7 +493,14 @@ function classify(file) {
       const probs = softmax(Array.from(out[session.outputNames[0]].data));
       const top3 = [...probs.keys()].sort((a, b) => probs[b] - probs[a]).slice(0, 3)
         .map(i => ({ species: CLASS_NAMES[i] ?? `idx_${i}`, confidence: probs[i] * 100 }));
+      if (file.tree) {
+        await treePhoto(file, bmp, top3, card);
+        bmp.close?.();
+        setStatus(readyText(), "ready");
+        return;
+      }
       const invasive = fillCard(card, top3);
+      window.teamAI?.check(file, card);   // team AI check switch (assets/teamai.js)
       if (sharpness(bmp) < BLUR_THRESHOLD) {
         card.querySelector(".info .name").after(el("span", "blurry", "Blurry photo: try to get a clearer image."));
       }
@@ -387,7 +509,7 @@ function classify(file) {
         const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown", reasons: [] }));
         if (ai.verdict === "ai") { blockReport(card, ai); window.Innvadex?.fakePhoto(); }
         else {
-          fileReport(bmp, top3[0].species, top3[0].confidence, top3, card);
+          fileReport(buildReport(bmp, top3[0].species, top3[0].confidence, top3), card);
           window.Innvadex?.encounter(top3[0].species, card.querySelector("img").src);   // the game (assets/game.js)
         }
       } else if (window.Innvadex) {
@@ -407,6 +529,27 @@ function classify(file) {
   });
 }
 
+// A photo from the tree check: always sent to the team, because the person asked us to look at it.
+// The bug model's guesses go along for the team but aren't shown here: on a photo of bark, it would
+// just name whichever bug looks closest, which would be confusing.
+async function treePhoto(file, bmp, top3, card) {
+  const tree = file.tree, info = card.querySelector(".info"), fileLine = info.querySelector(".file");
+  card.className = "card tree";
+  info.innerHTML = "";
+  info.append(el("span", "flag tree", "Tree check"), el("p", "name", tree.name), fileLine, el("p", "tree-signs", tree.signsText));
+  window.teamAI?.check(file, card);   // team AI check switch (assets/teamai.js)
+  if (sharpness(bmp) < BLUR_THRESHOLD) {
+    info.querySelector(".name").after(el("span", "blurry", "Blurry photo: try to get a clearer image."));
+  }
+  const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown", reasons: [] }));
+  if (ai.verdict === "ai") { blockReport(card, ai); return; }
+  fileReport(buildTreeReport(bmp, tree, top3), card, tree.signsText);
+  window.treeCheck?.reported();
+}
+
+// While the tree check is waiting for its photo, new photos belong to it
+const tagForTree = file => { if (window.treeCheck?.pending) file.tree = window.treeCheck.pending; return file; };
+
 // source = where the photos came from ("pick", "drop", "capture" = the phone's camera app).
 // One photo goes to the crop step first; many photos are checked straight away.
 function handleFiles(list, source) {
@@ -414,6 +557,7 @@ function handleFiles(list, source) {
   const files = [...list].filter(f => EXT.test(f.name)).sort((a, b) =>
     (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name));
   if (!files.length) { setStatus("No supported images found (jpg, png, bmp, webp).", "error"); return; }
+  files.forEach(tagForTree);
   if (files.length === 1) showCrop(files[0], source);
   else files.forEach(classify);
 }
@@ -627,7 +771,7 @@ function takePhoto() {
     closeCamera();
     const photo = new File([blob], name, { type: "image/jpeg" });
     photo.fromCamera = true;
-    showCrop(photo, "camera");
+    showCrop(tagForTree(photo), "camera");
   }, "image/jpeg", 0.92);
 }
 
@@ -699,6 +843,7 @@ async function checkCrop() {
     if (!blob) throw new Error("couldn't make the zoomed photo");
     const zoomed = new File([blob], file.name.replace(/\.[^.]+$/, "") + "-zoomed.jpg", { type: "image/jpeg" });
     zoomed.fromCamera = file.fromCamera;
+    zoomed.tree = file.tree;
     zoomed.original = file;   // the AI-photo check reads labels that only the original file has
     classify(zoomed);
   } catch (e) {
@@ -801,5 +946,6 @@ window.addEventListener("online", () => sendPending());
 
 showReportState();
 renderMine();
+refreshLevels();
 sendPending();
 loadModel();
