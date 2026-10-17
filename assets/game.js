@@ -382,13 +382,20 @@ const FINALE = [
   { scene: "forest",   who: "🌲", name: "Oregon's forests", text: "From Forest Park to Mount Hood, the forests are safer because of Bug Rangers like you." },
   { scene: "lab",      ...HAZEL, text: "But this isn't really the end. Invasive bugs are still out there in the real world." },
   { scene: "lab",      ...HAZEL, text: "Keep finding them. Every real report helps experts protect nature. Thank you, Champion!" },
+  { scene: "victory",  ...HAZEL, text: "Open the Badges tab to print your Forest Protector certificate. And check the Shop: there's a crown waiting for you!" },
   { scene: "forest",   ...PIP,   text: "See you on the next adventure, {name}! Bzz!" },
 ];
 
 // Cutscenes wait in line until the pop-ups are closed, then play one after another
-let sceneQueue = [];
+// (a queued function, like a Team Tangle ambush, runs in its turn too)
+let sceneQueue = [], playing = false;
 const queueScene = slides => sceneQueue.push(slides);
-async function playQueued() { while (sceneQueue.length) await cutscene(sceneQueue.shift()); }
+async function playQueued() {
+  if (playing) return;
+  playing = true;
+  try { while (sceneQueue.length) { const next = sceneQueue.shift(); await (typeof next === "function" ? next() : cutscene(next)); } }
+  finally { playing = false; }
+}
 
 // Queues a cutscene for each gym that just opened
 function checkUnlocks(g) {
@@ -400,6 +407,16 @@ function checkUnlocks(g) {
       ? { scene: gym.id, who: gym.face, name: gym.leader, text: "So you have all {n} gym badges, {name}? I'm Juniper, the Oregon Champion. Come find me in the Battle tab!", vars: { n: GYMS.length - 1 } }
       : { scene: gym.id, who: gym.face, name: gym.leader, text: "I'm {leader}. The {gym} is open now, {name}! Come battle me when you're ready.", vars: { leader: gym.leader, gym: t(gym.name) } }]);
   }
+  // Team Tangle tells you about their next scheme
+  TANGLE.forEach((sc, i) => {
+    const id = `tangle-${sc.id}`;
+    if (!tangleOpen(g, i) || g.unlockSeen.includes(id) || g.tangle.includes(sc.id)) return;
+    g.unlockSeen.push(id);
+    queueScene(i === 0
+      ? [{ scene: "lab", ...HAZEL, text: "Uh oh, {name}. A sneaky group called Team Tangle is spreading invasive bugs on purpose!" },
+         { scene: "lab", ...HAZEL, text: "Find them in the Battle tab, and stop their scheme!" }]
+      : [{ scene: "tangle", ...BRAMBLE, text: "Ha ha! Team Tangle has a new plan: {scheme}! Come stop us if you can!", vars: { scheme: t(sc.name) }, sound: "tangle" }]);
+  });
 }
 
 // ---------- version 7: bug types, seasons, missions ----------
@@ -444,6 +461,169 @@ const MISSIONS = [
   { id: "car",      emoji: "🚗", text: "Help check a car or bike for egg patches before a trip.", why: "Spotted lanternflies lay mud-like egg patches on cars and outdoor stuff." },
 ];
 
+// ---------- version 8: Team Tangle, Swarm Boss, Bug Buddy, weather, night, outfits, minigames ----------
+
+// Team Tangle: a goofy villain team that spreads invasive bugs on purpose. Each scheme shows a
+// real way bugs spread, and what people do to stop it. They always lose in the end, and they
+// never really take your bugs.
+const BRAMBLE = { who: "🦹‍♀️", name: "Bramble" }, THISTLE = { who: "🦹‍♂️", name: "Thistle" };
+const SQUAWK = { who: "🐦", name: "Squawk" };   // their pet European starling, an invasive bird
+const BURDOCK = { who: "🕴️", name: "Boss Burdock" };
+const TANGLE_MOTTO = [
+  { scene: "tangle", ...BRAMBLE, text: "Bugs in the firewood, bugs on the truck!" },
+  { scene: "tangle", ...THISTLE, text: "Spreading them everywhere, wishing you luck!" },
+  { scene: "tangle", ...BRAMBLE, text: "From the coast to the mountains, big bugs and small!" },
+  { scene: "tangle", ...THISTLE, text: "We're Team Tangle! We'll tangle them all!" },
+  { scene: "tangle", ...SQUAWK, text: "Squawk! That's right! I'm an invasive starling, too!", sound: "tangle" },
+];
+// When they lose, they fly away in their firewood truck
+const TANGLE_BLAST_OFF = [
+  { scene: "tangle", ...BRAMBLE, text: "No fair! Our perfect plan!" },
+  { scene: "tangle", ...THISTLE, text: "Quick, back to the firewood truck!" },
+  { scene: "sky", who: "🚚", name: "Team Tangle", text: "Team Tangle is tangled up agaaain! ✨", fly: true, sound: "fly" },
+];
+const TANGLE_SAY = { next: "Go, bug! Spread out!", lose: "No fair! We'll be back!", win: "Ha ha! Team Tangle wins this time!" };
+// The schemes, in order. Each needs the one before it, and `gyms` gym badges.
+const TANGLE = [
+  { id: "firewood", emoji: "🪵", name: "The Firewood Scheme", gyms: 0, level: 1, bugLevel: 1, heals: 0, reward: 60,
+    team: ["anisandrus_dispar", "xyleborus_monographus", "agrilus_planipennis"],
+    plan: [
+      { scene: "forest", ...HAZEL, text: "{name}, come quick! Someone is loading a big truck with firewood near the campground." },
+      { scene: "tangle", ...BRAMBLE, text: "Ha ha ha! Who's this little Bug Ranger?" },
+      "motto",
+      { scene: "tangle", ...THISTLE, text: "Our plan: drive this firewood all over Oregon! The beetles hiding inside will move into every forest!" },
+      { scene: "tangle", ...PIP, text: "Bzz! Moving firewood is one of the main ways tree-killing beetles spread! Stop them, {name}!" },
+      { scene: "tangle", ...BRAMBLE, text: "You want our firewood? You'll have to battle us for it!" },
+    ],
+    lesson: "Remember: buy firewood where you burn it, and never carry it to a new place." },
+  { id: "cars", emoji: "🚗", name: "The Road Trip Scheme", gyms: 2, level: 2, bugLevel: 2, heals: 0, reward: 80,
+    team: ["halyomorpha_halys", "lymantria_dispar", "lycorma_delicatula"],
+    plan: [
+      { scene: "road", ...HAZEL, text: "Team Tangle is back! They're at a rest stop on the highway." },
+      { scene: "road", ...THISTLE, text: "Look, Bramble! It's that pesky Bug Ranger again!" },
+      "motto",
+      { scene: "road", ...BRAMBLE, text: "This time we're sticking spotted lanternfly eggs on every car and camper! The bugs will ride along to new places!" },
+      { scene: "road", ...SQUAWK, text: "Squawk! A free ride for every bug!" },
+      { scene: "road", ...PIP, text: "Bzz… those egg patches look like dried mud. People don't even notice them!" },
+      { scene: "road", ...THISTLE, text: "Let's see you stop a whole parking lot of bugs!" },
+    ],
+    lesson: "Before a trip, check cars, trailers, and camping gear for egg patches. Spongy moths lay eggs on them too!" },
+  { id: "crates", emoji: "📦", name: "The Shipping Crate Scheme", gyms: 5, level: 3, bugLevel: 2, heals: 1, reward: 100,
+    team: ["coptotermes_formosanus", "solenopsis_invicta", "popillia_japonica", "anoplophora_glabripennis"],
+    plan: [
+      { scene: "port", ...HAZEL, text: "{name}! Team Tangle snuck into the shipping port with a pile of wooden crates!" },
+      { scene: "port", ...BRAMBLE, text: "Welcome to our biggest plan yet!" },
+      "motto",
+      { scene: "port", ...THISTLE, text: "We'll hide bugs in these crates and ship them across the ocean. Bugs everywhere, all over the world!" },
+      { scene: "port", ...HAZEL, text: "That's how the Asian longhorned beetle got to North America: inside wooden packing crates." },
+      { scene: "port", ...SQUAWK, text: "Squawk! My family came here on a ship long ago, too!" },
+      { scene: "port", ...BRAMBLE, text: "Our crates are packed with our strongest bugs. Ready to lose?" },
+    ],
+    lesson: "Wooden crates from other countries must be heated to kill hidden bugs. They get a special stamp to show it was done!" },
+  { id: "boss", emoji: "🏰", name: "Tangle Tower", boss: true, gyms: 9, level: 3, bugLevel: 3, heals: 2, reward: 150,
+    team: ["lymantria_dispar", "agrilus_planipennis", "lycorma_delicatula", "anoplophora_glabripennis", "vespa_mandarinia"],
+    plan: [
+      { scene: "tower", ...HAZEL, text: "This is it, {name}. Tangle Tower, Team Tangle's secret hideout." },
+      { scene: "tower", ...BRAMBLE, text: "Boss! Boss! That Bug Ranger found our hideout!" },
+      { scene: "tower", ...BURDOCK, text: "So, you're the one who keeps ruining my plans. I'm Boss Burdock." },
+      { scene: "tower", ...BURDOCK, text: "I'm named after the burdock plant. Its prickly burrs stick to fur and socks, so it hitchhikes everywhere. Just like me!" },
+      { scene: "tower", ...THISTLE, text: "The boss has the toughest bugs of all!" },
+      { scene: "tower", ...PIP, text: "Bzz! You stopped every plan so far. You can do this, {name}!" },
+      { scene: "tower", ...BURDOCK, text: "Let's see you stop my Legendary team!" },
+    ],
+    ending: [
+      { scene: "tower", ...BURDOCK, text: "Impossible! Beaten by a Bug Ranger!" },
+      { scene: "tower", ...BURDOCK, text: "Hmm. Maybe spreading bugs everywhere isn't such a great plan after all…" },
+      { scene: "tower", ...BRAMBLE, text: "Wait, Boss… are we the bad guys?" },
+      { scene: "tower", ...THISTLE, text: "Maybe we could help protect forests instead?" },
+      { scene: "tower", ...SQUAWK, text: "Squawk! I'd like that!" },
+    ],
+    lesson: "Burdock is a real plant that came from far away. Its burrs hitchhike on socks and pets, so check them after a hike!",
+    say: { next: "My bugs never give up!", lose: "Impossible!", win: "Ha! Come back when you're stronger, Bug Ranger." } },
+];
+const AMBUSH_CHANCE = 0.3, AMBUSH_REWARD = 25;
+
+// The weekly Swarm Boss: one giant swarm a week. The damage you do is saved until the week ends.
+const BOSS_HP = 400, BOSS_ATK = 13, BOSS_REWARD = 150, BOSS_UNLOCK = 3;
+const BOSS_BUGS = ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia"];
+
+// Bug Buddy: a native bug that grows as you earn points. Stages start at these points.
+const BUDDIES = {
+  swallowtail: { name: "Oregon swallowtail", stages: ["🥚", "🐛", "🦋", "🦋"],
+    fact: "Oregon's state insect! A big yellow-and-black butterfly that lives east of the Cascade Mountains." },
+  ladybug: { name: "Convergent lady beetle", stages: ["🥚", "🐛", "🐞", "🐞"],
+    fact: "A native ladybug with two white lines behind its head. It eats aphids that hurt plants." },
+  groundbeetle: { name: "Ground beetle", stages: ["🥚", "🐛", "🪲", "🪲"],
+    fact: "A fast native beetle that hunts slugs and garden pests at night." },
+};
+const BUDDY_STAGES = [[0, "Egg"], [40, "Baby"], [150, "Grown-up"], [400, "Super"]];
+const BUDDY_TIPS = [
+  "Look under leaves. Lots of bugs hide there!",
+  "Brush off your shoes after a hike, so no seeds or bugs hitchhike.",
+  "Don't move firewood. Buy it where you burn it!",
+  "Real photos only! AI-made photos don't count.",
+  "Some types are strong against others. Check the fact cards!",
+  "Missions are more fun with a grown-up.",
+  "Moths come out at night. Try the game after dark!",
+];
+
+// Game weather: a new one each day, the same for everyone. It makes some types stronger in battles.
+const WEATHER_BOOST = 1.2;
+const WEATHER = [
+  { emoji: "☀️", name: "Sunny", types: ["wasp", "beetle"], text: "Wasps and beetles love warm sun. They're 20% stronger in battles." },
+  { emoji: "🌧️", name: "Rainy", types: ["ant", "termite"], text: "Bugs with wings hide from the rain. Ants and termites are 20% stronger in battles." },
+  { emoji: "💨", name: "Windy", types: ["moth"], text: "Moths and butterflies ride the wind! They're 20% stronger in battles." },
+  { emoji: "🌫️", name: "Foggy", types: ["bug"], text: "True bugs sneak around in the fog. They're 20% stronger in battles." },
+];
+// Night is from 8 PM to 6 AM. Moths come out, so they give double points.
+const NIGHT_START = 20, NIGHT_END = 6;
+
+// Trainer outfits for the shop. The crown is free, but only for the Oregon Champion.
+const OUTFITS = [
+  { id: "sunhat",     slot: "hat",  emoji: "👒", name: "Sun hat",          price: 30 },
+  { id: "tophat",     slot: "hat",  emoji: "🎩", name: "Top hat",          price: 45 },
+  { id: "helmet",     slot: "hat",  emoji: "⛑️", name: "Ranger helmet",    price: 50 },
+  { id: "gradcap",    slot: "hat",  emoji: "🎓", name: "Graduation cap",   price: 60 },
+  { id: "crown",      slot: "hat",  emoji: "👑", name: "Champion crown",   price: 0, champion: true },
+  { id: "flashlight", slot: "gear", emoji: "🔦", name: "Flashlight",       price: 25 },
+  { id: "backpack",   slot: "gear", emoji: "🎒", name: "Backpack",         price: 30 },
+  { id: "magnifier",  slot: "gear", emoji: "🔍", name: "Magnifying glass", price: 35 },
+  { id: "spyglass",   slot: "gear", emoji: "🔭", name: "Spyglass",         price: 45 },
+];
+
+// Minigames: the first win each day gives more points
+const GAME_WIN_POINTS = 30, GAME_REPLAY_POINTS = 5;
+// Trap Defense: bugs walk along the path to the forest (🌳). Traps catch bugs next to them.
+const TRAP_COLS = 8, TRAP_ROWS = 5;
+const TRAP_PATH = [[0, 1], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3], [4, 3], [5, 3], [6, 3], [6, 2], [6, 1], [7, 1]];
+const TRAPS = {
+  sticky: { emoji: "🟨", name: "Sticky trap", cost: 2, desc: "Catches any bug a little." },
+  prism:  { emoji: "🟪", name: "Purple prism trap", cost: 3, desc: "Beetles love purple! Catches beetles a lot, other bugs a little." },
+};
+const TRAP_WAVES = [5, 7, 9], TRAP_MONEY = 8, TRAP_HEARTS = 3, TRAP_HP = { common: 3, rare: 6, legendary: 12 };
+const TRAP_TICK = 250, TRAP_RANGE = 1.5;
+// Where's the Bug?: find the hidden bug in a grid of plants. Each round is bigger.
+const HIDE_ROUNDS = [[6, 4], [7, 5], [8, 6]], HIDE_SECONDS = 15, HIDE_PENALTY = 2;
+const HIDE_PLANTS = ["🌿", "🍃", "🌱", "🍂", "🌾", "🌳", "🌲", "🪨", "🍄", "🌼"];
+const HIDE_DECOYS = ["🐌", "🕷️", "🪱", "🐸", "🐿️", "🐦"];
+
+// New badges and scenes for version 8
+BADGES.push(
+  { id: "tangle", emoji: "🦹", name: "Tangle Buster",   desc: "Stop all of Team Tangle's schemes.",     earned: g => g.tangle.length >= TANGLE.length },
+  { id: "traps",  emoji: "🟪", name: "Trap Master",     desc: "Win Trap Defense.",                       earned: g => g.trapWins >= 1 },
+  { id: "hide",   emoji: "🔎", name: "Sharp Eyes",      desc: "Win Where's the Bug?",                    earned: g => g.hideWins >= 1 },
+  { id: "swarm",  emoji: "👾", name: "Swarm Stopper",   desc: "Beat a weekly Swarm Boss.",               earned: g => g.bossWins >= 1 },
+  { id: "buddy",  emoji: "🐾", name: "Best Buddies",    desc: "Help your Bug Buddy grow all the way to Super.", earned: g => buddyStage(g) >= BUDDY_STAGES.length - 1 },
+);
+CHALLENGES.push({ text: "Win a minigame (Trap Defense or Where's the Bug?).", check: ev => ev.type === "minigame" });
+Object.assign(SCENES, {
+  tangle: { bg: "linear-gradient(180deg, #e2d3f2 0%, #6e4a8e 100%)", decor: "🚚 🪵 🪵 📦 🪵 🚚" },
+  sky:    { bg: "linear-gradient(180deg, #9fd3ff 0%, #e8f6ff 100%)", decor: "☁️ ✨ ☁️ ✨ ☁️" },
+  road:   { bg: "linear-gradient(180deg, #d9e8f2 0%, #8a8f8c 100%)", decor: "🚗 🚙 🛣️ 🚐 🏕️ 🚗" },
+  port:   { bg: "linear-gradient(180deg, #cfe3f2 0%, #3d6a8c 100%)", decor: "🚢 📦 📦 🏗️ 📦 🌊" },
+  tower:  { bg: "linear-gradient(180deg, #4b3a63 0%, #1f1630 100%)", decor: "🏰 🪵 📦 🕸️ 📦 🏰" },
+});
+
 // ---------- saving ----------
 function loadGame() {
   let g = null;
@@ -451,7 +631,8 @@ function loadGame() {
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     items: {}, spots: [], useMap: false, muted: false, quiz: { day: null, right: 0 },
     trainer: { name: "", avatar: AVATARS[0] }, streak: { last: null, count: 0 }, unlockSeen: null,
-    protectorDex: {}, missions: [], bigText: false, ...(g || {}) };
+    protectorDex: {}, missions: [], bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
+    buddy: null, outfits: { owned: [], hat: null, gear: null }, readAloud: false, games: {}, ambushDay: null, ...(g || {}) };
   // Gyms that were already open before gym cutscenes existed don't need one
   if (!g.unlockSeen) g.unlockSeen = GYMS.filter(gym => gymOpen(g, gym)).map(gym => gym.id);
   if (g.coins == null) g.coins = g.points;   // games saved before the shop existed
@@ -466,7 +647,8 @@ const totalCaught = g => Object.values(g.caught).reduce((a, b) => a + b, 0);
 const kindsCaught = g => Object.keys(g.caught).length;
 const caughtRarity = (g, r) => Object.keys(g.caught).some(s => SPECIES_FACTS[s]?.rarity === r);
 // Points count toward your rank, and you get the same number of coins to spend in the shop
-const addPoints = (g, n) => { g.points += n; g.coins += n; };
+// Your Bug Buddy grows with the points you earn
+const addPoints = (g, n) => { g.points += n; g.coins += n; if (g.buddy) g.buddy.xp += n; };
 const dayKey = (offset = 0) => { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const todayKey = () => dayKey(0);
 const todaysChallenge = () => {
@@ -502,6 +684,10 @@ function progress(g, ev) {
     if (RANK_TALK[rank[2]]) queueScene([{ scene: "victory", ...HAZEL, text: RANK_TALK[rank[2]] }]);
   }
   g.rankSeen = rank[2];
+  if (g.buddy && buddyStage(g) > g.buddy.seen) {
+    g.buddy.seen = buddyStage(g);
+    lines.push(`${buddyFace(g)} ${t("Your Bug Buddy grew! It's now: {stage}", { stage: t(BUDDY_STAGES[g.buddy.seen][1]) })}`);
+  }
   if (lines.length) { sound("badge"); confetti(); }
   return lines;
 }
@@ -543,7 +729,7 @@ function renderGame() {
   const streakOn = g.streak.count > 0 && [todayKey(), dayKey(-1)].includes(g.streak.last);
   $("gameStreak").textContent = `🔥 ${t("{n}-day streak", { n: g.streak.count })}`;
   $("gameStreak").hidden = !streakOn;
-  $("trainerBtn").textContent = `${g.trainer.avatar} ${g.trainer.name || t("Make your trainer card")}`;
+  $("trainerBtn").textContent = `${trainerLook(g)} ${g.trainer.name || t("Make your trainer card")}`;
   $("muteBtn").textContent = g.muted ? `🔇 ${t("Sound off")}` : `🔊 ${t("Sound on")}`;
   $("muteBtn").setAttribute("aria-pressed", g.muted);
   $("gameProgress").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: all.length });
@@ -559,6 +745,11 @@ function renderGame() {
   renderStory(g);
   applyBigText(g);
   $("bigTextBtn").setAttribute("aria-pressed", !!g.bigText);
+  $("readAloudBtn").setAttribute("aria-pressed", !!g.readAloud);
+  renderWorld(g);
+  renderBuddy(g);
+  renderGames(g);
+  renderCertificate(g);
 
   const dex = $("dexGrid"); dex.innerHTML = "";
   for (const s of all) {
@@ -621,6 +812,35 @@ function renderBattles(g) {
   TRAINERS.forEach(tr => row(tr, false));
   list.append(el("h3", null, t("Forest gyms (beat them in order)")));
   GYMS.forEach(gym => row(gym, true));
+
+  // Team Tangle's schemes, in order
+  const simpleRow = (emoji, name, about, label, locked, beaten, onClick) => {
+    const item = el("div", "foe" + (beaten ? " beaten" : ""));
+    const who = el("div", "foe-who");
+    who.append(el("strong", null, name), el("span", "muted", about));
+    const b = el("button", "btn" + (locked ? "" : " primary"), label);
+    b.type = "button"; b.disabled = locked; b.onclick = onClick;
+    item.append(el("span", "bug-emoji", emoji), who, b);
+    list.append(item);
+  };
+  list.append(el("h3", null, `🦹 ${t("Team Tangle's schemes")}`));
+  TANGLE.forEach((sc, i) => {
+    const done = g.tangle.includes(sc.id), open = tangleOpen(g, i);
+    const label = done ? `✅ ${t("Battle again")}` : open ? t("Stop them!")
+      : kinds < 2 ? `🔒 ${t("Catch {n} kinds", { n: 2 })}` : i && !g.tangle.includes(TANGLE[i - 1].id) ? `🔒 ${t("Stop the last scheme first")}`
+      : `🔒 ${t("Get {n} gym badges first", { n: sc.gyms })}`;
+    const about = `${sc.boss ? BURDOCK.name : "Bramble & Thistle"} · ${t("{n} bugs", { n: sc.team.length })}${sc.bugLevel > 1 ? ` (${t("Lv {lv}", { lv: sc.bugLevel })})` : ""}`;
+    simpleRow(sc.emoji, t(sc.name), about, label, !open && !done, done,
+      () => done ? battle(tangleFoe(sc), false) : cutscene(tanglePlan(sc)).then(() => battle(tangleFoe(sc), false)));
+  });
+
+  // The weekly Swarm Boss
+  list.append(el("h3", null, `👾 ${t("Weekly Swarm Boss")}`));
+  const sw = swarm({ ...g });
+  simpleRow(SPECIES_FACTS[sw.species].emoji, t("Mega Swarm: {bug}", { bug: commonName(sw.species) }),
+    sw.beaten ? t("Beaten this week! A new swarm comes on Monday.") : t("{hp} of {max} HP left. Your damage is saved all week!", { hp: sw.hp, max: BOSS_HP }),
+    sw.beaten ? `✅ ${t("Beaten")}` : kinds < BOSS_UNLOCK ? `🔒 ${t("Catch {n} kinds", { n: BOSS_UNLOCK })}` : t("Battle!"),
+    sw.beaten || kinds < BOSS_UNLOCK, sw.beaten, () => battle(swarmFoe(loadGame()), false));
 }
 
 function showTab(name) {
@@ -674,6 +894,12 @@ function showInstructions() {
     "Each bug has a type. Some types are strong against others, like wasps against moths. Check the fact cards!",
     "Watch for seasonal events: some bugs give double points at certain times of the year.",
     "Try the real-world “Missions” with a grown-up, and see bugs you left be in the “Protector-dex”.",
+    "Watch out for Team Tangle! Stop their schemes in the “Battle” tab. Sometimes they ambush you after a catch, too.",
+    "Battle the weekly Swarm Boss. The damage you do is saved all week.",
+    "Play “Trap Defense” and “Where's the Bug?” in the “Minigames” tab.",
+    "Pick a Bug Buddy. It grows as you earn points and cheers for you in battles.",
+    "Check the weather: it makes some types stronger. At night, moths give double points.",
+    "Turn on “Read aloud” to hear the story, and buy hats and gear in the “Shop”.",
     "Open “Learn about species” to see every invasive bug, even ones you haven't caught yet.",
   ]) list.append(el("li", null, t(step, { n: GYMS.length - 1 })));
   const safety = el("div", "safety");
@@ -742,6 +968,7 @@ function minigame(species, photo) {
     arena.append(bug);
     // Items from the shop are used up here, if you have them
     const g = loadGame(), used = [];
+    if (g.buddy) arena.append(el("span", "arena-buddy", buddyFace(g)));   // your Bug Buddy cheers you on
     let needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
     if (g.items.stickynet > 0) { g.items.stickynet--; needTaps = STICKYNET_TAPS; used.push(`🍯 ${t("Sticky Net: only 2 taps!")}`); }
     if (g.items.supernet > 0) { g.items.supernet--; seconds += SUPERNET_SECONDS; used.push(`🥅 ${t("Super Net: +{n} seconds!", { n: SUPERNET_SECONDS })}`); }
@@ -831,7 +1058,8 @@ function encounter(species, photo) {
     const spot = await here();   // null unless the catch map is turned on
     const g = loadGame();
     const se = season(), seasonal = se.groups.includes(SPECIES_FACTS[species].group);
-    const pts = RARITY[SPECIES_FACTS[species].rarity].points * (seasonal ? 2 : 1);
+    const nightly = !seasonal && isNight() && SPECIES_FACTS[species].group === "moth";
+    const pts = RARITY[SPECIES_FACTS[species].rarity].points * (seasonal || nightly ? 2 : 1);
     const before = bugLevel(g.caught[species] || 0), firstEver = totalCaught(g) === 0;
     const firstLegend = SPECIES_FACTS[species].rarity === "legendary" && !caughtRarity(g, "legendary");
     g.caught[species] = (g.caught[species] || 0) + 1;
@@ -840,12 +1068,13 @@ function encounter(species, photo) {
     // Story cutscenes for big moments (they play after the pop-up, in this order)
     if (firstEver) queueScene(FIRST_CATCH);
     if (firstLegend) queueScene(FIRST_LEGENDARY.map(sl => ({ ...sl, vars: { bug: commonName(species) } })));
-    const lines = seasonal ? [`${se.emoji} ${t("{season}: double points!", { season: t(se.name) })}`] : [];
+    const lines = seasonal ? [`${se.emoji} ${t("{season}: double points!", { season: t(se.name) })}`] : nightly ? [`🌙 ${t("Night Watch: double points!")}`] : [];
     if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before)
       lines.push(`⬆️ ${t("Your {bug} leveled up to Lv {lv}! It's stronger in battles now.", { bug: commonName(species), lv: bugLevel(g.caught[species]) })}`);
     lines.push(...progress(g, { type: "catch", species, pts }));
     if (spot) lines.push(`📍 ${t("Saved on your catch map.")}`);
     checkUnlocks(g);
+    if (!firstEver) maybeAmbush(g, species);
     const extra = lines.map(l => el("p", "new-badge", l));
     saveGame(g);
     justCaught = species;
@@ -920,18 +1149,24 @@ function foeMove(level, team, now, target) {
   return "special";
 }
 
+// Returns a promise that finishes when the result pop-up is closed
 function battle(foe, gym) {
-  const g = loadGame(), mine = myTeam(g), theirs = foe.team.filter(s => SPECIES_FACTS[s]).map(s => fighter(s, foe.bugLevel || 1));
-  if (!mine.length || !theirs.length) return;
+  return new Promise(battleDone => {
+  const g = loadGame(), mine = myTeam(g), theirs = foe.fighters || foe.team.filter(s => SPECIES_FACTS[s]).map(s => fighter(s, foe.bugLevel || 1));
+  if (!mine.length || !theirs.length) return battleDone();
   const foeName = gym ? foe.leader : foe.name;
   let me = 0, them = 0, busy = false, over = false, fx = null, heals = foe.heals || 0;
-  const youLabel = `${g.trainer.avatar} ${g.trainer.name || t("You")}`;
+  const youLabel = `${trainerLook(g)} ${g.trainer.name || t("You")}`;
+  // A grown-up Bug Buddy cheers, which makes your bugs a little stronger
+  const cheer = buddyBoost(g);
+  for (const f of mine) f.atk += cheer;
+  const buddyTip = el("p", "buddy-tip");
 
   const field = el("div", "battle-field");
   const bubble = el("p", "speech");
   const talk = text => { bubble.textContent = `${foe.emoji} ${foeName}: “${t(text)}”`; };
   talk(foe.say.hi);
-  const log = el("p", "battle-log", t("{foe} wants to battle!", { foe: foeName }));
+  const log = el("p", "battle-log", t("{foe} wants to battle!", { foe: foeName }) + (cheer ? ` ${t("{buddy} cheers! Your bugs get +{n} attack.", { buddy: buddyName(g), n: cheer })}` : ""));
   log.setAttribute("aria-live", "polite");
   const say = text => { log.textContent = text; };
   const side = (team, i, label, cls) => {
@@ -970,6 +1205,13 @@ function battle(foe, gym) {
     snack.textContent = `🍃 ${t("Bug Snack")} (${snacks()})`;
     snack.hidden = !snacks();
     snack.disabled = busy || over || mine[me].hp === mine[me].max;
+    // Your Bug Buddy gives a type tip
+    buddyTip.hidden = !g.buddy;
+    if (g.buddy) {
+      const boost = typeBoost(mine[me].species, theirs[them].species), vars = { bug: commonName(mine[me].species), foe: commonName(theirs[them].species) };
+      buddyTip.textContent = `${buddyFace(g)} ${buddyName(g)}: ${boost > 1 ? t("Your {bug} is strong against {foe}. Attack!", vars)
+        : typeBoost(theirs[them].species, mine[me].species) > 1 ? t("Uh oh, {foe} is strong against your {bug}. Try switching!", vars) : t("You can do it!")}`;
+    }
   };
 
   // One attack. A special move hits harder but can miss.
@@ -978,8 +1220,8 @@ function battle(foe, gym) {
     const who = owner ? t("{owner}'s {bug}", { owner, bug }) : t("Your {bug}", { bug });
     const target = d === mine[me] ? "you" : "them";
     if (useSpecial && Math.random() > SPECIAL_HIT_CHANCE) { fx = { target, text: t("Miss!") }; return say(t("{who} used {move}… but missed!", { who, move })); }
-    const boost = typeBoost(a.species, d.species);
-    const dmg = Math.max(1, Math.round((useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)) * boost));
+    const boost = typeBoost(a.species, d.species);   // the weather can make some types stronger, too
+    const dmg = Math.max(1, Math.round((useSpecial ? a.atk * 1.8 + (Math.random() * 6 - 3) : a.atk + (Math.random() * 4 - 2)) * boost * weatherBoost(a.species)));
     d.hp = Math.max(0, d.hp - dmg);
     fx = { target, text: `-${dmg}`, hit: true };
     sound("hit");
@@ -1027,23 +1269,33 @@ function battle(foe, gym) {
     busy = false; draw();
   }
 
-  let firstGymWin = false;
+  let firstGymWin = false, firstTangleWin = false;
   function finish(won, ran) {
     if (over) return;
     over = true; popupDone = null;
     const lines = [];
     let title = t(ran ? "You ran away." : "You lost this time. Catch more bugs and try again!");
+    const g = loadGame();
+    if (foe.swarm) {   // the swarm keeps its damage until the week is over
+      swarm(g);   // starts this week's swarm in the save, if it isn't there yet
+      g.boss.hp = theirs[0].hp;
+      if (!won) title = t("The swarm has {hp} of {max} HP left. Come back and battle again!", { hp: g.boss.hp, max: BOSS_HP });
+    }
     if (won) {
-      const g = loadGame();
-      const beatenBefore = gym && g.gyms.includes(foe.id), pts = beatenBefore ? 10 : foe.reward;
+      const beatenBefore = gym ? g.gyms.includes(foe.id) : foe.tangle ? g.tangle.includes(foe.tangle) : false;
+      const pts = beatenBefore ? 10 : foe.reward;
       firstGymWin = gym && !beatenBefore;
+      firstTangleWin = !!foe.tangle && !beatenBefore;
       g.wins++; addPoints(g, pts);
       if (gym && !beatenBefore) g.gyms.push(foe.id);
+      if (firstTangleWin) g.tangle.push(foe.tangle);
+      if (foe.swarm) { g.boss.beaten = true; g.bossWins++; }
       lines.push(...progress(g, { type: "win", pts }));
       checkUnlocks(g);
-      saveGame(g); renderGame();
       title = t("You beat {foe}! +{pts} points", { foe: foeName, pts });
     }
+    if (foe.ambush && !won) lines.push(`😅 ${t("Team Tangle tried to grab your {bug}, but it slipped away and hid in your Innvadex. Phew!", { bug: commonName(foe.bug) })}`);
+    saveGame(g); renderGame();
     const tipBug = foe.team[Math.floor(Math.random() * foe.team.length)];
     sound(won ? "win" : "lose");
     const said = ran ? null : el("p", "speech", `${foe.emoji} ${foeName}: “${t(won ? foe.say.lose : foe.say.win)}”`);
@@ -1051,8 +1303,10 @@ function battle(foe, gym) {
       if (won) confetti();
       openPopup([el("h2", null, title), ...(said ? [said] : []), ...lines.map(l => el("p", "new-badge", l)),
         el("p", "muted", t("Did you know? {bug}: {harm}", { bug: commonName(tipBug), harm: t(SPECIES_FACTS[tipBug].harm) }))], [["OK", true]]);
-      popupDone = playQueued;
+      popupDone = () => { battleDone(); playQueued(); };
     };
+    // Team Tangle flies away when they lose
+    if (won && foe.villain) { $("gamePopup").hidden = true; return cutscene(blastOff(foe, firstTangleWin)).then(result); }
     if (!(won && firstGymWin)) return result();
     // Beating a gym for the first time: a victory cutscene (and the ending after the last gym)
     $("gamePopup").hidden = true;
@@ -1071,10 +1325,11 @@ function battle(foe, gym) {
     ]).then(result);
   }
 
-  openPopup([el("h2", null, `${foe.emoji} ${gym ? t(foe.name) : foe.name}`), bubble, field, log, moves], [["Run away", false]]);
+  openPopup([el("h2", null, `${foe.emoji} ${gym ? t(foe.name) : foe.name}`), bubble, buddyTip, field, log, moves], [["Run away", false]]);
   popupDone = () => finish(false, true);   // "Run away" or Escape
   draw();
   tackle.focus();
+  });
 }
 
 // ---------- sounds ----------
@@ -1093,6 +1348,8 @@ const TUNES = {
   buy:    [[988, .08], [1319, .12]],
   tick:   [[660, .04]],
   click:  [[1568, .05], [2093, .12]],
+  tangle: [[294, .12], [277, .12], [262, .12], [247, .3]],
+  fly:    [[880, .05], [1175, .05], [1568, .05], [2093, .05], [2637, .15]],
 };
 function sound(name) {
   if (loadGame().muted || !TUNES[name]) return;
@@ -1124,6 +1381,7 @@ function renderShop(g) {
     row.append(el("span", "bug-emoji", it.emoji), who, b);
     list.append(row);
   }
+  renderOutfits(g, list);
 }
 function buy(id) {
   const it = ITEMS.find(i => i.id === id), g = loadGame();
@@ -1280,12 +1538,14 @@ function cutscene(slides) {
       // How the character moves: a new speaker walks in from one side (then the other side next time).
       // The same speaker reacts to what they say: jump for "!", tilt for "?", spin for a win, or sway.
       const newSpeaker = i === 0 || slides[i - 1].who !== s.who;
-      const move = newSpeaker ? (fromLeft ? "enter-left" : "enter-right")
+      const move = s.fly ? "fly-away" : newSpeaker ? (fromLeft ? "enter-left" : "enter-right")
         : s.scene === "victory" ? "spin" : /[!！]$/.test(full) ? "jump" : /[?？]$/.test(full) ? "tilt" : "sway";
       if (newSpeaker) fromLeft = !fromLeft;
       face.textContent = s.who;
       actor.className = "cs-actor"; void actor.offsetWidth; actor.classList.add(move);
       face.classList.add("talking");
+      if (s.sound) sound(s.sound);
+      speak(full, s.name);
       next.textContent = i === slides.length - 1 ? `${t("Done")} ✔` : `${t("Next")} ▶`;
       if (calm) return finishTyping();
       text.textContent = "";
@@ -1296,6 +1556,7 @@ function cutscene(slides) {
     const advance = () => typing ? finishTyping() : show(i + 1);
     function done() {
       clearInterval(typing);
+      hush();
       wrap.remove();
       resolve();
     }
@@ -1320,11 +1581,15 @@ function editTrainer(first) {
     const input = el("input", "trainer-input");
     input.type = "text"; input.maxLength = NAME_MAX; input.value = g.trainer.name;
     input.placeholder = t("Like BugBuster or LeafNinja"); input.id = "trainerName"; label.htmlFor = "trainerName";
+    // A preview of your trainer, wearing your hat and gear from the shop
+    const look = el("div", "trainer-look"), lookFace = el("span", "face", avatar);
+    look.setAttribute("aria-hidden", "true");
+    look.append(el("span", "hat", outfitEmoji(g, "hat")), lookFace, el("span", "gear", outfitEmoji(g, "gear")));
     const picks = el("div", "avatar-picks");
     for (const a of AVATARS) {
       const b = el("button", "avatar-pick", a);
       b.type = "button"; b.setAttribute("aria-pressed", a === avatar); b.setAttribute("aria-label", `Avatar ${a}`);
-      b.onclick = () => { avatar = a; for (const p of picks.children) p.setAttribute("aria-pressed", p === b); };
+      b.onclick = () => { avatar = a; lookFace.textContent = a; for (const p of picks.children) p.setAttribute("aria-pressed", p === b); };
       picks.append(b);
     }
     const save = () => {
@@ -1333,7 +1598,7 @@ function editTrainer(first) {
       saveGame(g); renderGame();
     };
     popupDone = resolve;
-    openPopup([el("h2", null, t("Your trainer card")),
+    openPopup([el("h2", null, t("Your trainer card")), look,
       el("p", "muted", t("Pick a nickname. Don't use your real name, so you stay safe online. It's saved only on this device.")),
       label, input, el("p", "trainer-label", t("Pick your avatar")), picks],
       [["Save", true, save], ...(first ? [] : [["Cancel", false]])]);
@@ -1391,6 +1656,8 @@ function storyScenes(g) {
     if (gymOpen(g, gym) || g.gyms.includes(gym.id)) list.push({ name: `${gym.emoji} ${t("Arriving at {place}", { place: t(gym.place) })}`, slides: gymIntroScenes(gym) });
     if (g.gyms.includes(gym.id) && gym.champion) list.push({ name: `🏆 ${t("The ending")}`, slides: FINALE });
   }
+  if (g.tangle.length) list.push({ name: `🦹 ${t("Team Tangle's motto")}`, slides: TANGLE_MOTTO });
+  for (const sc of TANGLE) if (g.tangle.includes(sc.id)) list.push({ name: `${sc.emoji} ${t(sc.name)}`, slides: [...tanglePlan(sc), ...blastOff(tangleFoe(sc), true)] });
   return list;
 }
 function renderStory(g) {
@@ -1405,6 +1672,413 @@ function renderStory(g) {
 }
 
 function applyBigText(g) { document.documentElement.classList.toggle("big-text", !!g.bigText); }
+
+// ---------- version 8: Team Tangle, Swarm Boss, Bug Buddy, weather, night, outfits, minigames ----------
+
+const pickOne = list => list[Math.floor(Math.random() * list.length)];
+const dayNumber = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); };
+const weekNumber = () => Math.floor((dayNumber() + 3) / 7);   // a new week starts each Monday
+// The same "random" weather all day, for everyone
+const weather = () => WEATHER[Math.floor(Math.abs(Math.sin(dayNumber() * 12.9898) * 43758.5453) % 1 * WEATHER.length)];
+const weatherBoost = species => weather().types.includes(SPECIES_FACTS[species].group) ? WEATHER_BOOST : 1;
+const isNight = () => { const h = new Date().getHours(); return h >= NIGHT_START || h < NIGHT_END; };
+const gymCount = g => g.gyms.filter(id => id !== "champion").length;
+
+// ---- weather and night ----
+function renderWorld(g) {
+  const w = weather(), night = isNight();
+  $("weatherText").textContent = `${w.emoji} ${t("Today's weather: {weather}.", { weather: t(w.name) })} ${t(w.text)}`
+    + (night ? `  🌙 ${t("Night Watch: moths and butterflies give double points.")}` : "");
+  $("game").classList.toggle("night", night);
+  if (night && !$("game").querySelector(".fireflies")) {
+    const sky = el("div", "fireflies");
+    sky.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 14; i++) {
+      const f = el("i");
+      f.style.left = `${Math.random() * 100}%`; f.style.top = `${Math.random() * 100}%`;
+      f.style.animationDelay = `${Math.random() * 4}s`; f.style.animationDuration = `${3 + Math.random() * 3}s`;
+      sky.append(f);
+    }
+    $("game").prepend(sky);
+  }
+  if (!night) $("game").querySelector(".fireflies")?.remove();
+}
+
+// ---- Bug Buddy ----
+const buddyStage = g => g.buddy ? BUDDY_STAGES.filter(s => g.buddy.xp >= s[0]).length - 1 : -1;
+const buddyFace = g => BUDDIES[g.buddy.kind].stages[buddyStage(g)];
+const buddyName = g => t(BUDDIES[g.buddy.kind].name);
+const buddyBoost = g => Math.max(0, buddyStage(g) - 1);   // grown-up: +1 attack, super: +2
+
+function renderBuddy(g) {
+  const b = $("buddyBtn");
+  b.classList.toggle("super", buddyStage(g) === BUDDY_STAGES.length - 1);
+  b.textContent = g.buddy ? `${buddyFace(g)} ${buddyName(g)} · ${t(BUDDY_STAGES[buddyStage(g)][1])}` : `🥚 ${t("Pick a Bug Buddy")}`;
+}
+function pickBuddy() {
+  const picks = el("div", "buddy-picks");
+  for (const [kind, bd] of Object.entries(BUDDIES)) {
+    const b = el("button", "buddy-pick");
+    b.type = "button";
+    b.append(el("span", "bug-emoji", bd.stages[2]), el("strong", null, t(bd.name)), el("span", "muted", t(bd.fact)));
+    b.onclick = () => {
+      const g = loadGame();
+      g.buddy = { kind, xp: 0, seen: 0 };
+      saveGame(g); closePopup(); renderGame(); sound("badge");
+      toast([`🥚 ${t("Your {buddy} egg is ready! Earn points to help it grow.", { buddy: t(bd.name) })}`]);
+    };
+    picks.append(b);
+  }
+  openPopup([el("h2", null, t("Pick a Bug Buddy")),
+    el("p", "muted", t("Your buddy is a native bug. It grows as you earn points, gives you tips, and cheers for you in battles.")), picks],
+    [["Not now", false]]);
+}
+function showBuddy() {
+  const g = loadGame();
+  if (!g.buddy) return pickBuddy();
+  const st = buddyStage(g), next = BUDDY_STAGES[st + 1], from = BUDDY_STAGES[st][0];
+  const big = el("div", "buddy-big" + (next ? "" : " super"), buddyFace(g));
+  const bar = el("div", "track"), fill = el("div", "fill");
+  fill.style.width = next ? `${(g.buddy.xp - from) / (next[0] - from) * 100}%` : "100%";
+  bar.append(fill);
+  openPopup([big, el("h2", null, buddyName(g)),
+    el("p", null, `${t(BUDDY_STAGES[st][1])} · ${next ? t("{n} more points to grow", { n: next[0] - g.buddy.xp }) : t("Fully grown!")}`), bar,
+    el("p", "muted", t(BUDDIES[g.buddy.kind].fact)),
+    el("p", "speech", `${buddyFace(g)} “${t(pickOne(BUDDY_TIPS))}”`),
+    el("p", "muted", st >= 2 ? t("In battles, your buddy cheers: your bugs get +{n} attack.", { n: buddyBoost(g) }) : t("When your buddy is grown up, it cheers for your bugs in battles."))],
+    [["Close", true]]);
+  sound("right");
+}
+
+// ---- trainer outfits ----
+const outfitEmoji = (g, slot) => OUTFITS.find(o => o.id === g.outfits[slot])?.emoji || "";
+const trainerLook = g => `${outfitEmoji(g, "hat")}${g.trainer.avatar}${outfitEmoji(g, "gear")}`;
+const ownsOutfit = (g, o) => g.outfits.owned.includes(o.id) || (o.champion && g.gyms.includes("champion"));
+
+function renderOutfits(g, list) {
+  list.append(el("h3", null, `👕 ${t("Trainer outfits")}`));
+  for (const o of OUTFITS) {
+    const owned = ownsOutfit(g, o), wearing = g.outfits[o.slot] === o.id;
+    const row = el("div", "foe" + (wearing ? " beaten" : ""));
+    const who = el("div", "foe-who");
+    who.append(el("strong", null, t(o.name)), el("span", "muted", o.champion ? t("Free for the Oregon Champion!") : t(o.slot === "hat" ? "Hat" : "Gear")));
+    const b = el("button", "btn");
+    b.type = "button";
+    if (owned) {
+      b.textContent = t(wearing ? "Take off" : "Wear");
+      b.classList.toggle("primary", !wearing);
+      b.onclick = () => { const g = loadGame(); g.outfits[o.slot] = wearing ? null : o.id; saveGame(g); renderGame(); sound("click"); };
+    } else if (o.champion) {
+      b.textContent = `🔒 ${t("Champion only")}`; b.disabled = true;
+    } else {
+      b.textContent = `🪙 ${o.price}`; b.disabled = g.coins < o.price; b.classList.toggle("primary", g.coins >= o.price);
+      b.setAttribute("aria-label", t("Buy {item} for {n} coins", { item: t(o.name), n: o.price }));
+      b.onclick = () => buyOutfit(o);
+    }
+    row.append(el("span", "bug-emoji", o.emoji), who, b);
+    list.append(row);
+  }
+}
+function buyOutfit(o) {
+  const g = loadGame();
+  if (g.coins < o.price || ownsOutfit(g, o)) return;
+  g.coins -= o.price; g.outfits.owned.push(o.id); g.outfits[o.slot] = o.id;
+  saveGame(g); renderGame(); sound("buy");
+  toast([`${o.emoji} ${t("You bought: {item}!", { item: t(o.name) })} ${t("You're wearing it now.")}`]);
+}
+
+// ---- Team Tangle ----
+const tangleOpen = (g, i) => kindsCaught(g) >= 2 && (i === 0 || g.tangle.includes(TANGLE[i - 1].id)) && gymCount(g) >= TANGLE[i].gyms;
+const tanglePlan = sc => sc.plan.flatMap(s => s === "motto" ? TANGLE_MOTTO : [s]);
+const tangleFoe = sc => ({ ...sc, tangle: sc.id, villain: true, emoji: sc.boss ? BURDOCK.who : "🦹", name: sc.boss ? BURDOCK.name : "Team Tangle",
+  say: { hi: "Look out! Team Tangle is here!", ...TANGLE_SAY, ...(sc.say || {}) } });
+// After Team Tangle loses: the boss's ending (the first time), the fly-away, and a real-world lesson
+const blastOff = (foe, first) => [
+  ...(first && foe.ending ? foe.ending : []),
+  ...TANGLE_BLAST_OFF,
+  ...(first && foe.lesson ? [{ scene: "lab", ...HAZEL, text: foe.lesson }] : []),
+];
+// Sometimes, after a catch, Team Tangle tries to grab your bug (once a day at most)
+function maybeAmbush(g, species) {
+  if (!g.tangle.length || g.ambushDay === todayKey() || totalCaught(g) < 3 || Math.random() > AMBUSH_CHANCE) return;
+  g.ambushDay = todayKey();
+  const bug = commonName(species);
+  queueScene(() => cutscene([
+    { scene: "tangle", ...BRAMBLE, text: "Not so fast! That {bug} is coming with us!", vars: { bug }, sound: "tangle" },
+    { scene: "tangle", ...THISTLE, text: "We'll set it free in a brand-new forest! Ha ha!" },
+    { scene: "tangle", ...SQUAWK, text: "Squawk! More bugs in more places!" },
+    { scene: "forest", ...PIP, text: "Bzz! An invasive bug in a new forest? No way! Battle them, {name}!" },
+  ]).then(() => battle({ id: "ambush", ambush: true, villain: true, bug: species, emoji: "🦹", name: "Team Tangle",
+    level: 2, bugLevel: Math.min(3, 1 + Math.floor(gymCount(g) / 4)), heals: 0, reward: AMBUSH_REWARD,
+    team: shuffle(gameSpecies()).slice(0, 3), say: { hi: "Hand it over, Bug Ranger!", ...TANGLE_SAY } }, false)));
+}
+
+// ---- the weekly Swarm Boss ----
+function swarm(g) {
+  const week = weekNumber();
+  if (!g.boss || g.boss.week !== week) g.boss = { week, hp: BOSS_HP, beaten: false };
+  return { ...g.boss, species: BOSS_BUGS[week % BOSS_BUGS.length] };
+}
+function swarmFoe(g) {
+  const sw = swarm(g);
+  return { id: "swarm", swarm: true, emoji: SPECIES_FACTS[sw.species].emoji, name: t("Mega Swarm: {bug}", { bug: commonName(sw.species) }),
+    level: 2, reward: BOSS_REWARD, team: [sw.species], fighters: [{ species: sw.species, level: 4, hp: sw.hp, max: BOSS_HP, atk: BOSS_ATK }],
+    say: { hi: "BZZZZZZZZ!", next: "BZZZ!", lose: "Bzz… bzz…", win: "BZZZZZZZZ!" } };
+}
+
+// ---- minigames: Trap Defense and Where's the Bug? ----
+function renderGames(g) {
+  const list = $("gamesList"); list.innerHTML = "";
+  const today = g.games.day === todayKey() ? g.games : {};
+  for (const [id, emoji, name, desc, play] of [
+    ["traps", "🟪", "Trap Defense", "Bugs are crawling toward the forest! Place traps to stop 3 waves.", trapDefense],
+    ["hide", "🔎", "Where's the Bug?", "Find the hidden invasive bug before time runs out. 3 rounds!", hideAndSeek],
+  ]) {
+    const row = el("div", "foe" + (today[id] ? " beaten" : ""));
+    const who = el("div", "foe-who");
+    who.append(el("strong", null, t(name)), el("span", "muted", `${t(desc)} ${today[id]
+      ? t("Today: +{pts} points per win.", { pts: GAME_REPLAY_POINTS }) : t("First win today: +{pts} points!", { pts: GAME_WIN_POINTS })}`));
+    const b = el("button", "btn primary", t("Play!"));
+    b.type = "button"; b.onclick = play; b.disabled = !gameSpecies().length;
+    row.append(el("span", "bug-emoji", emoji), who, b);
+    list.append(row);
+  }
+}
+// Points for a minigame win: more for the first win of the day
+function minigameWin(id) {
+  const g = loadGame();
+  if (g.games.day !== todayKey()) g.games = { day: todayKey() };
+  const pts = g.games[id] ? GAME_REPLAY_POINTS : GAME_WIN_POINTS;
+  g.games[id] = true;
+  if (id === "traps") g.trapWins++; else g.hideWins++;
+  addPoints(g, pts);
+  const lines = progress(g, { type: "minigame", pts });
+  saveGame(g); renderGame();
+  return [pts, lines];
+}
+function minigameResult(won, title, lines, again) {
+  sound(won ? "win" : "lose");
+  if (won) confetti();
+  openPopup([el("h2", null, title), ...lines.map(l => el("p", won ? "new-badge" : "muted", l))], [["Play again", true, again], ["Close", false]]);
+  popupDone = playQueued;
+}
+
+// Trap Defense: tap the grass to place traps. Traps catch bugs on the path next to them.
+function trapDefense() {
+  const species = gameSpecies();
+  if (!species.length) return;
+  const byRarity = r => species.filter(s => SPECIES_FACTS[s].rarity === r);
+  // Wave 1: common bugs. Wave 2: some rare ones. Wave 3: a Legendary bug at the end.
+  const waveBugs = w => Array.from({ length: TRAP_WAVES[w] }, (_, i) =>
+    pickOne(w === TRAP_WAVES.length - 1 && i === TRAP_WAVES[w] - 1 ? byRarity("legendary") : w >= 1 && i % 2 ? byRarity("rare") : byRarity("common")) || pickOne(species));
+  const onPath = new Map(TRAP_PATH.map(([c, r], i) => [`${c},${r}`, i]));
+  const traps = new Map();
+  let money = TRAP_MONEY, hearts = TRAP_HEARTS, wave = -1, queue = [], bugs = [], tick = 0, timer = null, over = false, kind = "sticky", note = "", caught = 0;
+
+  const board = el("div", "trap-board");
+  board.style.setProperty("--cols", TRAP_COLS); board.style.setProperty("--rows", TRAP_ROWS);
+  const status = el("p", "arena-info");
+  status.setAttribute("aria-live", "polite");
+  const showStatus = () => {
+    status.textContent = `${"❤️".repeat(hearts)}${"🖤".repeat(TRAP_HEARTS - hearts)} · 🪙 ${t("Trap points: {n}", { n: money })} · ${t("Wave {n} of {total}", { n: Math.max(1, wave + 1), total: TRAP_WAVES.length })}${note ? ` · ${note}` : ""}`;
+  };
+  let forest = null;
+  for (let r = 0; r < TRAP_ROWS; r++) for (let c = 0; c < TRAP_COLS; c++) {
+    const i = onPath.get(`${c},${r}`);
+    if (i != null) {
+      const cell = el("div", "trap-cell path" + (i === TRAP_PATH.length - 1 ? " forest" : ""), i === TRAP_PATH.length - 1 ? "🌳" : "");
+      if (i === TRAP_PATH.length - 1) forest = cell;
+      board.append(cell);
+      continue;
+    }
+    const cell = el("button", "trap-cell");
+    cell.type = "button";
+    cell.setAttribute("aria-label", t("Grass: place a trap here"));
+    cell.onclick = () => place(c, r, cell);
+    board.append(cell);
+  }
+  const place = (c, r, cell) => {
+    const key = `${c},${r}`, tr = TRAPS[kind];
+    if (traps.has(key) || over) return;
+    if (money < tr.cost) { note = t("Not enough trap points!"); sound("wrong"); return showStatus(); }
+    money -= tr.cost; note = "";
+    traps.set(key, { kind, c, r, cell });
+    cell.textContent = tr.emoji; cell.classList.add("trap"); cell.setAttribute("aria-label", t(tr.name));
+    sound("buy"); showStatus();
+  };
+  const picker = el("div", "trap-picker");
+  for (const [id, tr] of Object.entries(TRAPS)) {
+    const b = el("button", "btn", `${tr.emoji} ${t(tr.name)} · 🪙 ${tr.cost}`);
+    b.type = "button"; b.setAttribute("aria-pressed", id === kind);
+    b.onclick = () => { kind = id; for (const p of picker.children) p.setAttribute("aria-pressed", p === b); };
+    picker.append(b);
+  }
+  const legend = el("p", "muted trap-legend", Object.values(TRAPS).map(tr => `${tr.emoji} ${t(tr.desc)}`).join("  "));
+
+  // Bugs move smoothly along the path, one step at a time
+  const where = b => {
+    const i = Math.min(Math.floor(b.pos), TRAP_PATH.length - 1), f = b.pos - i;
+    const [c1, r1] = TRAP_PATH[i], [c2, r2] = TRAP_PATH[Math.min(i + 1, TRAP_PATH.length - 1)];
+    return [c1 + (c2 - c1) * f, r1 + (r2 - r1) * f];
+  };
+  const draw = b => {
+    const [x, y] = where(b);
+    b.el.style.left = `${(x + .5) / TRAP_COLS * 100}%`; b.el.style.top = `${(y + .5) / TRAP_ROWS * 100}%`;
+    b.el.style.setProperty("--hp", b.hp / b.max);
+  };
+  const spawn = s => {
+    const hp = TRAP_HP[SPECIES_FACTS[s].rarity];
+    const b = { s, pos: 0, hp, max: hp, el: el("span", "trap-bug", SPECIES_FACTS[s].emoji) };
+    b.el.title = commonName(s);
+    board.append(b.el); bugs.push(b); draw(b);
+  };
+  const remove = b => { bugs.splice(bugs.indexOf(b), 1); b.el.classList.add("gone"); setTimeout(() => b.el.remove(), 300); };
+  const replay = (cls, e) => { e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); };
+  const step = () => {
+    tick++;
+    if (queue.length && tick % 6 === 1) spawn(queue.shift());
+    for (const b of [...bugs]) {
+      b.pos += SPECIES_FACTS[b.s].rarity === "legendary" ? .16 : .22;
+      if (b.pos < TRAP_PATH.length - 1) { draw(b); continue; }
+      remove(b); hearts--; sound("wrong"); replay("shake", forest);
+      if (hearts <= 0) return end(false);
+    }
+    // Each trap catches the bug nearest the forest, about once a second
+    if (tick % 4 === 0) for (const tr of traps.values()) {
+      const target = bugs.filter(b => { const [x, y] = where(b); return Math.hypot(x - tr.c, y - tr.r) <= TRAP_RANGE; }).sort((a, b) => b.pos - a.pos)[0];
+      if (!target) continue;
+      target.hp -= tr.kind === "prism" && SPECIES_FACTS[target.s].group === "beetle" ? 3 : 1;
+      replay("zap", tr.cell); replay("hit", target.el);
+      if (target.hp > 0) { draw(target); continue; }
+      remove(target); money++; caught++; sound("hit");
+    }
+    if (!queue.length && !bugs.length) {
+      if (wave >= TRAP_WAVES.length - 1) return end(true);
+      clearInterval(timer); timer = null;
+      note = t("Wave cleared! Place more traps, then start the next wave.");
+      setStart();
+    }
+    showStatus();
+  };
+  const start = el("button", "btn primary");
+  start.type = "button";
+  const setStart = () => { start.textContent = `▶ ${t("Start wave {n}", { n: wave + 2 })}`; start.hidden = false; start.focus(); };
+  start.onclick = () => { wave++; queue = waveBugs(wave); tick = 0; note = ""; start.hidden = true; timer = setInterval(step, TRAP_TICK); showStatus(); };
+
+  function end(won, quit) {
+    if (over) return;
+    over = true; clearInterval(timer); popupDone = null;
+    if (quit) return;
+    if (!won) return minigameResult(false, t("The bugs reached the forest!"),
+      [t("Tip: put traps next to corners, where the path goes by more than once. Purple prism traps are best for beetles.")], trapDefense);
+    const [pts, lines] = minigameWin("traps");
+    minigameResult(true, t("You saved the forest! +{pts} points", { pts }), [t("Your traps caught {n} bugs.", { n: caught }), ...lines], trapDefense);
+  }
+  showStatus(); setStart();
+  openPopup([el("h2", null, `🟪 ${t("Trap Defense")}`), el("p", "muted", t("Tap the grass to place traps. Stop the bugs before they reach the forest!")),
+    picker, legend, board, status, start], [["Quit", false]]);
+  popupDone = () => end(false, true);   // "Quit" or Escape
+  start.focus();
+}
+
+// Where's the Bug?: one bug peeks out from the plants. Tapping the wrong spot costs 2 seconds.
+function hideAndSeek() {
+  const species = gameSpecies();
+  if (!species.length) return;
+  let round = 0, left = 0, paused = true, over = false;
+  const clue = el("p", "speech"), grid = el("div", "hide-grid"), bar = el("div", "track"), fill = el("div", "fill"), info = el("p", "arena-info");
+  bar.append(fill);
+  info.setAttribute("aria-live", "polite");
+  const startRound = () => {
+    const [cols, rows] = HIDE_ROUNDS[round], n = cols * rows, target = pickOne(species), f = SPECIES_FACTS[target];
+    clue.textContent = t("Find the {bug} {emoji}! Clue: {fact}", { bug: commonName(target), emoji: f.emoji, fact: t(f.fact) });
+    info.textContent = t("Round {n} of {total}", { n: round + 1, total: HIDE_ROUNDS.length });
+    grid.innerHTML = ""; grid.style.setProperty("--cols", cols);
+    const spot = Math.floor(Math.random() * n), decoys = new Set();
+    while (decoys.size < 2 + round * 2) { const d = Math.floor(Math.random() * n); if (d !== spot) decoys.add(d); }
+    for (let i = 0; i < n; i++) {
+      const cell = el("button", "hide-cell", pickOne(HIDE_PLANTS));
+      cell.type = "button";
+      if (i === spot || decoys.has(i)) cell.append(el("span", "peek", i === spot ? f.emoji : pickOne(HIDE_DECOYS)));
+      cell.onclick = i === spot ? () => found(cell) : () => miss(cell);
+      grid.append(cell);
+    }
+    left = HIDE_SECONDS * 10; paused = false;
+  };
+  const found = cell => {
+    if (paused || over) return;
+    paused = true; cell.classList.add("found"); sound("right");
+    round++;
+    if (round >= HIDE_ROUNDS.length) return setTimeout(() => end(true), 600);
+    info.textContent = t("Found it!");
+    setTimeout(startRound, 900);
+  };
+  const miss = cell => {
+    if (paused || over) return;
+    left -= HIDE_PENALTY * 10; sound("wrong");
+    cell.classList.remove("shake"); void cell.offsetWidth; cell.classList.add("shake");
+    info.textContent = t("Not there! −{n} seconds", { n: HIDE_PENALTY });
+  };
+  const timer = setInterval(() => {
+    if (paused || over) return;
+    left--;
+    fill.style.width = `${Math.max(0, left) / (HIDE_SECONDS * 10) * 100}%`;
+    if (left <= 0) end(false);
+  }, 100);
+  function end(won, quit) {
+    if (over) return;
+    over = true; clearInterval(timer); popupDone = null;
+    if (quit) return;
+    if (!won) return minigameResult(false, t("Time's up!"), [t("Tip: read the clue, then look for a tiny bug peeking out of the plants.")], hideAndSeek);
+    const [pts, lines] = minigameWin("hide");
+    minigameResult(true, t("Sharp eyes! You found all {n} bugs! +{pts} points", { n: HIDE_ROUNDS.length, pts }), lines, hideAndSeek);
+  }
+  startRound();
+  openPopup([el("h2", null, `🔎 ${t("Where's the Bug?")}`), clue, grid, bar, info], [["Quit", false]]);
+  popupDone = () => end(false, true);
+}
+
+// ---- read aloud ----
+// The browser reads the cutscenes out loud, in the game's language (if the device has that voice)
+const VOICE_LANG = { en: "en-US", es: "es-ES", fr: "fr-FR", hi: "hi-IN" };
+const VOICE_PITCH = { Pip: 1.6, Squawk: 1.9, Bramble: 1.3, Thistle: .8, "Boss Burdock": .5 };
+function speak(text, who) {
+  if (!window.speechSynthesis || !loadGame().readAloud) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}|️|‍/gu, ""));
+  u.lang = VOICE_LANG[gameLang] || "en-US";
+  const voices = speechSynthesis.getVoices().map(v => [v, v.lang.replace("_", "-")]);
+  const voice = (voices.find(([, l]) => l === u.lang) || voices.find(([, l]) => l.startsWith(u.lang.slice(0, 2))))?.[0];
+  if (voice) u.voice = voice;
+  u.pitch = VOICE_PITCH[who] || 1; u.rate = .95;
+  speechSynthesis.speak(u);
+}
+const hush = () => window.speechSynthesis?.cancel();
+
+// ---- the certificate ----
+function renderCertificate(g) {
+  const box = $("certBox"); box.innerHTML = "";
+  if (!g.gyms.includes("champion")) return box.append(el("p", "muted", `🔒 ${t("Beat the Oregon Champion to unlock your printable Forest Protector certificate.")}`));
+  const b = el("button", "btn primary", `🖨️ ${t("Print your certificate")}`);
+  b.type = "button"; b.onclick = showCertificate;
+  box.append(b);
+}
+function showCertificate() {
+  const g = loadGame();
+  const cert = el("div", "certificate");
+  const sign = el("div", "cert-sign");
+  sign.append(el("span", null, "👩‍🏫 Professor Hazel"), el("span", null, new Date().toLocaleDateString(gameLang)), el("span", null, "🦸 Champion Juniper"));
+  cert.append(el("p", "cert-top", "🌲 🦫 🌲"), el("h2", null, t("Forest Protector Certificate")), el("p", null, t("This certificate goes to")),
+    el("p", "cert-name", `${trainerLook(g)} ${g.trainer.name || t("Ranger")}`),
+    el("p", null, t("for beating all {n} forest gyms, becoming the Oregon Champion, and helping protect Oregon from invasive bugs.", { n: GYMS.length - 1 })),
+    el("p", "cert-stats", t("{kinds} kinds of bugs caught · {badges} badges · {pts} points", { kinds: kindsCaught(g), badges: g.badges.length, pts: g.points })),
+    sign, el("p", "cert-foot", "Pyinsect · Innvadex"));
+  const print = el("button", "btn primary", `🖨️ ${t("Print")}`);
+  print.type = "button";
+  print.onclick = () => { document.body.classList.add("printing"); window.print(); };
+  openPopup([cert, print], [["Close", false]]);
+}
+addEventListener("afterprint", () => document.body.classList.remove("printing"));
 
 // ---------- wiring ----------
 for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => {
@@ -1424,6 +2098,11 @@ $("langSelect").onchange = e => {
   if ($("quizBox").children.length) newQuestion();   // re-ask the quiz in the new language
 };
 $("bigTextBtn").onclick = () => { const g = loadGame(); g.bigText = !g.bigText; saveGame(g); renderGame(); };
+$("readAloudBtn").hidden = !window.speechSynthesis;
+$("readAloudBtn").onclick = () => { const g = loadGame(); g.readAloud = !g.readAloud; saveGame(g); renderGame(); if (!g.readAloud) hush(); };
+$("buddyBtn").onclick = showBuddy;
+// Night starts and ends while you play, so check the clock every minute
+setInterval(() => renderWorld(loadGame()), 60000);
 $("mapToggle").onchange = e => {
   const g = loadGame(); g.useMap = e.target.checked; saveGame(g);
   // Ask for permission now, so it doesn't pop up in the middle of a catch

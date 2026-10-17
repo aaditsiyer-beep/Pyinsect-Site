@@ -197,6 +197,44 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] The language is remembered after a reload.
   - [ ] Someone who speaks each language has checked the translations.
 
+## Innvadex version 8: Team Tangle, new minigames, Bug Buddy, and more
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-16
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Players want more to do, more story, and a funny bad guy team (like Team Rocket).
+- **Why it matters:** Each new part teaches a real way invasive bugs spread, or how experts
+  stop them. Read-aloud helps kids who can't read yet.
+- **Our idea:**
+  - **Team Tangle:** a goofy villain team (Bramble, Thistle, and Squawk, an invasive European
+    starling) who spread bugs on purpose: in firewood, on cars, in shipping crates. You stop 4 of
+    their schemes in the Battle tab, and sometimes they ambush you after a catch. When they lose,
+    they shout "Team Tangle is tangled up agaaain!" They never really take your bugs.
+  - **Trap Defense:** bugs crawl toward the forest. Place sticky traps and purple prism traps
+    (real traps experts use for emerald ash borers) to stop 3 waves.
+  - **Where's the Bug?:** find the hidden invasive bug in a busy forest picture before time runs out.
+  - **Weekly Swarm Boss:** a giant bug swarm with lots of HP. Damage you do is saved, so you can
+    beat it over many battles during the week.
+  - **Bug Buddy:** pick a native bug (Oregon swallowtail, convergent lady beetle, or ground
+    beetle). It grows as you earn points, gives tips when you tap it, and cheers in battles.
+  - **Day and night:** at night the game gets dark with fireflies, and moths give double points.
+  - **Weather:** a new weather each day (sunny, rainy, windy, foggy). It makes some types
+    stronger in battles.
+  - **Read aloud:** the computer reads cutscenes out loud in the player's language.
+  - **Trainer outfits:** spend coins on hats and gear for your trainer.
+  - **Printable certificate:** after you beat the Champion, print a "Forest Protector" certificate.
+- **Other ideas we talked about:** real weather from the internet (we picked game weather so
+  nobody's location is needed).
+- **Done when:**
+  - [ ] Each Team Tangle scheme plays its cutscenes, and winning shows the "tangled up" ending.
+  - [ ] Trap Defense and Where's the Bug? can be won and lost, and give points.
+  - [ ] Swarm Boss damage is still there after a reload.
+  - [ ] The Bug Buddy grows when you earn points.
+  - [ ] Night mode shows after 8 PM, and the weather changes each day.
+  - [ ] Read aloud speaks the cutscene in the chosen language (when the device has that voice).
+  - [ ] A hat bought in the shop shows on the trainer card.
+  - [ ] The certificate prints with the player's nickname.
+
 ## Camera zoom and crop
 
 - **Status:** Building

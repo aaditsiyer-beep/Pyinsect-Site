@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261016a">
+<link rel="stylesheet" href="assets/site.css?v=20261016b">
 </head>
 <body>
 <div class="wrap">
@@ -118,15 +118,17 @@
   <section class="game" id="game" aria-label="Innvadex game">
     <div class="ledger-head">
       <h2>Innvadex</h2>
-      <span class="game-score"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <span id="gameRank" class="status"></span> <span id="gameStreak" class="status" hidden></span> <span id="gamePoints" class="status">0 points</span> <span id="gameCoins" class="status"></span> <span id="gameProgress" class="status"></span> <span id="gameProtector" class="status"></span></span>
+      <span class="game-score"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <span id="gameRank" class="status"></span> <span id="gameStreak" class="status" hidden></span> <span id="gamePoints" class="status">0 points</span> <span id="gameCoins" class="status"></span> <span id="gameProgress" class="status"></span> <span id="gameProtector" class="status"></span> <button id="buddyBtn" class="status buddy-btn" type="button"></button></span>
     </div>
     <div id="daily" class="daily"><span class="daily-label">📅 <span data-i18n="Today's challenge">Today's challenge</span></span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
     <p id="seasonText" class="season"></p>
+    <p id="weatherText" class="season weather"></p>
     <div class="game-bar">
       <div class="game-tabs" role="tablist">
         <button class="tab" type="button" role="tab" data-tab="dex" aria-selected="true" data-i18n="My Innvadex">My Innvadex</button>
         <button class="tab" type="button" role="tab" data-tab="badges" aria-selected="false" data-i18n="Badges">Badges</button>
         <button class="tab" type="button" role="tab" data-tab="battle" aria-selected="false" data-i18n="Battle">Battle</button>
+        <button class="tab" type="button" role="tab" data-tab="games" aria-selected="false" data-i18n="Minigames">Minigames</button>
         <button class="tab" type="button" role="tab" data-tab="quiz" aria-selected="false" data-i18n="Quiz">Quiz</button>
         <button class="tab" type="button" role="tab" data-tab="shop" aria-selected="false" data-i18n="Shop">Shop</button>
         <button class="tab" type="button" role="tab" data-tab="map" aria-selected="false" data-i18n="Map">Map</button>
@@ -139,13 +141,15 @@
         <label class="lang-pick">🌐 <span class="visually-hidden" data-i18n="Language">Language</span> <select id="langSelect"></select></label>
         <button id="bigTextBtn" class="btn" type="button" aria-pressed="false">🔠 <span data-i18n="Big text">Big text</span></button>
         <button id="muteBtn" class="btn" type="button" aria-pressed="false">🔊 Sound on</button>
+        <button id="readAloudBtn" class="btn" type="button" aria-pressed="false">🗣️ <span data-i18n="Read aloud">Read aloud</span></button>
         <button id="howToPlay" class="btn" type="button" data-i18n="How to play">How to play</button>
         <button id="introBtn" class="btn" type="button">🎬 <span data-i18n="Watch intro">Watch intro</span></button>
       </span>
     </div>
     <div id="tab-dex" role="tabpanel"><div id="dexGrid" class="dex-grid"></div></div>
-    <div id="tab-badges" role="tabpanel" hidden><div id="badgeList" class="badge-list"></div></div>
+    <div id="tab-badges" role="tabpanel" hidden><div id="certBox" class="cert-box"></div><div id="badgeList" class="badge-list"></div></div>
     <div id="tab-battle" role="tabpanel" hidden><div id="battleList" class="battle-list"></div></div>
+    <div id="tab-games" role="tabpanel" hidden><div id="gamesList" class="battle-list"></div></div>
     <div id="tab-quiz" role="tabpanel" hidden><div id="quizBox" class="quiz"></div></div>
     <div id="tab-shop" role="tabpanel" hidden><div id="shopList" class="battle-list"></div></div>
     <div id="tab-map" role="tabpanel" hidden>
