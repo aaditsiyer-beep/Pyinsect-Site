@@ -644,3 +644,7 @@ input[type=file] { display: none; }
   .fireflies i { opacity: .8; }
   .trap-bug { transition: none; }
 }
+
+/* "Insect not in my list" / "Unable to determine" cards (Oregon model) */
+.card.unsure .name { color: var(--muted); }
+.card .unsure-note { font-size: 14px; color: var(--muted); }
