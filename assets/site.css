@@ -648,3 +648,31 @@ input[type=file] { display: none; }
 /* "Insect not in my list" / "Unable to determine" cards (Oregon model) */
 .card.unsure .name { color: var(--muted); }
 .card .unsure-note { font-size: 14px; color: var(--muted); }
+
+/* Innvadex version 9: more minigames */
+.match-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.match-card { position: relative; aspect-ratio: 3 / 4; padding: 0; border: 0; border-radius: 12px; cursor: pointer; background: none; perspective: 600px; font: inherit; color: var(--ink); }
+.match-card > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; border-radius: 12px; backface-visibility: hidden; transition: transform .35s; }
+.match-back { background: linear-gradient(135deg, #3fb4a8, #8e4fe0); }
+.match-back .innva-orb { position: static; width: 36px; height: 36px; margin: 0; }
+.match-front { background: var(--surface); border: 2px solid var(--accent); transform: rotateY(180deg); }
+.match-front .bug-emoji { font-size: 26px; }
+.match-front small { font-size: 10px; line-height: 1.15; }
+.match-card.flipped .match-back { transform: rotateY(180deg); }
+.match-card.flipped .match-front { transform: rotateY(360deg); }
+.match-card.matched .match-front { background: #e4f7e9; border-color: #1f8a4c; }
+.sort-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #bfe3c8, #7fbf8e); color: #15241b; }
+.sort-card .bug-emoji { font-size: 56px; }
+.sort-card strong { font-size: 18px; }
+.pop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; border-radius: 18px; background: linear-gradient(180deg, #8fcf8f, #5a9a68); }
+.pop-hole { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; aspect-ratio: 1; padding: 4px; border: 0; border-radius: 50% 50% 18px 18px; background: radial-gradient(ellipse at 50% 85%, #3b2a1a 0 38%, transparent 40%); cursor: pointer; font: inherit; color: #15241b; overflow: hidden; }
+.pop-hole .bug-emoji { font-size: 34px; }
+.pop-hole small { font-size: 11px; line-height: 1.1; font-weight: 600; background: rgba(255, 255, 255, .8); padding: 1px 4px; border-radius: 6px; }
+.pop-hole.up > * { animation: pop-up .2s ease-out; }
+@keyframes pop-up { from { transform: translateY(40px); } }
+.pop-hole.bonk { background-color: rgba(255, 243, 107, .6); }
+.pop-hole.oops { background-color: rgba(231, 76, 60, .45); }
+@media (prefers-reduced-motion: reduce) {
+  .match-card > span { transition: none; }
+  .pop-hole.up > * { animation: none; }
+}

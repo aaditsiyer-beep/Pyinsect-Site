@@ -235,6 +235,27 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] A hat bought in the shop shows on the trainer card.
   - [ ] The certificate prints with the player's nickname.
 
+## Innvadex version 9: more minigames
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-18
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Players want more minigames.
+- **Why it matters:** Each game teaches something: the names of invasive bugs, and which bugs
+  belong here so we leave them be.
+- **Our idea:** 3 new games in the Minigames tab (5 in all):
+  - **Bug Match:** a memory game. Flip cards to find matching pairs of invasive bugs.
+  - **Invasive or Native?:** sort 10 bugs. Get 8 right to win.
+  - **Bug Pop:** bugs pop out of holes for 30 seconds. Tap invasive ones, but tapping a native
+    bug (like Pip's family) loses points.
+  - New badges for each game, and "Minigame Champ" for winning all 5.
+  - Fact cards for the 6 new bugs in the Pyinsect 2.8 Oregon model, so catching them works.
+    A photo of emerald ash borer damage counts as finding the ash borer.
+- **Done when:**
+  - [ ] Each new game can be won (and Invasive or Native? and Bug Pop can be lost).
+  - [ ] The first win each day gives 30 points, later wins 5.
+  - [ ] Every new bug in the Oregon model has a fact card.
+
 ## Camera zoom and crop
 
 - **Status:** Building

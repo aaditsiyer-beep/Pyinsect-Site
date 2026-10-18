@@ -82,6 +82,31 @@ const SPECIES_FACTS = {
     fact: "A white butterfly with one or two black spots on each wing. It came from Europe.",
     harm: "Its green caterpillars munch cabbage, broccoli, and kale.",
     todo: "Take a photo. Check under garden leaves for small green caterpillars." },
+  // Added for the Pyinsect 2.8 Oregon model
+  ips_typographus: { rarity: "rare", group: "beetle", emoji: "🪲",
+    fact: "A small, hairy brown beetle that tunnels under spruce tree bark.",
+    harm: "In Europe it has killed huge forests of spruce trees. It isn't in Oregon yet, and we want to keep it that way!",
+    todo: "Look for tiny holes and reddish-brown sawdust on spruce trunks. Take a photo and report it." },
+  lymantria_monacha: { rarity: "rare", group: "moth", emoji: "🦋",
+    fact: "A white moth with black zigzag lines on its wings.",
+    harm: "Its caterpillars eat the needles of pine and spruce trees and can harm whole forests.",
+    todo: "Take a photo and report it. It isn't in North America yet, so every sighting matters!" },
+  cydalima_perspectalis: { rarity: "rare", group: "moth", emoji: "🦋",
+    fact: "A white moth with a brown border on its wings. Its green-and-black caterpillars live on boxwood bushes.",
+    harm: "Its caterpillars eat boxwood leaves and can strip whole bushes bare.",
+    todo: "Check boxwood bushes for webbing and chewed leaves. Take a photo and report it." },
+  operophtera_brumata: { rarity: "common", group: "moth", emoji: "🦋",
+    fact: "A small brown moth that flies in late fall and winter, when most moths are gone.",
+    harm: "Its little green caterpillars eat the buds and young leaves of oaks, maples, and fruit trees in spring.",
+    todo: "Take a photo. Look for moths near porch lights on mild winter nights." },
+  scolytus_multistriatus: { rarity: "common", group: "beetle", emoji: "🪲",
+    fact: "A tiny, shiny reddish-brown beetle that lives under elm tree bark.",
+    harm: "It spreads Dutch elm disease, a fungus that has killed millions of elm trees.",
+    todo: "Look for tiny round holes in elm bark. Take a photo and report it." },
+  drosophila_melanogaster_suzukii: { rarity: "common", group: "fly", emoji: "🪰",
+    fact: "A tiny fruit fly with red eyes. The males have a dark spot on each wing.",
+    harm: "It lays eggs inside ripe berries and cherries, so the fruit turns mushy.",
+    todo: "Take a photo. Pick ripe fruit quickly, and throw away mushy berries." },
   polistes_dominula: { rarity: "common", group: "wasp", emoji: "🐝",
     fact: "A yellow-and-black paper wasp that builds open, umbrella-shaped nests.",
     harm: "It pushes out native paper wasps and competes with them for food.",
@@ -127,7 +152,7 @@ const CHALLENGES = [
 
 // Battle strength by rarity, and each group's special move
 const STATS = { common: { hp: 30, atk: 8 }, rare: { hp: 38, atk: 10 }, legendary: { hp: 46, atk: 12 } };
-const SPECIAL_MOVES = { beetle: "Wood Drill", ant: "Swarm", wasp: "Sting", moth: "Leaf Munch", bug: "Sap Suck", termite: "Chomp" };
+const SPECIAL_MOVES = { beetle: "Wood Drill", ant: "Swarm", wasp: "Sting", moth: "Leaf Munch", bug: "Sap Suck", termite: "Chomp", fly: "Fruit Dive" };
 const SPECIAL_HIT_CHANCE = 0.7;
 const TEAM_SIZE = 6;
 
@@ -424,15 +449,16 @@ function checkUnlocks(g) {
 // Bug types. Each group is strong against some others: its attacks do 1.5× damage to them,
 // and 0.67× (two thirds) the other way around.
 const TYPES = {
-  beetle: "🪲 Beetle", ant: "🐜 Ant", wasp: "🐝 Wasp", moth: "🦋 Moth & butterfly", bug: "🦗 True bug", termite: "🪵 Termite",
+  beetle: "🪲 Beetle", ant: "🐜 Ant", wasp: "🐝 Wasp", moth: "🦋 Moth & butterfly", bug: "🦗 True bug", termite: "🪵 Termite", fly: "🪰 Fly",
 };
 const STRONG_AGAINST = {
-  wasp: ["moth", "bug"],       // wasps hunt caterpillars and other soft bugs
+  wasp: ["moth", "bug", "fly"], // wasps hunt caterpillars, flies, and other soft bugs
   ant: ["termite", "moth"],    // ants raid termite nests and carry off caterpillars
   beetle: ["ant", "wasp"],     // a hard shell stops bites and stings
   bug: ["beetle"],             // a stinky smell scares beetles away
   termite: ["bug"],            // a big colony crowds them out
   moth: ["termite"],           // flying over the termites' heads
+  fly: ["beetle"],             // too quick for slow beetles to catch
 };
 const typeBoost = (attacker, defender) => {
   const a = SPECIES_FACTS[attacker].group, d = SPECIES_FACTS[defender].group;
@@ -606,6 +632,20 @@ const TRAP_TICK = 250, TRAP_RANGE = 1.5;
 const HIDE_ROUNDS = [[6, 4], [7, 5], [8, 6]], HIDE_SECONDS = 15, HIDE_PENALTY = 2;
 const HIDE_PLANTS = ["🌿", "🍃", "🌱", "🍂", "🌾", "🌳", "🌲", "🪨", "🍄", "🌼"];
 const HIDE_DECOYS = ["🐌", "🕷️", "🪱", "🐸", "🐿️", "🐦"];
+// Native bugs for "Invasive or Native?" and Bug Pop. They belong in Oregon, so we leave them be.
+const NATIVE_BUGS = [
+  { emoji: "🐝", name: "Western bumble bee", fact: "Pip's family! It helps flowers make seeds." },
+  { emoji: "🦋", name: "Oregon swallowtail", fact: "Oregon's state insect!" },
+  { emoji: "🐞", name: "Convergent lady beetle", fact: "A native ladybug that eats aphids." },
+  { emoji: "🐝", name: "Blue orchard mason bee", fact: "A shiny blue native bee that helps fruit trees make fruit." },
+  { emoji: "🦋", name: "Western tiger swallowtail", fact: "A big yellow butterfly with black stripes, common in Oregon towns." },
+  { emoji: "🪲", name: "Ten-lined June beetle", fact: "A big native beetle with white stripes. It squeaks if you pick it up!" },
+  { emoji: "🐜", name: "Pacific dampwood termite", fact: "A native termite that eats wet, rotting logs and helps the forest recycle." },
+  { emoji: "🪲", name: "Ground beetle", fact: "A fast native beetle that hunts slugs at night." },
+];
+const MATCH_PAIRS = 6;                                  // Bug Match: 12 cards
+const SORT_ROUNDS = 10, SORT_TO_WIN = 8;                // Invasive or Native?: get 8 of 10 right
+const POP_SECONDS = 30, POP_TO_WIN = 15, POP_HOLES = 9, POP_NATIVE_CHANCE = 0.3, POP_PENALTY = 2;   // Bug Pop
 
 // New badges and scenes for version 8
 BADGES.push(
@@ -613,9 +653,13 @@ BADGES.push(
   { id: "traps",  emoji: "🟪", name: "Trap Master",     desc: "Win Trap Defense.",                       earned: g => g.trapWins >= 1 },
   { id: "hide",   emoji: "🔎", name: "Sharp Eyes",      desc: "Win Where's the Bug?",                    earned: g => g.hideWins >= 1 },
   { id: "swarm",  emoji: "👾", name: "Swarm Stopper",   desc: "Beat a weekly Swarm Boss.",               earned: g => g.bossWins >= 1 },
+  { id: "match",  emoji: "🃏", name: "Memory Master",   desc: "Win Bug Match.",                          earned: g => g.miniWins.match >= 1 },
+  { id: "sort",   emoji: "🌼", name: "Sorting Star",    desc: "Win Invasive or Native?",                 earned: g => g.miniWins.sort >= 1 },
+  { id: "pop",    emoji: "🕳️", name: "Pop Star",        desc: "Win Bug Pop.",                            earned: g => g.miniWins.pop >= 1 },
+  { id: "games5", emoji: "🎮", name: "Minigame Champ",  desc: "Win all 5 minigames.",                    earned: g => g.trapWins >= 1 && g.hideWins >= 1 && ["match", "sort", "pop"].every(k => g.miniWins[k] >= 1) },
   { id: "buddy",  emoji: "🐾", name: "Best Buddies",    desc: "Help your Bug Buddy grow all the way to Super.", earned: g => buddyStage(g) >= BUDDY_STAGES.length - 1 },
 );
-CHALLENGES.push({ text: "Win a minigame (Trap Defense or Where's the Bug?).", check: ev => ev.type === "minigame" });
+CHALLENGES.push({ text: "Win any minigame.", check: ev => ev.type === "minigame" });
 Object.assign(SCENES, {
   tangle: { bg: "linear-gradient(180deg, #e2d3f2 0%, #6e4a8e 100%)", decor: "🚚 🪵 🪵 📦 🪵 🚚" },
   sky:    { bg: "linear-gradient(180deg, #9fd3ff 0%, #e8f6ff 100%)", decor: "☁️ ✨ ☁️ ✨ ☁️" },
@@ -632,7 +676,7 @@ function loadGame() {
     items: {}, spots: [], useMap: false, muted: false, quiz: { day: null, right: 0 },
     trainer: { name: "", avatar: AVATARS[0] }, streak: { last: null, count: 0 }, unlockSeen: null,
     protectorDex: {}, missions: [], bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, outfits: { owned: [], hat: null, gear: null }, readAloud: false, games: {}, ambushDay: null, ...(g || {}) };
+    buddy: null, outfits: { owned: [], hat: null, gear: null }, readAloud: false, games: {}, miniWins: {}, ambushDay: null, ...(g || {}) };
   // Gyms that were already open before gym cutscenes existed don't need one
   if (!g.unlockSeen) g.unlockSeen = GYMS.filter(gym => gymOpen(g, gym)).map(gym => gym.id);
   if (g.coins == null) g.coins = g.points;   // games saved before the shop existed
@@ -896,7 +940,7 @@ function showInstructions() {
     "Try the real-world “Missions” with a grown-up, and see bugs you left be in the “Protector-dex”.",
     "Watch out for Team Tangle! Stop their schemes in the “Battle” tab. Sometimes they ambush you after a catch, too.",
     "Battle the weekly Swarm Boss. The damage you do is saved all week.",
-    "Play “Trap Defense” and “Where's the Bug?” in the “Minigames” tab.",
+    "Play 5 minigames in the “Minigames” tab, like “Trap Defense” and “Bug Pop”.",
     "Pick a Bug Buddy. It grows as you earn points and cheers for you in battles.",
     "Check the weather: it makes some types stronger. At night, moths give double points.",
     "Turn on “Read aloud” to hear the story, and buy hats and gear in the “Shop”.",
@@ -1044,7 +1088,10 @@ function minigame(species, photo) {
 let encounters = Promise.resolve();
 
 // Called by app.js when a photo shows an invasive bug. Bugs found together wait their turn.
+// Photos of a bug's damage count as finding that bug
+const SPECIES_ALIAS = { agrilus_planipennis_damage: "agrilus_planipennis" };
 function encounter(species, photo) {
+  species = SPECIES_ALIAS[species] || species;
   if (!SPECIES_FACTS[species]) return;
   encounters = encounters.then(async () => {
     const won = await minigame(species, photo);
@@ -1833,6 +1880,9 @@ function renderGames(g) {
   for (const [id, emoji, name, desc, play] of [
     ["traps", "🟪", "Trap Defense", "Bugs are crawling toward the forest! Place traps to stop 3 waves.", trapDefense],
     ["hide", "🔎", "Where's the Bug?", "Find the hidden invasive bug before time runs out. 3 rounds!", hideAndSeek],
+    ["match", "🃏", "Bug Match", "Flip cards to find matching bug pairs.", bugMatch],
+    ["sort", "🌼", "Invasive or Native?", "Is it an invader, or does it belong here? Get 8 of 10 right!", invasiveOrNative],
+    ["pop", "🕳️", "Bug Pop", "Tap invasive bugs as they pop up, but leave native bugs alone!", bugPop],
   ]) {
     const row = el("div", "foe" + (today[id] ? " beaten" : ""));
     const who = el("div", "foe-who");
@@ -1850,7 +1900,9 @@ function minigameWin(id) {
   if (g.games.day !== todayKey()) g.games = { day: todayKey() };
   const pts = g.games[id] ? GAME_REPLAY_POINTS : GAME_WIN_POINTS;
   g.games[id] = true;
-  if (id === "traps") g.trapWins++; else g.hideWins++;
+  if (id === "traps") g.trapWins++;
+  else if (id === "hide") g.hideWins++;
+  else g.miniWins[id] = (g.miniWins[id] || 0) + 1;
   addPoints(g, pts);
   const lines = progress(g, { type: "minigame", pts });
   saveGame(g); renderGame();
@@ -2036,6 +2088,158 @@ function hideAndSeek() {
   startRound();
   openPopup([el("h2", null, `🔎 ${t("Where's the Bug?")}`), clue, grid, bar, info], [["Quit", false]]);
   popupDone = () => end(false, true);
+}
+
+// Bug Match: a memory game. Flip two cards; if they show the same bug, they stay up.
+function bugMatch() {
+  const kinds = shuffle(gameSpecies()).slice(0, MATCH_PAIRS);
+  if (kinds.length < 2) return;
+  let open = [], matched = 0, tries = 0, busy = false, over = false;
+  const grid = el("div", "match-grid"), info = el("p", "arena-info");
+  info.setAttribute("aria-live", "polite");
+  const show = () => { info.textContent = t("Pairs found: {n} of {total} · Tries: {tries}", { n: matched, total: kinds.length, tries }); };
+  for (const s of shuffle([...kinds, ...kinds])) {
+    const card = el("button", "match-card"), front = el("span", "match-front"), back = el("span", "match-back");
+    card.type = "button";
+    card.setAttribute("aria-label", t("Hidden card"));
+    back.append(makeOrb());
+    front.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("small", null, commonName(s)));
+    card.append(back, front);
+    card.onclick = async () => {
+      if (busy || over || card.classList.contains("flipped")) return;
+      card.classList.add("flipped"); card.setAttribute("aria-label", commonName(s)); sound("tick");
+      open.push([card, s]);
+      if (open.length < 2) return;
+      const [[a, sa], [b, sb]] = open;
+      open = []; tries++;
+      if (sa === sb) {
+        a.classList.add("matched"); b.classList.add("matched"); matched++; sound("right"); show();
+        if (matched === kinds.length) setTimeout(() => end(), 500);
+        return;
+      }
+      show(); busy = true;
+      await wait(850);
+      for (const c of [a, b]) { c.classList.remove("flipped"); c.setAttribute("aria-label", t("Hidden card")); }
+      busy = false;
+    };
+    grid.append(card);
+  }
+  function end(quit) {
+    if (over) return;
+    over = true; popupDone = null;
+    if (quit) return;
+    const [pts, lines] = minigameWin("match");
+    minigameResult(true, t("You matched all the bugs! +{pts} points", { pts }), [t("It took you {n} tries.", { n: tries }), ...lines], bugMatch);
+  }
+  show();
+  openPopup([el("h2", null, `🃏 ${t("Bug Match")}`), el("p", "muted", t("Flip two cards at a time. Find all the matching bug pairs!")), grid, info], [["Quit", false]]);
+  popupDone = () => end(true);
+}
+
+// Invasive or Native?: sort 10 bugs. Half are invasive, half belong in Oregon.
+function invasiveOrNative() {
+  const inv = shuffle(gameSpecies()).slice(0, SORT_ROUNDS / 2)
+    .map(s => ({ emoji: SPECIES_FACTS[s].emoji, name: commonName(s), fact: t(SPECIES_FACTS[s].fact), invasive: true }));
+  if (!inv.length) return;
+  const nat = shuffle(NATIVE_BUGS).slice(0, SORT_ROUNDS - inv.length).map(b => ({ emoji: b.emoji, name: t(b.name), fact: t(b.fact), invasive: false }));
+  const rounds = shuffle([...inv, ...nat]);
+  let i = 0, right = 0, over = false;
+  const card = el("div", "sort-card"), feedback = el("p", "quiz-result"), info = el("p", "arena-info"), buttons = el("div", "battle-moves");
+  feedback.setAttribute("aria-live", "polite");
+  const yes = el("button", "btn", `🚫 ${t("Invasive")}`), no = el("button", "btn", `🌼 ${t("Native")}`), next = el("button", "btn primary", t("Next"));
+  yes.type = no.type = next.type = "button";
+  buttons.append(yes, no, next);
+  const status = () => { info.textContent = t("Bug {n} of {total} · {right} right", { n: i + 1, total: rounds.length, right }); };
+  const showRound = () => {
+    const r = rounds[i];
+    card.innerHTML = "";
+    card.append(el("span", "bug-emoji", r.emoji), el("strong", null, r.name));
+    feedback.textContent = ""; yes.disabled = no.disabled = false; next.hidden = true;
+    status(); yes.focus();
+  };
+  const answer = saidInvasive => {
+    const r = rounds[i], ok = saidInvasive === r.invasive;
+    if (ok) right++;
+    sound(ok ? "right" : "wrong");
+    yes.disabled = no.disabled = true;
+    feedback.textContent = `${ok ? "✅" : "❌"} ${t(r.invasive ? "It's invasive! Catch it and report it." : "It's native! Leave it be.")} ${r.fact}`;
+    status(); next.hidden = false; next.focus();
+  };
+  yes.onclick = () => answer(true);
+  no.onclick = () => answer(false);
+  next.onclick = () => { i++; if (i >= rounds.length) return end(); showRound(); };
+  function end(quit) {
+    if (over) return;
+    over = true; popupDone = null;
+    if (quit) return;
+    if (right < SORT_TO_WIN) return minigameResult(false, t("You got {n} of {total} right.", { n: right, total: rounds.length }),
+      [t("Get {n} right to win. Read the fact cards in Learn about species, then try again!", { n: SORT_TO_WIN })], invasiveOrNative);
+    const [pts, lines] = minigameWin("sort");
+    minigameResult(true, t("You got {n} of {total} right! +{pts} points", { n: right, total: rounds.length, pts }), lines, invasiveOrNative);
+  }
+  openPopup([el("h2", null, `🌼 ${t("Invasive or Native?")}`), card, buttons, feedback, info], [["Quit", false]]);
+  popupDone = () => end(true);
+  showRound();
+}
+
+// Bug Pop: bugs pop out of holes. Tap invasive ones (+1). Tapping a native bug costs 2 points.
+function bugPop() {
+  const species = gameSpecies();
+  if (!species.length) return;
+  let score = 0, left = POP_SECONDS * 10, tick = 0, over = false;
+  const holes = el("div", "pop-grid"), info = el("p", "arena-info"), bar = el("div", "track"), fill = el("div", "fill");
+  bar.append(fill);
+  info.setAttribute("aria-live", "polite");
+  const show = note => { info.textContent = `${t("Score: {n}", { n: score })} · ${t("Goal: {n}", { n: POP_TO_WIN })}${note ? ` · ${note}` : ""}`; };
+  const cells = Array.from({ length: POP_HOLES }, (_, k) => {
+    const h = el("button", "pop-hole");
+    h.type = "button"; h.setAttribute("aria-label", t("Empty hole"));
+    h.onclick = () => tap(k);
+    holes.append(h);
+    return { h, bug: null, timer: null };
+  });
+  const hide = k => { const c = cells[k]; c.bug = null; c.h.innerHTML = ""; c.h.className = "pop-hole"; c.h.setAttribute("aria-label", t("Empty hole")); };
+  const pop = () => {
+    const free = cells.map((c, k) => c.bug ? -1 : k).filter(k => k >= 0);
+    if (!free.length) return;
+    const k = pickOne(free), c = cells[k];
+    const nb = Math.random() < POP_NATIVE_CHANCE ? pickOne(NATIVE_BUGS) : null, s = pickOne(species);
+    const bug = nb ? { native: true, emoji: nb.emoji, name: t(nb.name) } : { native: false, emoji: SPECIES_FACTS[s].emoji, name: commonName(s) };
+    c.bug = bug;
+    c.h.className = "pop-hole up";
+    c.h.append(el("span", "bug-emoji", bug.emoji), el("small", null, bug.name));
+    c.h.setAttribute("aria-label", bug.name);
+    // Bugs stay up a little shorter as the game goes on
+    c.timer = setTimeout(() => { if (c.bug === bug) hide(k); }, Math.max(800, 1600 - tick * 3));
+  };
+  const tap = k => {
+    const c = cells[k];
+    if (over || !c.bug || c.bug.gone) return;
+    clearTimeout(c.timer);
+    if (c.bug.native) { score = Math.max(0, score - POP_PENALTY); sound("wrong"); c.h.classList.add("oops"); show(t("That's a native bug! Leave it be.")); }
+    else { score++; sound("hit"); c.h.classList.add("bonk"); show(); }
+    c.bug = { gone: true };
+    setTimeout(() => hide(k), 300);
+  };
+  const timer = setInterval(() => {
+    if (over) return;
+    tick++; left--;
+    fill.style.width = `${left / (POP_SECONDS * 10) * 100}%`;
+    if (tick % 7 === 0 || (tick > 100 && tick % 11 === 0)) pop();
+    if (left <= 0) end();
+  }, 100);
+  function end(quit) {
+    if (over) return;
+    over = true; clearInterval(timer); cells.forEach(c => clearTimeout(c.timer)); popupDone = null;
+    if (quit) return;
+    if (score < POP_TO_WIN) return minigameResult(false, t("Time's up! You scored {n}.", { n: score }),
+      [t("Get {n} to win. Tap invasive bugs fast, and leave native bugs alone!", { n: POP_TO_WIN })], bugPop);
+    const [pts, lines] = minigameWin("pop");
+    minigameResult(true, t("You scored {n}! +{pts} points", { n: score, pts }), lines, bugPop);
+  }
+  show(); pop();
+  openPopup([el("h2", null, `🕳️ ${t("Bug Pop")}`), el("p", "muted", t("Tap the invasive bugs when they pop up. Don't tap native bugs, like Pip's family!")), holes, bar, info], [["Quit", false]]);
+  popupDone = () => end(true);
 }
 
 // ---- read aloud ----
