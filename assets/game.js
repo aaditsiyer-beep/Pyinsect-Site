@@ -2056,18 +2056,42 @@ function bugPop() {
 }
 
 // ---- read aloud ----
-// The browser reads the cutscenes out loud, in the game's language (if the device has that voice)
+// The browser reads the cutscenes out loud, in the game's language (if the device has that voice).
+// Devices often have several voices. The good ones sound like real people ("Natural", "Neural",
+// Google, Siri, and so on), and the old ones sound like robots, so we pick the best one we can.
 const VOICE_LANG = { en: "en-US", es: "es-ES", fr: "fr-FR", hi: "hi-IN" };
-const VOICE_PITCH = { Pip: 1.6, Squawk: 1.9, Bramble: 1.3, Thistle: .8, "Boss Burdock": .5 };
+// Small changes only. Pitch that's very high or very low is what makes a voice sound robotic.
+const VOICE_STYLE = { Pip: { pitch: 1.2, rate: 1.05 }, Squawk: { pitch: 1.3, rate: 1.1 }, Bramble: { pitch: 1.1 }, Thistle: { pitch: .92 }, "Boss Burdock": { pitch: .85, rate: .92 } };
+// Characters who get a different voice than Professor Hazel, when the device has more than one good voice
+const VOICE_SLOT = { Pip: 1, Bramble: 1, Squawk: 1, Thistle: 2, "Boss Burdock": 2 };
+const VOICE_GOOD = /natural|neural|premium|enhanced|online|google|siri|samantha|aria|jenny|guy|libby|sonia|denise|elvira|madhur|swara/i;
+const VOICE_BAD = /espeak|compact|robot|novelty|zarvox|trinoids|whisper|bells|bad news|bubbles|cellos|jester|organ|superstar/i;
+let voices = [];
+if (window.speechSynthesis) {
+  voices = speechSynthesis.getVoices();
+  // The list often isn't ready when the page opens, so listen for it
+  speechSynthesis.addEventListener?.("voiceschanged", () => { voices = speechSynthesis.getVoices(); });
+}
+function voiceScore(v, lang) {
+  const l = v.lang.replace("_", "-").toLowerCase(), want = lang.toLowerCase();
+  if (!l.startsWith(want.slice(0, 2))) return -1;           // wrong language
+  return (l === want ? 2 : 1) + (VOICE_GOOD.test(v.name) ? 4 : 0) - (VOICE_BAD.test(v.name) ? 5 : 0) + (v.localService ? 0 : 1);
+}
+function pickVoice(lang, who) {
+  const scored = voices.map(v => [v, voiceScore(v, lang)]).filter(x => x[1] >= 0).sort((a, b) => b[1] - a[1]);
+  if (!scored.length) return null;
+  const best = scored.filter(x => x[1] === scored[0][1]).map(x => x[0]);   // the voices tied for best
+  return best[(VOICE_SLOT[who] || 0) % best.length];
+}
 function speak(text, who) {
   if (!window.speechSynthesis || !loadGame().readAloud) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}|️|‍/gu, ""));
+  const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}|\uFE0F|\u200D/gu, "").replace(/…/g, "..."));
   u.lang = VOICE_LANG[gameLang] || "en-US";
-  const voices = speechSynthesis.getVoices().map(v => [v, v.lang.replace("_", "-")]);
-  const voice = (voices.find(([, l]) => l === u.lang) || voices.find(([, l]) => l.startsWith(u.lang.slice(0, 2))))?.[0];
-  if (voice) u.voice = voice;
-  u.pitch = VOICE_PITCH[who] || 1; u.rate = .95;
+  const voice = pickVoice(u.lang, who);
+  if (voice) { u.voice = voice; u.lang = voice.lang; }
+  const style = VOICE_STYLE[who] || {};
+  u.pitch = style.pitch || 1; u.rate = style.rate || 1;
   speechSynthesis.speak(u);
 }
 const hush = () => window.speechSynthesis?.cancel();
