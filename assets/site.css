@@ -687,4 +687,4 @@ input[type=file] { display: none; }
 .caught-where { text-align: left; padding: 12px 14px; border-radius: 16px; background: var(--accent-soft); }
 .caught-where ul { margin: 6px 0 0; padding-left: 20px; }
 .caught-where p { margin: 0; }
-.game.night .btn.primary, .game-popup .btn.primary { color: #0d1411; }
+.game.night .btn.primary, .game.night .btn.primary:hover:not(:disabled) { color: #0d1411; }   /* light green buttons at night need dark text */
