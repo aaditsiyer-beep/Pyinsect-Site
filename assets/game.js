@@ -180,96 +180,95 @@ const TRAINERS = [
 // Innvadex has `unlock` kinds of bugs AND you've beaten the gym before it. Later gyms are harder:
 //   level    = how smart the leader is (see foeMove)
 //   bugLevel = how strong the leader's bugs are (yours go up to Lv 3, the Champion's are Lv 4)
-//   heals    = how many times the leader can heal a badly hurt bug
 // For the cutscenes: `place` and `story` (where you are), `intro` (the leader says hello),
 // `tip` (a real-world tip the leader gives you after you win).
 const GYMS = [
   { id: "forestpark", emoji: "🌲", name: "Forest Park Gym", place: "Forest Park", badge: "Forest Park Badge", leader: "Ranger Fern", face: "👩‍🌾",
-    level: 1, bugLevel: 1, heals: 0, unlock: 1, reward: 50,
+    level: 1, bugLevel: 1, unlock: 1, reward: 50,
     team: ["exomala_orientalis", "anisandrus_dispar", "pieris_rapae"],
     story: "Forest Park is one of the biggest city forests in the country, right in Portland. Invasive beetles are sneaking in!",
     intro: "Hi! I'm Ranger Fern. I've hiked every single trail in Forest Park. That's more than 80 miles!",
     tip: "When you hike, brush off your boots and gear before you leave. Seeds and bugs love to hitchhike!",
     say: { hi: "Welcome to Forest Park! Let's see if you can protect it.", next: "The forest is counting on me!", lose: "You've earned the Forest Park Badge!", win: "Come back when you're stronger!" } },
   { id: "siuslaw", emoji: "🌊", name: "Siuslaw Coast Gym", place: "the Siuslaw National Forest", badge: "Siuslaw Badge", leader: "Ranger Tide", face: "🏄",
-    level: 2, bugLevel: 1, heals: 0, unlock: 2, reward: 60,
+    level: 2, bugLevel: 1, unlock: 2, reward: 60,
     team: ["linepithema_humile", "harmonia_axyridis", "pieris_rapae", "halyomorpha_halys"],
     story: "The Siuslaw National Forest goes all the way to the ocean, with foggy forests and giant sand dunes.",
     intro: "Hey there! I'm Ranger Tide. When I'm not surfing, I'm watching for bugs that wash in from far away.",
     tip: "Never move plants, soil, or sand from one beach or forest to another. Tiny bugs can hide in them!",
     say: { hi: "Surf's up! Let's see if you can ride this wave.", next: "Here comes another wave!", lose: "Totally awesome! You've earned the Siuslaw Badge!", win: "Wiped out! Try again, dude!" } },
   { id: "tillamook", emoji: "🌧️", name: "Tillamook Forest Gym", place: "the Tillamook State Forest", badge: "Tillamook Badge", leader: "Ranger Moss", face: "🧔",
-    level: 2, bugLevel: 2, heals: 0, unlock: 3, reward: 70,
+    level: 2, bugLevel: 2, unlock: 3, reward: 70,
     team: ["macrodactylus_subspinosus", "solenopsis_invicta", "adelges_piceae"],
     story: "The Tillamook State Forest grew back after giant fires long ago. People planted millions of trees here by hand!",
     intro: "Name's Ranger Moss. I like rain, mud, and trees. Lots and lots of trees.",
     tip: "Look for white fuzzy spots on fir and hemlock trees. That can mean tiny sap-sucking bugs are there.",
     say: { hi: "Rain or shine, I'm ready to battle!", next: "A little rain won't stop me!", lose: "You've earned the Tillamook Badge!", win: "The rain is on my side today!" } },
   { id: "gorge", emoji: "💦", name: "Columbia Gorge Gym", place: "the Columbia River Gorge", badge: "Gorge Badge", leader: "Ranger Falls", face: "🚣",
-    level: 2, bugLevel: 2, heals: 1, unlock: 3, reward: 80,
+    level: 2, bugLevel: 2, unlock: 3, reward: 80,
     team: ["halyomorpha_halys", "polistes_dominula", "popillia_japonica", "macrodactylus_subspinosus"],
     story: "The Columbia River Gorge has more than 90 waterfalls on the Oregon side. Bugs ride in on boats and trucks here!",
     intro: "I'm Ranger Falls! I paddle the Columbia River every day. I've seen bugs hitch rides on boats!",
     tip: "Brown marmorated stink bugs crawl into houses in fall. Sealing cracks around windows keeps them out.",
     say: { hi: "My bugs are as strong as a waterfall. Ready to get splashed?", next: "Keep paddling!", lose: "What a ride! You've earned the Gorge Badge!", win: "Swept away! Try again!" } },
   { id: "umpqua", emoji: "🎣", name: "Umpqua River Gym", place: "the Umpqua National Forest", badge: "Umpqua Badge", leader: "Ranger River", face: "🧑‍🦱",
-    level: 2, bugLevel: 2, heals: 1, unlock: 4, reward: 85,
+    level: 2, bugLevel: 2, unlock: 4, reward: 85,
     team: ["halyomorpha_halys", "exomala_orientalis", "polistes_dominula", "solenopsis_invicta"],
     story: "The Umpqua National Forest has rushing rivers and tall waterfalls, like Watson Falls, one of the tallest in Oregon.",
     intro: "I'm Ranger River. I fish, I hike, and I never, ever let an invasive bug get past me.",
     tip: "Fire ants build dirt mounds. Never poke one! Take a photo from far away and tell a grown-up.",
     say: { hi: "Let's see if you can swim upstream against my team!", next: "The river keeps flowing!", lose: "Good catch! You've earned the Umpqua Badge!", win: "The current was too strong! Try again." } },
   { id: "willamette", emoji: "🍄", name: "Willamette Forest Gym", place: "the Willamette National Forest", badge: "Willamette Badge", leader: "Ranger Cedar", face: "👩‍🦰",
-    level: 3, bugLevel: 2, heals: 1, unlock: 4, reward: 90,
+    level: 3, bugLevel: 2, unlock: 4, reward: 90,
     team: ["xyleborus_monographus", "lymantria_dispar", "coptotermes_formosanus", "popillia_japonica"],
     story: "The Willamette National Forest has some of the oldest, tallest trees in Oregon. Some are hundreds of years old!",
     intro: "I'm Ranger Cedar. Some of my trees were already old before your great-great-grandparents were born.",
     tip: "Tiny holes and sawdust on an oak tree can mean a beetle is inside. Take a photo and report it!",
     say: { hi: "These are the bugs that worry us most in the Willamette. Show me what you know!", next: "My forest won't give up!", lose: "You've earned the Willamette Badge!", win: "Train a bit more, then come back!" } },
   { id: "rogue", emoji: "🪨", name: "Rogue-Siskiyou Gym", place: "the Rogue River-Siskiyou National Forest", badge: "Siskiyou Badge", leader: "Ranger Flint", face: "🤠",
-    level: 3, bugLevel: 2, heals: 1, unlock: 5, reward: 100,
+    level: 3, bugLevel: 2, unlock: 5, reward: 100,
     team: ["lymantria_dispar", "popillia_japonica", "polistes_dominula", "adelges_piceae"],
     story: "The Rogue River-Siskiyou National Forest has wild rivers and rare plants that grow almost nowhere else on Earth.",
     intro: "Howdy, I'm Ranger Flint. These mountains are full of rare plants, and I aim to keep 'em safe.",
     tip: "Spongy moth caterpillars are hairy. Don't touch them, because the hairs can make your skin itchy!",
     say: { hi: "Rare plants need tough protectors. Let's see how tough you are!", next: "Don't get too comfortable, partner!", lose: "Well done, partner! You've earned the Siskiyou Badge!", win: "These mountains are rough. Try again!" } },
   { id: "deschutes", emoji: "🌋", name: "Deschutes Forest Gym", place: "the Deschutes National Forest", badge: "Deschutes Badge", leader: "Ranger Ember", face: "👩‍🚒",
-    level: 3, bugLevel: 3, heals: 1, unlock: 5, reward: 110,
+    level: 3, bugLevel: 3, unlock: 5, reward: 110,
     team: ["lymantria_dispar", "coptotermes_formosanus", "solenopsis_invicta", "adelges_piceae", "xyleborus_monographus"],
     story: "The Deschutes National Forest has huge ponderosa pines growing next to old lava flows.",
     intro: "I'm Ranger Ember. I help protect this forest from wildfires, and from bugs that weaken the trees.",
     tip: "Trees weakened by invasive bugs can burn more easily. Healthy forests are safer forests!",
     say: { hi: "My bugs are hot as lava. Think you can handle the heat?", next: "Things are heating up!", lose: "You put out my fire! You've earned the Deschutes Badge!", win: "Too hot to handle! Cool off and try again." } },
   { id: "wallowa", emoji: "🏜️", name: "Wallowa Canyon Gym", place: "the Wallowa-Whitman National Forest", badge: "Wallowa Badge", leader: "Ranger Canyon", face: "👨‍🦳",
-    level: 3, bugLevel: 3, heals: 1, unlock: 6, reward: 120,
+    level: 3, bugLevel: 3, unlock: 6, reward: 120,
     team: ["coptotermes_formosanus", "xyleborus_monographus", "solenopsis_invicta", "lymantria_dispar", "anoplophora_glabripennis"],
     story: "The Wallowa-Whitman National Forest includes Hells Canyon, the deepest river canyon in North America!",
     intro: "I'm Ranger Canyon. I've been a ranger out here for forty years. I've seen a lot of bugs come and go.",
     tip: "Buy firewood where you burn it. Moving firewood is one of the main ways tree-killing bugs spread.",
     say: { hi: "This canyon is deep, and so is my experience. Let's battle!", next: "We're just getting started!", lose: "You've got real skill. You've earned the Wallowa Badge!", win: "Experience wins today. Come back stronger!" } },
   { id: "craterlake", emoji: "💧", name: "Crater Lake Gym", place: "Crater Lake", badge: "Crater Lake Badge", leader: "Ranger Blue", face: "🤿",
-    level: 3, bugLevel: 3, heals: 1, unlock: 6, reward: 130,
+    level: 3, bugLevel: 3, unlock: 6, reward: 130,
     team: ["anoplophora_glabripennis", "lycorma_delicatula", "popillia_japonica", "lymantria_dispar", "solenopsis_invicta"],
     story: "Crater Lake is the deepest lake in the United States. It sits inside an old volcano!",
     intro: "I'm Ranger Blue. I study the lake and the forests around it. My strategies run deep!",
     tip: "Asian longhorned beetles leave perfectly round holes in trees. If you see them, report them!",
     say: { hi: "My strategy is as deep as Crater Lake. Dive in!", next: "We're going deeper!", lose: "You've earned the Crater Lake Badge!", win: "You sank! Come back up and try again." } },
   { id: "malheur", emoji: "🍂", name: "Malheur Mountain Gym", place: "the Malheur National Forest", badge: "Malheur Badge", leader: "Ranger Morel", face: "🧑‍🔬",
-    level: 3, bugLevel: 3, heals: 2, unlock: 6, reward: 140,
+    level: 3, bugLevel: 3, unlock: 6, reward: 140,
     team: ["anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "coptotermes_formosanus", "lymantria_dispar"],
     story: "The Malheur National Forest is home to a giant honey mushroom that spreads underground. It's one of the biggest living things on Earth!",
     intro: "I'm Ranger Morel. I study fungus, and some beetles carry fungus that can hurt trees. Fascinating, and dangerous!",
     tip: "Spotted lanternflies lay mud-like egg patches on cars and outdoor stuff. Check before you travel!",
     say: { hi: "My team grows stronger, like a giant mushroom. Let's battle!", next: "My roots run deep!", lose: "Amazing! You've earned the Malheur Badge!", win: "My fungus friends win this time!" } },
   { id: "mthood", emoji: "🏔️", name: "Mount Hood Forest Gym", place: "Mount Hood", badge: "Mount Hood Badge", leader: "Ranger Summit", face: "🧗",
-    level: 3, bugLevel: 3, heals: 2, unlock: 6, reward: 150,
+    level: 3, bugLevel: 3, unlock: 6, reward: 150,
     team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "coptotermes_formosanus", "popillia_japonica"],
     story: "Mount Hood is Oregon's tallest mountain. Only the best Bug Rangers make it this far!",
     intro: "I'm Ranger Summit. I've climbed to the top of Mount Hood more times than I can count.",
     tip: "Emerald ash borers leave D-shaped holes in ash trees. Spotting them early can save a whole forest!",
     say: { hi: "You made it to the top! My Legendary bugs are the toughest in Oregon.", next: "A Legendary bug never gives up!", lose: "Amazing! You've earned the Mount Hood Badge!", win: "The mountain wins this time. Keep training!" } },
   { id: "champion", emoji: "🏆", name: "Oregon Champion", place: "the Champion's Hall", badge: "Champion Trophy", leader: "Champion Juniper", face: "🦸", champion: true,
-    level: 3, bugLevel: 4, heals: 3, unlock: 6, reward: 250,
+    level: 3, bugLevel: 4, unlock: 6, reward: 250,
     team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "lymantria_dispar", "popillia_japonica"],
     story: "This is the Champion's Hall. Only Bug Rangers with every gym badge are allowed inside.",
     intro: "I'm Juniper, the Oregon Champion. I've protected every forest in this state, from the coast to the mountains.",
@@ -480,7 +479,7 @@ const TANGLE_BLAST_OFF = [
 const TANGLE_SAY = { next: "Go, bug! Spread out!", lose: "No fair! We'll be back!", win: "Ha ha! Team Tangle wins this time!" };
 // The schemes, in order. Each needs the one before it, and `gyms` gym badges.
 const TANGLE = [
-  { id: "firewood", emoji: "🪵", name: "The Firewood Scheme", gyms: 0, level: 1, bugLevel: 1, heals: 0, reward: 60,
+  { id: "firewood", emoji: "🪵", name: "The Firewood Scheme", gyms: 0, level: 1, bugLevel: 1, reward: 60,
     team: ["anisandrus_dispar", "xyleborus_monographus", "agrilus_planipennis"],
     plan: [
       { scene: "forest", ...HAZEL, text: "{name}, come quick! Someone is loading a big truck with firewood near the campground." },
@@ -491,7 +490,7 @@ const TANGLE = [
       { scene: "tangle", ...BRAMBLE, text: "You want our firewood? You'll have to battle us for it!" },
     ],
     lesson: "Remember: buy firewood where you burn it, and never carry it to a new place." },
-  { id: "cars", emoji: "🚗", name: "The Road Trip Scheme", gyms: 2, level: 2, bugLevel: 2, heals: 0, reward: 80,
+  { id: "cars", emoji: "🚗", name: "The Road Trip Scheme", gyms: 2, level: 2, bugLevel: 2, reward: 80,
     team: ["halyomorpha_halys", "lymantria_dispar", "lycorma_delicatula"],
     plan: [
       { scene: "road", ...HAZEL, text: "Team Tangle is back! They're at a rest stop on the highway." },
@@ -503,7 +502,7 @@ const TANGLE = [
       { scene: "road", ...THISTLE, text: "Let's see you stop a whole parking lot of bugs!" },
     ],
     lesson: "Before a trip, check cars, trailers, and camping gear for egg patches. Spongy moths lay eggs on them too!" },
-  { id: "crates", emoji: "📦", name: "The Shipping Crate Scheme", gyms: 5, level: 3, bugLevel: 2, heals: 1, reward: 100,
+  { id: "crates", emoji: "📦", name: "The Shipping Crate Scheme", gyms: 5, level: 3, bugLevel: 2, reward: 100,
     team: ["coptotermes_formosanus", "solenopsis_invicta", "popillia_japonica", "anoplophora_glabripennis"],
     plan: [
       { scene: "port", ...HAZEL, text: "{name}! Team Tangle snuck into the shipping port with a pile of wooden crates!" },
@@ -515,7 +514,7 @@ const TANGLE = [
       { scene: "port", ...BRAMBLE, text: "Our crates are packed with our strongest bugs. Ready to lose?" },
     ],
     lesson: "Wooden crates from other countries must be heated to kill hidden bugs. They get a special stamp to show it was done!" },
-  { id: "boss", emoji: "🏰", name: "Tangle Tower", boss: true, gyms: 9, level: 3, bugLevel: 3, heals: 2, reward: 150,
+  { id: "boss", emoji: "🏰", name: "Tangle Tower", boss: true, gyms: 9, level: 3, bugLevel: 3, reward: 150,
     team: ["lymantria_dispar", "agrilus_planipennis", "lycorma_delicatula", "anoplophora_glabripennis", "vespa_mandarinia"],
     plan: [
       { scene: "tower", ...HAZEL, text: "This is it, {name}. Tangle Tower, Team Tangle's secret hideout." },
@@ -1163,7 +1162,7 @@ function battle(foe, gym) {
   const g = loadGame(), mine = myTeam(g), theirs = foe.fighters || foe.team.filter(s => SPECIES_FACTS[s]).map(s => fighter(s, foe.bugLevel || 1));
   if (!mine.length || !theirs.length) return battleDone();
   const foeName = gym ? foe.leader : foe.name;
-  let me = 0, them = 0, busy = false, over = false, fx = null, heals = foe.heals || 0;
+  let me = 0, them = 0, busy = false, over = false, fx = null;
   const youLabel = `${trainerLook(g)} ${g.trainer.name || t("You")}`;
   // A grown-up Bug Buddy cheers, which makes your bugs a little stronger
   const cheer = buddyBoost(g);
@@ -1246,12 +1245,8 @@ function battle(foe, gym) {
     }
     // The AI trainer's turn (see foeMove)
     let choice = foeMove(foe.level, theirs, them, mine[me]);
-    // Tough leaders can heal a badly hurt bug (a few times per battle)
-    if (heals > 0 && theirs[them].hp / theirs[them].max < 0.3) { choice = "heal"; heals--; }
-    if (choice === "heal") {
-      theirs[them].hp = theirs[them].max; sound("heal");
-      say(t("{foe} gave {bug} a Bug Snack. It's all healed!", { foe: foeName, bug: commonName(theirs[them].species) }));
-    } else if (choice === "switch") {
+    // (Trainers and gyms never heal their bugs: once a bug is hurt, it stays hurt)
+    if (choice === "switch") {
       them = nextHealthiest(theirs, them);
       say(t("{foe} switches to {bug}!", { foe: foeName, bug: commonName(theirs[them].species) })); talk(foe.say.next);
     }
@@ -1653,7 +1648,7 @@ function maybeAmbush(g, species) {
     { scene: "tangle", ...SQUAWK, text: "Squawk! More bugs in more places!" },
     { scene: "forest", ...PIP, text: "Bzz! An invasive bug in a new forest? No way! Battle them, {name}!" },
   ]).then(() => battle({ id: "ambush", ambush: true, villain: true, bug: species, emoji: "🦹", name: "Team Tangle",
-    level: 2, bugLevel: Math.min(3, 1 + Math.floor(gymCount(g) / 4)), heals: 0, reward: AMBUSH_REWARD,
+    level: 2, bugLevel: Math.min(3, 1 + Math.floor(gymCount(g) / 4)), reward: AMBUSH_REWARD,
     team: shuffle(gameSpecies()).slice(0, 3), say: { hi: "Hand it over, Bug Ranger!", ...TANGLE_SAY } }, false)));
 }
 
