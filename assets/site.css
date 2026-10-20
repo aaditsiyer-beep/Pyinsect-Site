@@ -676,3 +676,15 @@ input[type=file] { display: none; }
   .match-card > span { transition: none; }
   .pop-hole.up > * { animation: none; }
 }
+
+/* Innvadex version 10: simpler. One clear next step, and today's minigame. */
+.next-step { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-radius: 20px; border: 2px solid var(--accent); background: var(--accent-soft); }
+.next-step .next-emoji { font-size: 36px; line-height: 1; }
+.next-step p { flex: 1 1 200px; margin: 0; font-size: 18px; font-weight: 600; }
+.next-step:empty { display: none; }
+.daily-game { align-items: center; }
+.daily-game .btn { margin-left: auto; }
+.caught-where { text-align: left; padding: 12px 14px; border-radius: 16px; background: var(--accent-soft); }
+.caught-where ul { margin: 6px 0 0; padding-left: 20px; }
+.caught-where p { margin: 0; }
+.game.night .btn.primary, .game-popup .btn.primary { color: #0d1411; }

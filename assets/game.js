@@ -126,10 +126,7 @@ const BADGES = [
   { id: "protector", emoji: "🛡️", name: "Nature Protector",  desc: "Find 5 bugs that aren't invasive.",              earned: g => g.protector >= 5 },
   { id: "trainer",   emoji: "⚔️", name: "Battle Buddy",      desc: "Win a battle against a trainer.",  earned: g => g.wins >= 1 },
   { id: "daily",     emoji: "📅", name: "Challenge Champ",   desc: "Finish a daily challenge.",        earned: g => g.dailyDone >= 1 },
-  { id: "streak3",   emoji: "🔥", name: "On a Roll",         desc: "Play 3 days in a row.",            earned: g => g.streak.count >= 3 },
   { id: "natives10", emoji: "🌼", name: "Friend of Natives", desc: "Find 10 kinds of bugs that aren't invasive.", earned: g => Object.keys(g.protectorDex).length >= 10 },
-  { id: "missions",  emoji: "🌍", name: "Mission Master",    desc: "Finish every real-world mission.", earned: g => g.missions.length >= MISSIONS.length },
-  { id: "streak7",   emoji: "📆", name: "Week Warrior",      desc: "Play 7 days in a row.",            earned: g => g.streak.count >= 7 },
 ];
 
 const MINIGAME_TAPS = 3, MINIGAME_SECONDS = 10;
@@ -299,13 +296,13 @@ function gymIntroScenes(gym) {
 }
 const signatureBug = gym => [...gym.team].sort((a, b) => Object.keys(RARITY).indexOf(SPECIES_FACTS[b].rarity) - Object.keys(RARITY).indexOf(SPECIES_FACTS[a].rarity))[0];
 
-// ---------- version 3: evolution, ranks, shop, quiz, map, sounds ----------
+// ---------- version 3: evolution, ranks, sounds ----------
 
 // Catch the same kind of bug 3 times and it levels up. Each level makes it stronger in battles.
 const CATCHES_PER_LEVEL = 3, MAX_LEVEL = 3, LEVEL_BONUS = { hp: 6, atk: 2 };
 const bugLevel = n => Math.min(MAX_LEVEL, 1 + Math.floor(n / CATCHES_PER_LEVEL));
 
-// Ranks go up with your points (coins you spend don't count against them)
+// Ranks go up with your points
 const RANKS = [
   [0, "🌱", "Rookie"], [25, "👀", "Bug Spotter"], [50, "🧭", "Explorer"], [100, "🥾", "Trail Scout"],
   [150, "🎒", "Ranger"], [225, "🌳", "Tree Defender"], [300, "🦸", "Bug Hero"], [450, "🌲", "Forest Guardian"],
@@ -314,28 +311,11 @@ const RANKS = [
 ];
 const rankOf = points => RANKS.filter(r => points >= r[0]).pop();
 
-// The item shop. Items are used up automatically the next time they can help.
-const ITEMS = [
-  { id: "supernet",  emoji: "🥅", name: "Super Net",  price: 30, desc: "Your next minigame gets 5 extra seconds." },
-  { id: "stickynet", emoji: "🍯", name: "Sticky Net", price: 40, desc: "Your next minigame needs only 2 taps." },
-  { id: "snack",     emoji: "🍃", name: "Bug Snack",  price: 25, desc: "In a battle, heal your bug all the way. Uses your turn." },
-];
-const SUPERNET_SECONDS = 5, STICKYNET_TAPS = 2;
-
-// The quiz: right answers earn points, up to a few a day
-const QUIZ_POINTS = 5, QUIZ_DAILY_MAX = 5;
-
-// The catch map: spots are rounded to 3 decimal places (about a city block) and saved only here
-const MAP_DECIMALS = 3;
-
-// ---------- version 4: cutscenes, trainer card, streaks ----------
+// ---------- version 4: cutscenes, trainer card ----------
 
 // Avatars for the trainer card. Nicknames are short and saved only on this device.
 const AVATARS = ["🧢", "🦊", "🐸", "🦉", "🐢", "🦄", "🐼", "🤖"];
 const NAME_MAX = 16;
-
-// Play on days in a row for bonus points (5 points per day in the streak, up to 25)
-const STREAK_BONUS = 5, STREAK_MAX = 5;
 
 // Cutscene backgrounds: a sky color and a row of emoji along the ground
 const SCENES = {
@@ -407,7 +387,7 @@ const FINALE = [
   { scene: "forest",   who: "🌲", name: "Oregon's forests", text: "From Forest Park to Mount Hood, the forests are safer because of Bug Rangers like you." },
   { scene: "lab",      ...HAZEL, text: "But this isn't really the end. Invasive bugs are still out there in the real world." },
   { scene: "lab",      ...HAZEL, text: "Keep finding them. Every real report helps experts protect nature. Thank you, Champion!" },
-  { scene: "victory",  ...HAZEL, text: "Open the Badges tab to print your Forest Protector certificate. And check the Shop: there's a crown waiting for you!" },
+  { scene: "victory",  ...HAZEL, text: "Open the Badges tab to print your Forest Protector certificate!" },
   { scene: "forest",   ...PIP,   text: "See you on the next adventure, {name}! Bzz!" },
 ];
 
@@ -444,7 +424,7 @@ function checkUnlocks(g) {
   });
 }
 
-// ---------- version 7: bug types, seasons, missions ----------
+// ---------- version 7: bug types, seasons ----------
 
 // Bug types. Each group is strong against some others: its attacks do 1.5× damage to them,
 // and 0.67× (two thirds) the other way around.
@@ -473,19 +453,6 @@ const SEASONS = [
   { months: [11, 0, 1], emoji: "❄️", name: "Winter Watch",      groups: ["ant", "termite"], text: "Ants and termites move indoors to stay warm. They give double points." },
 ];
 const season = () => SEASONS.find(se => se.months.includes(new Date().getMonth()));
-
-// Real-world missions (on your honor, with a grown-up)
-const MISSION_POINTS = 10;
-const MISSIONS = [
-  { id: "firewood", emoji: "🪵", text: "Ask a grown-up where your firewood comes from.",       why: "Buy it where you burn it! Moving firewood spreads tree-killing bugs." },
-  { id: "ash",      emoji: "🌳", text: "Check an ash tree for small D-shaped holes.",          why: "D-shaped holes can be a sign of the emerald ash borer." },
-  { id: "boots",    emoji: "🥾", text: "Brush off your shoes after a hike.",                  why: "Seeds and tiny bugs hitchhike on shoes." },
-  { id: "leaves",   emoji: "🍃", text: "Look under 5 leaves in a garden for bugs.",           why: "Lots of bugs hide under leaves. Just look, don't touch!" },
-  { id: "teach",    emoji: "🗣️", text: "Tell a friend or family member what an invasive species is.", why: "The more people know, the more eyes are watching." },
-  { id: "flowers",  emoji: "🌼", text: "Visit or plant a native flower for bees like Pip.",    why: "Native flowers feed native bees and butterflies." },
-  { id: "learn",    emoji: "📚", text: "Read 3 fact cards in Learn about species.",           why: "Knowing your bugs makes you a better Bug Ranger." },
-  { id: "car",      emoji: "🚗", text: "Help check a car or bike for egg patches before a trip.", why: "Spotted lanternflies lay mud-like egg patches on cars and outdoor stuff." },
-];
 
 // ---------- version 8: Team Tangle, Swarm Boss, Bug Buddy, weather, night, outfits, minigames ----------
 
@@ -589,7 +556,7 @@ const BUDDY_TIPS = [
   "Don't move firewood. Buy it where you burn it!",
   "Real photos only! AI-made photos don't count.",
   "Some types are strong against others. Check the fact cards!",
-  "Missions are more fun with a grown-up.",
+  "Bring a grown-up when you look for bugs.",
   "Moths come out at night. Try the game after dark!",
 ];
 
@@ -603,19 +570,6 @@ const WEATHER = [
 ];
 // Night is from 8 PM to 6 AM. Moths come out, so they give double points.
 const NIGHT_START = 20, NIGHT_END = 6;
-
-// Trainer outfits for the shop. The crown is free, but only for the Oregon Champion.
-const OUTFITS = [
-  { id: "sunhat",     slot: "hat",  emoji: "👒", name: "Sun hat",          price: 30 },
-  { id: "tophat",     slot: "hat",  emoji: "🎩", name: "Top hat",          price: 45 },
-  { id: "helmet",     slot: "hat",  emoji: "⛑️", name: "Ranger helmet",    price: 50 },
-  { id: "gradcap",    slot: "hat",  emoji: "🎓", name: "Graduation cap",   price: 60 },
-  { id: "crown",      slot: "hat",  emoji: "👑", name: "Champion crown",   price: 0, champion: true },
-  { id: "flashlight", slot: "gear", emoji: "🔦", name: "Flashlight",       price: 25 },
-  { id: "backpack",   slot: "gear", emoji: "🎒", name: "Backpack",         price: 30 },
-  { id: "magnifier",  slot: "gear", emoji: "🔍", name: "Magnifying glass", price: 35 },
-  { id: "spyglass",   slot: "gear", emoji: "🔭", name: "Spyglass",         price: 45 },
-];
 
 // Minigames: the first win each day gives more points
 const GAME_WIN_POINTS = 30, GAME_REPLAY_POINTS = 5;
@@ -631,6 +585,35 @@ const TRAP_TICK = 250, TRAP_RANGE = 1.5;
 // Where's the Bug?: find the hidden bug in a grid of plants. Each round is bigger.
 const HIDE_ROUNDS = [[6, 4], [7, 5], [8, 6]], HIDE_SECONDS = 15, HIDE_PENALTY = 2;
 const HIDE_PLANTS = ["🌿", "🍃", "🌱", "🍂", "🌾", "🌳", "🌲", "🪨", "🍄", "🌼"];
+// One minigame a day, the same for everyone (see dailyGame below)
+const MINIGAMES = [
+  { id: "traps", emoji: "🟪", name: "Trap Defense" },
+  { id: "hide",  emoji: "🔎", name: "Where's the Bug?" },
+  { id: "match", emoji: "🃏", name: "Bug Match" },
+  { id: "sort",  emoji: "🌼", name: "Invasive or Native?" },
+  { id: "pop",   emoji: "🕳️", name: "Bug Pop" },
+];
+// Oregon towns, to say where you caught a bug ("near Beaverton") without a map. The spot comes
+// from the photo part of the app (a rough area about 1 km wide) and stays on this device.
+const PLACES_KM = 30;   // farther than this from every town: show the numbers instead
+const PLACES = [
+  ["Portland", 45.52, -122.68], ["Beaverton", 45.49, -122.80], ["Hillsboro", 45.52, -122.99], ["Bethany", 45.56, -122.84],
+  ["Gresham", 45.50, -122.43], ["Lake Oswego", 45.42, -122.67], ["Tigard", 45.43, -122.77], ["Tualatin", 45.38, -122.76],
+  ["West Linn", 45.37, -122.61], ["Oregon City", 45.36, -122.61], ["Milwaukie", 45.45, -122.64], ["Happy Valley", 45.45, -122.53],
+  ["Sherwood", 45.36, -122.84], ["Wilsonville", 45.30, -122.77], ["Forest Grove", 45.52, -123.11], ["Troutdale", 45.54, -122.39],
+  ["Sandy", 45.40, -122.26], ["Canby", 45.26, -122.69], ["Newberg", 45.30, -122.97], ["McMinnville", 45.21, -123.20],
+  ["St. Helens", 45.86, -122.81], ["Vancouver, Washington", 45.64, -122.66], ["Salem", 44.94, -123.04], ["Keizer", 44.99, -123.03],
+  ["Woodburn", 45.14, -122.86], ["Silverton", 45.01, -122.78], ["Dallas", 44.92, -123.32], ["Albany", 44.64, -123.11],
+  ["Corvallis", 44.56, -123.26], ["Lebanon", 44.54, -122.91], ["Eugene", 44.05, -123.09], ["Springfield", 44.05, -123.02],
+  ["Cottage Grove", 43.80, -123.06], ["Roseburg", 43.22, -123.34], ["Grants Pass", 42.44, -123.33], ["Medford", 42.33, -122.87],
+  ["Ashland", 42.19, -122.71], ["Klamath Falls", 42.22, -121.78], ["Lakeview", 42.19, -120.35], ["Bend", 44.06, -121.31],
+  ["Redmond", 44.27, -121.17], ["Sisters", 44.29, -121.55], ["Prineville", 44.30, -120.83], ["Madras", 44.63, -121.13],
+  ["Hood River", 45.71, -121.52], ["The Dalles", 45.60, -121.18], ["Pendleton", 45.67, -118.79], ["Hermiston", 45.84, -119.29],
+  ["La Grande", 45.32, -118.09], ["Enterprise", 45.43, -117.28], ["Baker City", 44.77, -117.83], ["John Day", 44.42, -118.95],
+  ["Ontario", 44.03, -116.96], ["Burns", 43.59, -119.05], ["Astoria", 46.19, -123.83], ["Seaside", 45.99, -123.92],
+  ["Cannon Beach", 45.89, -123.96], ["Tillamook", 45.46, -123.84], ["Lincoln City", 44.96, -124.02], ["Newport", 44.64, -124.05],
+  ["Florence", 43.98, -124.10], ["Coos Bay", 43.37, -124.22], ["Brookings", 42.05, -124.28],
+];
 const HIDE_DECOYS = ["🐌", "🕷️", "🪱", "🐸", "🐿️", "🐦"];
 // Native bugs for "Invasive or Native?" and Bug Pop. They belong in Oregon, so we leave them be.
 const NATIVE_BUGS = [
@@ -673,13 +656,13 @@ function loadGame() {
   let g = null;
   try { g = JSON.parse(localStorage.getItem(GAME_KEY)); } catch {}
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
-    items: {}, spots: [], useMap: false, muted: false, quiz: { day: null, right: 0 },
-    trainer: { name: "", avatar: AVATARS[0] }, streak: { last: null, count: 0 }, unlockSeen: null,
-    protectorDex: {}, missions: [], bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, outfits: { owned: [], hat: null, gear: null }, readAloud: false, games: {}, miniWins: {}, ambushDay: null, ...(g || {}) };
+    spots: [], muted: false, trainer: { name: "", avatar: AVATARS[0] }, unlockSeen: null,
+    protectorDex: {}, bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
+    buddy: null, readAloud: false, games: {}, miniWins: {}, ambushDay: null, ...(g || {}) };
+  // Things from older versions that the game doesn't use anymore
+  for (const old of ["items", "coins", "quiz", "streak", "missions", "outfits", "useMap"]) delete g[old];
   // Gyms that were already open before gym cutscenes existed don't need one
   if (!g.unlockSeen) g.unlockSeen = GYMS.filter(gym => gymOpen(g, gym)).map(gym => gym.id);
-  if (g.coins == null) g.coins = g.points;   // games saved before the shop existed
   return g;
 }
 function saveGame(g) { try { localStorage.setItem(GAME_KEY, JSON.stringify(g)); } catch {} }
@@ -690,9 +673,9 @@ const gameSpecies = () => (window.PYINSECT_MODEL?.invasive || []).filter(s => SP
 const totalCaught = g => Object.values(g.caught).reduce((a, b) => a + b, 0);
 const kindsCaught = g => Object.keys(g.caught).length;
 const caughtRarity = (g, r) => Object.keys(g.caught).some(s => SPECIES_FACTS[s]?.rarity === r);
-// Points count toward your rank, and you get the same number of coins to spend in the shop
+// Points count toward your rank
 // Your Bug Buddy grows with the points you earn
-const addPoints = (g, n) => { g.points += n; g.coins += n; if (g.buddy) g.buddy.xp += n; };
+const addPoints = (g, n) => { g.points += n; if (g.buddy) g.buddy.xp += n; };
 const dayKey = (offset = 0) => { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const todayKey = () => dayKey(0);
 const todaysChallenge = () => {
@@ -704,16 +687,6 @@ const todaysChallenge = () => {
 // the badges. Changes the saved game `g` and returns the messages to show.
 function progress(g, ev) {
   const lines = [], rankBefore = g.rankSeen ?? rankOf(g.points - (ev.pts || 0))[2];
-  // The play streak: the first thing you do each day keeps it going (or starts a new one)
-  if (g.streak.last !== todayKey()) {
-    g.streak.count = g.streak.last === dayKey(-1) ? g.streak.count + 1 : 1;
-    g.streak.last = todayKey();
-    if (g.streak.count > 1) {
-      const bonus = STREAK_BONUS * Math.min(g.streak.count, STREAK_MAX);
-      addPoints(g, bonus);
-      lines.push(t("🔥 {n}-day streak! +{pts} points", { n: g.streak.count, pts: bonus }));
-    }
-  }
   if (g.daily !== todayKey() && todaysChallenge().check(ev)) {
     g.daily = todayKey(); g.dailyDone++; addPoints(g, DAILY_REWARD);
     lines.push(t("📅 Daily challenge done! +{pts} points", { pts: DAILY_REWARD }));
@@ -769,10 +742,6 @@ function renderGame() {
   $("gamePoints").textContent = t("{pts} points", { pts: g.points });
   const rank = rankOf(g.points), next = RANKS[RANKS.indexOf(rank) + 1];
   $("gameRank").textContent = `${rank[1]} ${t(rank[2])}${next ? ` · ${t("{n} to {rank}", { n: next[0] - g.points, rank: t(next[2]) })}` : ""}`;
-  $("gameCoins").textContent = `🪙 ${t("{n} coins", { n: g.coins })}`;
-  const streakOn = g.streak.count > 0 && [todayKey(), dayKey(-1)].includes(g.streak.last);
-  $("gameStreak").textContent = `🔥 ${t("{n}-day streak", { n: g.streak.count })}`;
-  $("gameStreak").hidden = !streakOn;
   $("trainerBtn").textContent = `${trainerLook(g)} ${g.trainer.name || t("Make your trainer card")}`;
   $("muteBtn").textContent = g.muted ? `🔇 ${t("Sound off")}` : `🔊 ${t("Sound on")}`;
   $("muteBtn").setAttribute("aria-pressed", g.muted);
@@ -785,14 +754,14 @@ function renderGame() {
   const se = season();
   $("seasonText").textContent = `${se.emoji} ${t(se.name)}: ${t(se.text)}`;
   renderProtectorDex(g);
-  renderMissions(g);
   renderStory(g);
   applyBigText(g);
   $("bigTextBtn").setAttribute("aria-pressed", !!g.bigText);
   $("readAloudBtn").setAttribute("aria-pressed", !!g.readAloud);
   renderWorld(g);
   renderBuddy(g);
-  renderGames(g);
+  renderDailyGame(g);
+  renderNextStep(g);
   renderCertificate(g);
 
   const dex = $("dexGrid"); dex.innerHTML = "";
@@ -803,7 +772,7 @@ function renderGame() {
     if (n) {
       slot.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("strong", null, commonName(s)), rarityTag(s),
         el("span", "count", t("Lv {lv} · ×{n}", { lv: bugLevel(n), n })));
-      slot.onclick = () => showFact(s, n);
+      slot.onclick = () => showFact(s, n, g.spots.filter(sp => sp.species === s));
     } else {
       slot.append(el("span", "bug-emoji", "❓"), el("strong", null, "???"), el("span", "count", t("Not caught yet")));
       slot.disabled = true;
@@ -825,8 +794,6 @@ function renderGame() {
   for (const s of all) learn.append(factCard(s, g.caught[s] || 0));
 
   renderBattles(g);
-  renderShop(g);
-  renderMapPanel(g);
 }
 
 // The Battle tab: practice trainers, then the forest gyms
@@ -917,34 +884,26 @@ function closePopup() {
 }
 let popupDone = null;
 
-function showFact(species, n) {
-  openPopup([factCard(species, n)], [["Close", true]]);
+// A caught bug's fact card, with where and when you caught it
+function showFact(species, n, spots = []) {
+  const where = el("div", "caught-where");
+  if (spots.length) {
+    where.append(el("strong", null, `📍 ${t("Where you caught it")}`));
+    const list = el("ul");
+    for (const sp of spots.slice(-5).reverse()) list.append(el("li", null, placeText(sp)));
+    where.append(list);
+  } else where.append(el("p", "muted", `📍 ${t("Catch it again with location on to see where you found it.")}`));
+  openPopup([factCard(species, n), where], [["Close", true]]);
 }
 
 function showInstructions() {
   const list = el("ol", "howto");
   for (const step of [
-    "Find a bug outside. Take a photo with “Take photo”, or pick one with “Select photos”.",
-    "If the bug is invasive, a wild bug appears! Tap it 3 times in 10 seconds to catch it.",
-    "Caught bugs go into your Innvadex with points. Common = 10, Rare = 25, Legendary = 50.",
-    "Earn badges, like “First Catch!”, as you play.",
-    "Find a bug that isn't invasive? Leave it be, and get protector points!",
-    "Do the daily challenge for bonus points. There's a new one every day.",
-    "Open “Battle” to battle trainers with your caught bugs. Beat the {n} forest gyms in order, then face the Oregon Champion!",
-    "Catch the same bug 3 times and it levels up, which makes it stronger in battles.",
-    "Earn coins as you play, and spend them in the “Shop” on items like the Super Net.",
-    "Play the “Quiz” for bonus points, and turn on the “Map” to see where you caught your bugs.",
-    "Play on days in a row to build a 🔥 streak for bonus points.",
-    "Each bug has a type. Some types are strong against others, like wasps against moths. Check the fact cards!",
-    "Watch for seasonal events: some bugs give double points at certain times of the year.",
-    "Try the real-world “Missions” with a grown-up, and see bugs you left be in the “Protector-dex”.",
-    "Watch out for Team Tangle! Stop their schemes in the “Battle” tab. Sometimes they ambush you after a catch, too.",
-    "Battle the weekly Swarm Boss. The damage you do is saved all week.",
-    "Play 5 minigames in the “Minigames” tab, like “Trap Defense” and “Bug Pop”.",
-    "Pick a Bug Buddy. It grows as you earn points and cheers for you in battles.",
-    "Check the weather: it makes some types stronger. At night, moths give double points.",
-    "Turn on “Read aloud” to hear the story, and buy hats and gear in the “Shop”.",
-    "Open “Learn about species” to see every invasive bug, even ones you haven't caught yet.",
+    "Take a photo of a bug with “Take photo” at the top of the page.",
+    "If it's invasive, a wild bug appears! Tap it 3 times to catch it.",
+    "If it isn't invasive, leave it be. You still get protector points!",
+    "Do “Today's challenge” and “Today's minigame” for bonus points.",
+    "Use your caught bugs to battle in the “Battle” tab. Beat the {n} forest gyms, then the Oregon Champion!",
   ]) list.append(el("li", null, t(step, { n: GYMS.length - 1 })));
   const safety = el("div", "safety");
   safety.append(el("strong", null, t("Stay safe")));
@@ -1011,12 +970,9 @@ function minigame(species, photo) {
     bug.append(img);
     arena.append(bug);
     // Items from the shop are used up here, if you have them
-    const g = loadGame(), used = [];
+    const g = loadGame();
     if (g.buddy) arena.append(el("span", "arena-buddy", buddyFace(g)));   // your Bug Buddy cheers you on
-    let needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
-    if (g.items.stickynet > 0) { g.items.stickynet--; needTaps = STICKYNET_TAPS; used.push(`🍯 ${t("Sticky Net: only 2 taps!")}`); }
-    if (g.items.supernet > 0) { g.items.supernet--; seconds += SUPERNET_SECONDS; used.push(`🥅 ${t("Super Net: +{n} seconds!", { n: SUPERNET_SECONDS })}`); }
-    if (used.length) { saveGame(g); renderGame(); }
+    const needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
     const info = el("p", "arena-info", t("Tap it {taps} times! {s} seconds left", { taps: needTaps, s: seconds }));
     const bar = el("div", "track"), fill = el("div", "fill");
     fill.style.width = "100%"; bar.append(fill);
@@ -1076,7 +1032,7 @@ function minigame(species, photo) {
     sound("appear");
     const hint = el("p", "muted orb-hint");
     hint.append(makeOrb(), t("Tap the bug to throw your Innva-Orb!"));
-    openPopup([el("h2", null, t("A wild {bug} appeared!", { bug: commonName(species) })), rarityTag(species), ...used.map(u => el("p", "new-badge", u)), hint, arena, bar, info],
+    openPopup([el("h2", null, t("A wild {bug} appeared!", { bug: commonName(species) })), rarityTag(species), hint, arena, bar, info],
       [["Let it go", false, () => end(false)]]);
     $("gamePopupBox").querySelector(".actions button").onclick = () => end(false);
     popupDone = () => end(false);   // closing the pop-up (Escape) lets the bug go
@@ -1102,7 +1058,7 @@ function encounter(species, photo) {
       return;
     }
     sound("catch");
-    const spot = await here();   // null unless the catch map is turned on
+    const spot = await here();   // a rough area from the photo part of the app, or null
     const g = loadGame();
     const se = season(), seasonal = se.groups.includes(SPECIES_FACTS[species].group);
     const nightly = !seasonal && isNight() && SPECIES_FACTS[species].group === "moth";
@@ -1111,7 +1067,7 @@ function encounter(species, photo) {
     const firstLegend = SPECIES_FACTS[species].rarity === "legendary" && !caughtRarity(g, "legendary");
     g.caught[species] = (g.caught[species] || 0) + 1;
     addPoints(g, pts);
-    if (spot) g.spots.push({ species, ...spot, when: new Date().toLocaleDateString() });
+    g.spots.push({ species, ...(spot || {}), when: new Date().toLocaleDateString() });
     // Story cutscenes for big moments (they play after the pop-up, in this order)
     if (firstEver) queueScene(FIRST_CATCH);
     if (firstLegend) queueScene(FIRST_LEGENDARY.map(sl => ({ ...sl, vars: { bug: commonName(species) } })));
@@ -1119,7 +1075,7 @@ function encounter(species, photo) {
     if (g.caught[species] > 1 && bugLevel(g.caught[species]) > before)
       lines.push(`⬆️ ${t("Your {bug} leveled up to Lv {lv}! It's stronger in battles now.", { bug: commonName(species), lv: bugLevel(g.caught[species]) })}`);
     lines.push(...progress(g, { type: "catch", species, pts }));
-    if (spot) lines.push(`📍 ${t("Saved on your catch map.")}`);
+    if (spot) lines.push(`📍 ${placeText({ ...spot, when: null })}`);
     checkUnlocks(g);
     if (!firstEver) maybeAmbush(g, species);
     const extra = lines.map(l => el("p", "new-badge", l));
@@ -1232,8 +1188,6 @@ function battle(foe, gym) {
   const tackle = btn(t("Tackle"), () => turn("tackle"));
   const special = btn("", () => turn("special"));
   const swap = btn(t("Switch bug"), () => turn("switch"));
-  const snack = btn("", () => turn("snack"));
-  const snacks = () => loadGame().items.snack || 0;
   tackle.classList.add("primary");
   const draw = () => {
     field.innerHTML = "";
@@ -1249,9 +1203,6 @@ function battle(foe, gym) {
     special.textContent = t("{move} (strong, can miss)", { move: t(specialMove(mine[me])) });
     for (const b of [tackle, special]) b.disabled = busy || over;
     swap.disabled = busy || over || nextAlive(mine, me) < 0 || nextAlive(mine, me) === me;
-    snack.textContent = `🍃 ${t("Bug Snack")} (${snacks()})`;
-    snack.hidden = !snacks();
-    snack.disabled = busy || over || mine[me].hp === mine[me].max;
     // Your Bug Buddy gives a type tip
     buddyTip.hidden = !g.buddy;
     if (g.buddy) {
@@ -1279,11 +1230,6 @@ function battle(foe, gym) {
     if (busy || over) return;
     busy = true;
     if (kind === "switch") { me = nextAlive(mine, me); say(t("Go, {bug}!", { bug: commonName(mine[me].species) })); }
-    else if (kind === "snack") {
-      const g = loadGame(); g.items.snack--; saveGame(g); renderGame();
-      mine[me].hp = mine[me].max; sound("heal");
-      say(t("Your {bug} ate a Bug Snack and is all healed!", { bug: commonName(mine[me].species) }));
-    }
     else attack(mine[me], theirs[them], kind === "special", null);
     draw(); await wait(900); if (over) return;
     if (theirs[them].hp <= 0) {
@@ -1414,119 +1360,22 @@ function sound(name) {
   } catch {}
 }
 
-// ---------- the shop ----------
-function renderShop(g) {
-  const list = $("shopList"); list.innerHTML = "";
-  for (const it of ITEMS) {
-    const row = el("div", "foe");
-    const who = el("div", "foe-who");
-    who.append(el("strong", null, `${t(it.name)} · ${t("you have {n}", { n: g.items[it.id] || 0 })}`), el("span", "muted", t(it.desc)));
-    const b = el("button", "btn" + (g.coins >= it.price ? " primary" : ""), `🪙 ${it.price}`);
-    b.type = "button"; b.disabled = g.coins < it.price;
-    b.setAttribute("aria-label", t("Buy {item} for {n} coins", { item: t(it.name), n: it.price }));
-    b.onclick = () => buy(it.id);
-    row.append(el("span", "bug-emoji", it.emoji), who, b);
-    list.append(row);
-  }
-  renderOutfits(g, list);
-}
-function buy(id) {
-  const it = ITEMS.find(i => i.id === id), g = loadGame();
-  if (!it || g.coins < it.price) return;
-  g.coins -= it.price;
-  g.items[id] = (g.items[id] || 0) + 1;
-  saveGame(g); renderGame(); sound("buy");
-  toast([`${it.emoji} ${t("You bought: {item}!", { item: t(it.name) })}`]);
-}
-
-// ---------- the quiz ----------
-// Shows a clue about one bug and four names to pick from. Clues come from the fact cards.
-const shuffle = list => list.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
-function newQuestion() {
-  const all = gameSpecies(), answer = all[Math.floor(Math.random() * all.length)];
-  const kind = Math.random() < 0.5 ? "fact" : "harm";
-  const options = shuffle([answer, ...shuffle(all.filter(s => s !== answer)).slice(0, 3)]);
-  const box = $("quizBox"); box.innerHTML = "";
-  box.append(el("p", "quiz-q", t(kind === "fact" ? "Which bug is this?" : "Which bug causes this problem?")),
-    el("p", "speech", t(SPECIES_FACTS[answer][kind])));
-  const choices = el("div", "quiz-choices"), result = el("p", "quiz-result");
-  result.setAttribute("aria-live", "polite");
-  const next = el("button", "btn primary", t("Next question"));
-  next.type = "button"; next.hidden = true;
-  next.onclick = newQuestion;
-  for (const s of options) {
-    const b = el("button", "btn", commonName(s));
-    b.type = "button";
-    b.onclick = () => {
-      for (const c of choices.children) c.disabled = true;
-      const g = loadGame();
-      if (g.quiz.day !== todayKey()) g.quiz = { day: todayKey(), right: 0 };
-      if (s === answer) {
-        b.classList.add("right"); sound("right");
-        if (g.quiz.right < QUIZ_DAILY_MAX) {
-          g.quiz.right++; addPoints(g, QUIZ_POINTS);
-          const lines = progress(g, { type: "quiz", pts: QUIZ_POINTS });
-          result.textContent = [`✅ ${t("Right! +{pts} points ({n} of {max} today)", { pts: QUIZ_POINTS, n: g.quiz.right, max: QUIZ_DAILY_MAX })}`, ...lines].join("  ");
-        } else result.textContent = `✅ ${t("Right! You've earned all your quiz points for today. Keep practicing!")}`;
-        saveGame(g); renderGame(); playQueued();
-      } else {
-        b.classList.add("wrong"); sound("wrong");
-        [...choices.children].find(c => c.textContent === commonName(answer))?.classList.add("right");
-        result.textContent = t("Not quite. It's the {bug}.", { bug: commonName(answer) });
-      }
-      next.hidden = false; next.focus();
-    };
-    choices.append(b);
-  }
-  box.append(choices, result, next);
-}
-
-// ---------- the catch map ----------
-// Asks the browser where you are, but only if you turned the map on. Gives up after 8 seconds.
+// ---------- where you caught it ----------
+// Uses the rough area (about 1 km) from the photo part of the app (getArea in app.js), so the
+// game never asks for location on its own. It's saved only on this device.
 function here() {
-  if (!loadGame().useMap || !navigator.geolocation) return Promise.resolve(null);
-  return new Promise(resolve => navigator.geolocation.getCurrentPosition(
-    p => resolve({ lat: +p.coords.latitude.toFixed(MAP_DECIMALS), lon: +p.coords.longitude.toFixed(MAP_DECIMALS) }),
-    () => resolve(null), { timeout: 8000, maximumAge: 60000 }));
+  return typeof getArea === "function" ? getArea().catch(() => null) : Promise.resolve(null);
 }
-
-function renderMapPanel(g) {
-  $("mapToggle").checked = g.useMap;
-  $("mapCount").textContent = g.spots.length ? t(g.spots.length === 1 ? "{n} catch on your map." : "{n} catches on your map.", { n: g.spots.length }) : t("No catches on your map yet.");
-  if (map) drawSpots(g);
-}
-
-// The map library (Leaflet) and the map pictures (OpenStreetMap) load only when you open the Map tab
-let map = null, mapLayer = null, mapLoading = null;
-function loadLeaflet() {
-  if (window.L) return Promise.resolve();
-  return mapLoading ??= new Promise((resolve, reject) => {
-    const css = document.createElement("link");
-    css.rel = "stylesheet"; css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
-    const js = document.createElement("script");
-    js.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-    js.onload = resolve; js.onerror = () => { mapLoading = null; reject(); };
-    document.head.append(css, js);
-  });
-}
-async function openMap() {
-  const g = loadGame();
-  if (!g.spots.length) return;
-  try { await loadLeaflet(); } catch { $("mapCount").textContent = t("The map couldn't load. Check your internet."); return; }
-  $("catchMap").hidden = false;
-  if (!map) {
-    map = L.map("catchMap");
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(map);
+// "Caught near Beaverton on 10/16/2026", using the closest town in PLACES
+function placeText(sp) {
+  const km = (a, b) => Math.hypot((a[0] - b[0]) * 111, (a[1] - b[1]) * 111 * Math.cos(a[0] * Math.PI / 180));
+  let where = null;
+  if (sp.lat != null) {
+    const near = PLACES.map(([name, lat, lon]) => [name, km([sp.lat, sp.lon], [lat, lon])]).sort((a, b) => a[1] - b[1])[0];
+    where = near[1] <= PLACES_KM ? t("near {place}", { place: near[0] }) : `${sp.lat.toFixed(2)}, ${sp.lon.toFixed(2)}`;
   }
-  map.invalidateSize();
-  drawSpots(g);
-}
-function drawSpots(g) {
-  if (!g.spots.length) return;
-  mapLayer?.remove();
-  mapLayer = L.layerGroup(g.spots.map(sp => L.marker([sp.lat, sp.lon], { title: commonName(sp.species) })
-    .bindPopup(`${SPECIES_FACTS[sp.species]?.emoji || "🐞"} ${commonName(sp.species)}<br>${sp.when}`))).addTo(map);
-  map.fitBounds(L.latLngBounds(g.spots.map(sp => [sp.lat, sp.lon])).pad(0.3), { maxZoom: 15 });
+  if (!sp.when) return t("Caught {where}", { where });
+  return where ? t("Caught {where} on {date}", { where, date: sp.when }) : t("Caught on {date}", { date: sp.when });
 }
 
 // ---------- confetti ----------
@@ -1628,15 +1477,11 @@ function editTrainer(first) {
     const input = el("input", "trainer-input");
     input.type = "text"; input.maxLength = NAME_MAX; input.value = g.trainer.name;
     input.placeholder = t("Like BugBuster or LeafNinja"); input.id = "trainerName"; label.htmlFor = "trainerName";
-    // A preview of your trainer, wearing your hat and gear from the shop
-    const look = el("div", "trainer-look"), lookFace = el("span", "face", avatar);
-    look.setAttribute("aria-hidden", "true");
-    look.append(el("span", "hat", outfitEmoji(g, "hat")), lookFace, el("span", "gear", outfitEmoji(g, "gear")));
     const picks = el("div", "avatar-picks");
     for (const a of AVATARS) {
       const b = el("button", "avatar-pick", a);
       b.type = "button"; b.setAttribute("aria-pressed", a === avatar); b.setAttribute("aria-label", `Avatar ${a}`);
-      b.onclick = () => { avatar = a; lookFace.textContent = a; for (const p of picks.children) p.setAttribute("aria-pressed", p === b); };
+      b.onclick = () => { avatar = a; for (const p of picks.children) p.setAttribute("aria-pressed", p === b); };
       picks.append(b);
     }
     const save = () => {
@@ -1645,7 +1490,7 @@ function editTrainer(first) {
       saveGame(g); renderGame();
     };
     popupDone = resolve;
-    openPopup([el("h2", null, t("Your trainer card")), look,
+    openPopup([el("h2", null, t("Your trainer card")),
       el("p", "muted", t("Pick a nickname. Don't use your real name, so you stay safe online. It's saved only on this device.")),
       label, input, el("p", "trainer-label", t("Pick your avatar")), picks],
       [["Save", true, save], ...(first ? [] : [["Cancel", false]])]);
@@ -1654,7 +1499,7 @@ function editTrainer(first) {
   });
 }
 
-// ---------- version 7: protector-dex, missions, story gallery, big text ----------
+// ---------- version 7: protector-dex, story gallery, big text ----------
 
 // The Protector-dex: bugs you found that aren't invasive (you leave them be)
 function renderProtectorDex(g) {
@@ -1667,29 +1512,6 @@ function renderProtectorDex(g) {
     const slot = el("div", "dex-slot caught");
     slot.append(el("span", "bug-emoji", "🌼"), el("strong", null, commonName(s)), el("span", "sci", sciName(s)), el("span", "count", t("Found ×{n}", { n })));
     list.append(slot);
-  }
-}
-
-// Real-world missions: things to do outside the game, on your honor
-function renderMissions(g) {
-  const list = $("missionList"); list.innerHTML = "";
-  $("missionCount").textContent = t("{n} of {total} missions done. Always do missions with a grown-up!", { n: g.missions.length, total: MISSIONS.length });
-  for (const m of MISSIONS) {
-    const done = g.missions.includes(m.id);
-    const row = el("div", "foe" + (done ? " beaten" : ""));
-    const who = el("div", "foe-who");
-    who.append(el("strong", null, t(m.text)), el("span", "muted", t(m.why)));
-    const b = el("button", "btn" + (done ? "" : " primary"), done ? `✅ ${t("Done")}` : t("I did it! +{pts}", { pts: MISSION_POINTS }));
-    b.type = "button"; b.disabled = done;
-    b.onclick = () => {
-      const g = loadGame();
-      if (g.missions.includes(m.id)) return;
-      g.missions.push(m.id); addPoints(g, MISSION_POINTS);
-      const lines = [`${m.emoji} ${t("Mission done! +{pts} points", { pts: MISSION_POINTS })}`, ...progress(g, { type: "mission", pts: MISSION_POINTS })];
-      saveGame(g); renderGame(); toast(lines); playQueued();
-    };
-    row.append(el("span", "bug-emoji", m.emoji), who, b);
-    list.append(row);
   }
 }
 
@@ -1797,42 +1619,7 @@ function showBuddy() {
   sound("right");
 }
 
-// ---- trainer outfits ----
-const outfitEmoji = (g, slot) => OUTFITS.find(o => o.id === g.outfits[slot])?.emoji || "";
-const trainerLook = g => `${outfitEmoji(g, "hat")}${g.trainer.avatar}${outfitEmoji(g, "gear")}`;
-const ownsOutfit = (g, o) => g.outfits.owned.includes(o.id) || (o.champion && g.gyms.includes("champion"));
-
-function renderOutfits(g, list) {
-  list.append(el("h3", null, `👕 ${t("Trainer outfits")}`));
-  for (const o of OUTFITS) {
-    const owned = ownsOutfit(g, o), wearing = g.outfits[o.slot] === o.id;
-    const row = el("div", "foe" + (wearing ? " beaten" : ""));
-    const who = el("div", "foe-who");
-    who.append(el("strong", null, t(o.name)), el("span", "muted", o.champion ? t("Free for the Oregon Champion!") : t(o.slot === "hat" ? "Hat" : "Gear")));
-    const b = el("button", "btn");
-    b.type = "button";
-    if (owned) {
-      b.textContent = t(wearing ? "Take off" : "Wear");
-      b.classList.toggle("primary", !wearing);
-      b.onclick = () => { const g = loadGame(); g.outfits[o.slot] = wearing ? null : o.id; saveGame(g); renderGame(); sound("click"); };
-    } else if (o.champion) {
-      b.textContent = `🔒 ${t("Champion only")}`; b.disabled = true;
-    } else {
-      b.textContent = `🪙 ${o.price}`; b.disabled = g.coins < o.price; b.classList.toggle("primary", g.coins >= o.price);
-      b.setAttribute("aria-label", t("Buy {item} for {n} coins", { item: t(o.name), n: o.price }));
-      b.onclick = () => buyOutfit(o);
-    }
-    row.append(el("span", "bug-emoji", o.emoji), who, b);
-    list.append(row);
-  }
-}
-function buyOutfit(o) {
-  const g = loadGame();
-  if (g.coins < o.price || ownsOutfit(g, o)) return;
-  g.coins -= o.price; g.outfits.owned.push(o.id); g.outfits[o.slot] = o.id;
-  saveGame(g); renderGame(); sound("buy");
-  toast([`${o.emoji} ${t("You bought: {item}!", { item: t(o.name) })} ${t("You're wearing it now.")}`]);
-}
+const trainerLook = g => g.trainer.avatar;
 
 // ---- Team Tangle ----
 const tangleOpen = (g, i) => kindsCaught(g) >= 2 && (i === 0 || g.tangle.includes(TANGLE[i - 1].id)) && gymCount(g) >= TANGLE[i].gyms;
@@ -1874,26 +1661,43 @@ function swarmFoe(g) {
 }
 
 // ---- minigames: Trap Defense and Where's the Bug? ----
-function renderGames(g) {
-  const list = $("gamesList"); list.innerHTML = "";
-  const today = g.games.day === todayKey() ? g.games : {};
-  for (const [id, emoji, name, desc, play] of [
-    ["traps", "🟪", "Trap Defense", "Bugs are crawling toward the forest! Place traps to stop 3 waves.", trapDefense],
-    ["hide", "🔎", "Where's the Bug?", "Find the hidden invasive bug before time runs out. 3 rounds!", hideAndSeek],
-    ["match", "🃏", "Bug Match", "Flip cards to find matching bug pairs.", bugMatch],
-    ["sort", "🌼", "Invasive or Native?", "Is it an invader, or does it belong here? Get 8 of 10 right!", invasiveOrNative],
-    ["pop", "🕳️", "Bug Pop", "Tap invasive bugs as they pop up, but leave native bugs alone!", bugPop],
-  ]) {
-    const row = el("div", "foe" + (today[id] ? " beaten" : ""));
-    const who = el("div", "foe-who");
-    who.append(el("strong", null, t(name)), el("span", "muted", `${t(desc)} ${today[id]
-      ? t("Today: +{pts} points per win.", { pts: GAME_REPLAY_POINTS }) : t("First win today: +{pts} points!", { pts: GAME_WIN_POINTS })}`));
-    const b = el("button", "btn primary", t("Play!"));
-    b.type = "button"; b.onclick = play; b.disabled = !gameSpecies().length;
-    row.append(el("span", "bug-emoji", emoji), who, b);
-    list.append(row);
-  }
+// Today's minigame, in the daily box
+const dailyGame = () => MINIGAMES[dayNumber() % MINIGAMES.length];
+const MINIGAME_PLAY = { traps: () => trapDefense(), hide: () => hideAndSeek(), match: () => bugMatch(), sort: () => invasiveOrNative(), pop: () => bugPop() };
+function renderDailyGame(g) {
+  const mg = dailyGame(), won = g.games.day === todayKey() && g.games[mg.id];
+  $("dailyGameName").textContent = `${mg.emoji} ${t(mg.name)}`;
+  $("dailyGameState").textContent = won ? t("✅ Won! Play again for fun.") : t("+{pts} points", { pts: GAME_WIN_POINTS });
+  $("dailyGameBtn").disabled = !gameSpecies().length;
 }
+
+// ---------- what to do next ----------
+// One clear next step at the top of the game, so new players always know what to do
+function nextStep(g) {
+  const all = gameSpecies();
+  if (!totalCaught(g)) return { emoji: "📸", text: "Take a photo of a bug outside. If it's invasive, you get to catch it!", btn: "Take a photo", go: takePhoto };
+  if (g.daily !== todayKey()) return { emoji: "📅", text: "Do today's challenge: {challenge}", vars: { challenge: t(todaysChallenge().text) } };
+  const gym = GYMS.find(gy => gymOpen(g, gy) && !g.gyms.includes(gy.id));
+  if (gym) return { emoji: gym.emoji, text: "Battle {leader} at the {gym}!", vars: { leader: gym.leader, gym: t(gym.name) }, btn: "Battle!",
+    go: () => { showTab("battle"); cutscene(gymIntroScenes(gym)).then(() => battle(gym, true)); } };
+  const i = TANGLE.findIndex((sc, k) => tangleOpen(g, k) && !g.tangle.includes(sc.id));
+  if (i >= 0) return { emoji: "🦹", text: "Stop Team Tangle's plan: {scheme}!", vars: { scheme: t(TANGLE[i].name) }, btn: "Stop them!",
+    go: () => { showTab("battle"); cutscene(tanglePlan(TANGLE[i])).then(() => battle(tangleFoe(TANGLE[i]), false)); } };
+  if (kindsCaught(g) < all.length) return { emoji: "📸", text: "Find more bugs! You've caught {n} of {total} kinds.", vars: { n: kindsCaught(g), total: all.length }, btn: "Take a photo", go: takePhoto };
+  return { emoji: "🏆", text: "You've caught every kind of bug! Keep reporting the ones you find." };
+}
+function takePhoto() {
+  const cam = $("openCamera");
+  $("tray")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (cam && !cam.disabled) cam.click();
+}
+function renderNextStep(g) {
+  const st = nextStep(g), box = $("nextStep");
+  box.innerHTML = "";
+  box.append(el("span", "next-emoji", st.emoji), el("p", null, t(st.text, st.vars)));
+  if (st.btn) { const b = el("button", "btn primary", t(st.btn)); b.type = "button"; b.onclick = st.go; box.append(b); }
+}
+
 // Points for a minigame win: more for the first win of the day
 function minigameWin(id) {
   const g = loadGame();
@@ -2287,8 +2091,6 @@ addEventListener("afterprint", () => document.body.classList.remove("printing"))
 // ---------- wiring ----------
 for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => {
   showTab(t.dataset.tab);
-  if (t.dataset.tab === "quiz" && !$("quizBox").children.length) newQuestion();
-  if (t.dataset.tab === "map") openMap();
 };
 $("muteBtn").onclick = () => { const g = loadGame(); g.muted = !g.muted; saveGame(g); renderGame(); };
 for (const [code, label] of Object.entries(GAME_LANGS)) {
@@ -2299,19 +2101,14 @@ for (const [code, label] of Object.entries(GAME_LANGS)) {
 $("langSelect").onchange = e => {
   const g = loadGame(); g.lang = e.target.value; saveGame(g);
   renderGame();
-  if ($("quizBox").children.length) newQuestion();   // re-ask the quiz in the new language
 };
 $("bigTextBtn").onclick = () => { const g = loadGame(); g.bigText = !g.bigText; saveGame(g); renderGame(); };
 $("readAloudBtn").hidden = !window.speechSynthesis;
 $("readAloudBtn").onclick = () => { const g = loadGame(); g.readAloud = !g.readAloud; saveGame(g); renderGame(); if (!g.readAloud) hush(); };
 $("buddyBtn").onclick = showBuddy;
+$("dailyGameBtn").onclick = () => MINIGAME_PLAY[dailyGame().id]();
 // Night starts and ends while you play, so check the clock every minute
 setInterval(() => renderWorld(loadGame()), 60000);
-$("mapToggle").onchange = e => {
-  const g = loadGame(); g.useMap = e.target.checked; saveGame(g);
-  // Ask for permission now, so it doesn't pop up in the middle of a catch
-  if (g.useMap) navigator.geolocation?.getCurrentPosition(() => {}, () => toast([`📍 ${t("Location is blocked, so catches can't go on the map. You can allow it in your browser settings.")}`]));
-};
 $("howToPlay").onclick = showInstructions;
 $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closePopup(); } });
 renderGame();

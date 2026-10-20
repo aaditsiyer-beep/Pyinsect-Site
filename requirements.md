@@ -256,6 +256,28 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [ ] The first win each day gives 30 points, later wins 5.
   - [ ] Every new bug in the Oregon model has a fact card.
 
+## Innvadex version 10: simpler game
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-19
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** The game had too many tabs and things to do, so new players didn't know where to start.
+- **Why it matters:** The game should be very basic. The second you open it, you know what to do.
+- **Our idea:**
+  - **"What to do next" box** at the top of the game with one step and one button. For example:
+    take your first photo, do today's challenge, battle the next gym, or stop Team Tangle.
+  - **Today's minigame:** one of the 5 minigames each day, right under today's challenge.
+    The Minigames tab is gone.
+  - **Removed:** the Shop (items and outfits), Quiz, Map, Missions, streaks, and coins.
+  - **Where you caught it:** tap a caught bug to see "Caught near Beaverton on 10/19/2026". It
+    uses the rough area (about 1 km) that the photo part already asks for, and a list of Oregon
+    towns built into the game. Nothing extra is sent anywhere, and it's saved only on this device.
+  - How to play is now 5 short steps.
+- **Done when:**
+  - [ ] A brand-new player sees "Take a photo" right away.
+  - [ ] Today's minigame can be played from the daily box.
+  - [ ] A caught bug's card says where and when you caught it.
+
 ## Camera zoom and crop
 
 - **Status:** Building
