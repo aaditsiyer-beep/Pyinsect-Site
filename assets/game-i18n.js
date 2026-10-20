@@ -866,4 +866,7 @@ const GAME_I18N = {
   "If it isn't invasive, leave it be. You still get protector points!": ["Si no es invasor, déjalo en paz. ¡Igual ganas puntos de protector!", "S'il n'est pas envahissant, laisse-le tranquille. Tu gagnes quand même des points de protecteur !", "अगर वह आक्रामक नहीं है, तो उसे छोड़ दो। तुम्हें फिर भी रक्षक अंक मिलेंगे!"],
   "Do “Today's challenge” and “Today's minigame” for bonus points.": ["Haz el “Reto del día” y el “Minijuego del día” para ganar puntos extra.", "Fais le « Défi du jour » et le « Mini-jeu du jour » pour gagner des points en plus.", "बोनस अंकों के लिए “आज की चुनौती” और “आज का मिनी गेम” करो।"],
   "Use your caught bugs to battle in the “Battle” tab. Beat the {n} forest gyms, then the Oregon Champion!": ["Usa los insectos que atrapaste para combatir en la pestaña “Batalla”. ¡Vence los {n} gimnasios del bosque y luego al Campeón de Oregón!", "Utilise les insectes que tu as attrapés pour combattre dans l'onglet « Combat ». Bats les {n} arènes de la forêt, puis le Champion de l'Oregon !", "पकड़े हुए कीड़ों से “लड़ाई” टैब में लड़ो। {n} वन जिम जीतो, फिर ओरेगन चैंपियन को हराओ!"],
+  // ---- tidier front page ----
+  "Settings": ["Ajustes", "Réglages", "सेटिंग्स"],
+  "Night Watch": ["Vigilancia nocturna", "Veille de nuit", "रात की निगरानी"],
 };

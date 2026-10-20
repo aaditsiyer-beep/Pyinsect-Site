@@ -765,7 +765,8 @@ function renderGame() {
   renderCertificate(g);
 
   const dex = $("dexGrid"); dex.innerHTML = "";
-  for (const s of all) {
+  // Caught bugs first, then a small ❓ for each one still to find
+  for (const s of [...all.filter(sp => g.caught[sp]), ...all.filter(sp => !g.caught[sp])]) {
     const n = g.caught[s] || 0;
     const slot = el("button", "dex-slot" + (n ? " caught" : "") + (s === justCaught ? " pop" : ""));
     slot.type = "button";
@@ -774,7 +775,9 @@ function renderGame() {
         el("span", "count", t("Lv {lv} · ×{n}", { lv: bugLevel(n), n })));
       slot.onclick = () => showFact(s, n, g.spots.filter(sp => sp.species === s));
     } else {
-      slot.append(el("span", "bug-emoji", "❓"), el("strong", null, "???"), el("span", "count", t("Not caught yet")));
+      slot.classList.add("empty-slot");
+      slot.append(el("span", "bug-emoji", "❓"));
+      slot.setAttribute("aria-label", t("Not caught yet"));
       slot.disabled = true;
     }
     dex.append(slot);
@@ -1558,6 +1561,8 @@ function renderWorld(g) {
   const w = weather(), night = isNight();
   $("weatherText").textContent = `${w.emoji} ${t("Today's weather: {weather}.", { weather: t(w.name) })} ${t(w.text)}`
     + (night ? `  🌙 ${t("Night Watch: moths and butterflies give double points.")}` : "");
+  const se = season();
+  $("conditionsText").textContent = `${se.emoji} ${t(se.name)} · ${w.emoji} ${t(w.name)}${night ? ` · 🌙 ${t("Night Watch")}` : ""}`;
   $("game").classList.toggle("night", night);
   if (night && !$("game").querySelector(".fireflies")) {
     const sky = el("div", "fireflies");
@@ -1676,7 +1681,6 @@ function renderDailyGame(g) {
 function nextStep(g) {
   const all = gameSpecies();
   if (!totalCaught(g)) return { emoji: "📸", text: "Take a photo of a bug outside. If it's invasive, you get to catch it!", btn: "Take a photo", go: takePhoto };
-  if (g.daily !== todayKey()) return { emoji: "📅", text: "Do today's challenge: {challenge}", vars: { challenge: t(todaysChallenge().text) } };
   const gym = GYMS.find(gy => gymOpen(g, gy) && !g.gyms.includes(gy.id));
   if (gym) return { emoji: gym.emoji, text: "Battle {leader} at the {gym}!", vars: { leader: gym.leader, gym: t(gym.name) }, btn: "Battle!",
     go: () => { showTab("battle"); cutscene(gymIntroScenes(gym)).then(() => battle(gym, true)); } };
@@ -2110,6 +2114,11 @@ $("dailyGameBtn").onclick = () => MINIGAME_PLAY[dailyGame().id]();
 // Night starts and ends while you play, so check the clock every minute
 setInterval(() => renderWorld(loadGame()), 60000);
 $("howToPlay").onclick = showInstructions;
+// The settings menu closes when you tap anywhere else, or pick something in it
+document.addEventListener("click", e => {
+  const menu = document.querySelector(".game .settings");
+  if (menu?.open && (!menu.contains(e.target) || e.target.closest(".settings-menu button"))) menu.open = false;
+});
 $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closePopup(); } });
 renderGame();
 $("introBtn").onclick = () => cutscene(INTRO);

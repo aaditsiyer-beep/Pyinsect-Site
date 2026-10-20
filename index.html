@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261019b">
+<link rel="stylesheet" href="assets/site.css?v=20261019d">
 </head>
 <body>
 <div class="wrap">
@@ -116,15 +116,17 @@
   </section>
 
   <section class="game" id="game" aria-label="Innvadex game">
-    <div class="ledger-head">
+    <div class="game-head">
       <h2>Innvadex</h2>
-      <span class="game-score"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <span id="gameRank" class="status"></span> <span id="gamePoints" class="status">0 points</span> <span id="gameProgress" class="status"></span> <span id="gameProtector" class="status"></span> <button id="buddyBtn" class="status buddy-btn" type="button"></button></span>
+      <span class="game-me"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <button id="buddyBtn" class="status buddy-btn" type="button"></button></span>
     </div>
+    <p class="game-stats"><span id="gameRank"></span> · <span id="gamePoints">0 points</span> · <span id="gameProgress"></span> · <span id="gameProtector"></span></p>
     <div id="nextStep" class="next-step" aria-live="polite"></div>
-    <div id="daily" class="daily"><span class="daily-label">📅 <span data-i18n="Today's challenge">Today's challenge</span></span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
-    <div class="daily daily-game"><span class="daily-label">🎮 <span data-i18n="Today's minigame">Today's minigame</span></span> <strong id="dailyGameName"></strong> <span id="dailyGameState" class="daily-state"></span> <button id="dailyGameBtn" class="btn primary" type="button" data-i18n="Play!">Play!</button></div>
-    <p id="seasonText" class="season"></p>
-    <p id="weatherText" class="season weather"></p>
+    <div class="today">
+      <div id="daily" class="today-row"><span class="daily-label">📅 <span data-i18n="Today's challenge">Today's challenge</span></span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
+      <div class="today-row daily-game"><span class="daily-label">🎮 <span data-i18n="Today's minigame">Today's minigame</span></span> <strong id="dailyGameName"></strong> <span id="dailyGameState" class="daily-state"></span> <button id="dailyGameBtn" class="btn primary" type="button" data-i18n="Play!">Play!</button></div>
+    </div>
+    <details class="conditions"><summary id="conditionsText"></summary><p id="seasonText"></p><p id="weatherText"></p></details>
     <div class="game-bar">
       <div class="game-tabs" role="tablist">
         <button class="tab" type="button" role="tab" data-tab="dex" aria-selected="true" data-i18n="My Innvadex">My Innvadex</button>
@@ -135,12 +137,17 @@
         <button class="tab" type="button" role="tab" data-tab="learn" aria-selected="false" data-i18n="Learn about species">Learn about species</button>
       </div>
       <span class="actions">
-        <label class="lang-pick">🌐 <span class="visually-hidden" data-i18n="Language">Language</span> <select id="langSelect"></select></label>
-        <button id="bigTextBtn" class="btn" type="button" aria-pressed="false">🔠 <span data-i18n="Big text">Big text</span></button>
-        <button id="muteBtn" class="btn" type="button" aria-pressed="false">🔊 Sound on</button>
-        <button id="readAloudBtn" class="btn" type="button" aria-pressed="false">🗣️ <span data-i18n="Read aloud">Read aloud</span></button>
-        <button id="howToPlay" class="btn" type="button" data-i18n="How to play">How to play</button>
-        <button id="introBtn" class="btn" type="button">🎬 <span data-i18n="Watch intro">Watch intro</span></button>
+        <button id="howToPlay" class="btn" type="button">❓ <span data-i18n="How to play">How to play</span></button>
+        <details class="settings">
+          <summary class="btn">⚙️ <span data-i18n="Settings">Settings</span></summary>
+          <div class="settings-menu">
+            <label class="lang-pick">🌐 <span class="visually-hidden" data-i18n="Language">Language</span> <select id="langSelect"></select></label>
+            <button id="bigTextBtn" class="btn" type="button" aria-pressed="false">🔠 <span data-i18n="Big text">Big text</span></button>
+            <button id="muteBtn" class="btn" type="button" aria-pressed="false">🔊 Sound on</button>
+            <button id="readAloudBtn" class="btn" type="button" aria-pressed="false">🗣️ <span data-i18n="Read aloud">Read aloud</span></button>
+            <button id="introBtn" class="btn" type="button">🎬 <span data-i18n="Watch intro">Watch intro</span></button>
+          </div>
+        </details>
       </span>
     </div>
     <div id="tab-dex" role="tabpanel"><div id="dexGrid" class="dex-grid"></div></div>
@@ -196,11 +203,11 @@
 <script src="assets/models/pyinsect-2.8-oregon.js?v=20261016a"></script>
 <script src="assets/aicheck.js?v=20261010g"></script>
 <script src="assets/app.js?v=20261016a"></script>
-<script src="assets/teamai.js?v=20261019a"></script>
-<script src="assets/trees/ash.js?v=20261019a"></script>
-<script src="assets/treecheck.js?v=20261019a"></script>
-<script src="assets/reportsmap.js?v=20261019a"></script>
-<script src="assets/game-i18n.js?v=20261019a"></script>
-<script src="assets/game.js?v=20261019a"></script>
+<script src="assets/teamai.js?v=20261019d"></script>
+<script src="assets/trees/ash.js?v=20261019d"></script>
+<script src="assets/treecheck.js?v=20261019d"></script>
+<script src="assets/reportsmap.js?v=20261019d"></script>
+<script src="assets/game-i18n.js?v=20261019d"></script>
+<script src="assets/game.js?v=20261019d"></script>
 </body>
 </html>
