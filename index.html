@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261019d">
+<link rel="stylesheet" href="assets/site.css?v=20261020b">
 </head>
 <body>
 <div class="wrap">
@@ -24,7 +24,7 @@
   <div id="choices" class="choices">
   <section id="tray" class="tray" aria-labelledby="trayTitle">
     <h2 id="trayTitle">📷 Report a bug or damage</h2>
-    <p>Take a photo of an insect, drop photos here, or choose photos. Photos are identified on this device. When a photo shows an invasive species, a report with a reduced copy of the photo is sent to the Pyinsect team.</p>
+    <p>Take or choose a photo of a bug. We'll tell you what it is, right here on your device. If it's invasive, a report with a smaller copy of the photo goes to the Pyinsect team.</p>
     <div class="actions">
       <button id="openCamera" class="btn primary" type="button" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
@@ -97,22 +97,15 @@
     </div>
   </section>
 
-  <section class="ledger reports-map" id="reportsMapSection" aria-labelledby="reportsMapTitle">
+
+  <section class="ledger">
     <div class="ledger-head">
-      <h2 id="reportsMapTitle">🗺️ Reports map</h2>
+      <h2>Results</h2>
+      <span id="count" class="status">0 photos</span>
     </div>
-    <p class="hint">Invasive bugs and tree damage reported by everyone, in squares about 1 km wide. No photos and no exact spots are ever shown.</p>
-    <ul class="map-key" aria-label="What the colors mean">
-      <li><span class="swatch" style="background:#1f8a4c"></span>Verified: a person on our team checked it</li>
-      <li><span class="swatch" style="background:#2f6fb3"></span>AI checked: an AI thinks it's a match</li>
-      <li><span class="swatch" style="background:#8a8f8c"></span>Not checked yet</li>
-      <li><span class="swatch mine"></span>Your reports (only you see these)</li>
-    </ul>
-    <div class="actions">
-      <button id="showReportsMap" class="btn" type="button">Show the map</button>
-      <span id="reportsMapMsg" class="muted" role="status"></span>
+    <div id="cards" class="cards">
+      <div id="empty" class="empty">No photos yet. Tap "Take photo" or "Select photos" above to get started. Each photo you add appears here with its top match and the next two guesses.</div>
     </div>
-    <div id="reportsMap" class="catch-map reports-map-box" hidden></div>
   </section>
 
   <section class="game" id="game" aria-label="Innvadex game">
@@ -175,14 +168,23 @@
     <div id="mine" class="rows"></div>
   </section>
 
-  <section class="ledger">
+
+  <section class="ledger reports-map" id="reportsMapSection" aria-labelledby="reportsMapTitle">
     <div class="ledger-head">
-      <h2>Results</h2>
-      <span id="count" class="status">0 photos</span>
+      <h2 id="reportsMapTitle">🗺️ Reports map</h2>
     </div>
-    <div id="cards" class="cards">
-      <div id="empty" class="empty">No photos yet. Tap "Take photo" or "Select photos" above to get started. Each photo you add appears here with its top match and the next two guesses.</div>
+    <p class="hint">Invasive bugs and tree damage reported by everyone, in squares about 1 km wide. No photos and no exact spots are ever shown.</p>
+    <ul class="map-key" aria-label="What the colors mean">
+      <li><span class="swatch" style="background:#1f8a4c"></span>Verified: a person on our team checked it</li>
+      <li><span class="swatch" style="background:#2f6fb3"></span>AI checked: an AI thinks it's a match</li>
+      <li><span class="swatch" style="background:#8a8f8c"></span>Not checked yet</li>
+      <li><span class="swatch mine"></span>Your reports (only you see these)</li>
+    </ul>
+    <div class="actions">
+      <button id="showReportsMap" class="btn" type="button">Show the map</button>
+      <span id="reportsMapMsg" class="muted" role="status"></span>
     </div>
+    <div id="reportsMap" class="catch-map reports-map-box" hidden></div>
   </section>
 </div>
 
@@ -203,11 +205,11 @@
 <script src="assets/models/pyinsect-2.8-oregon.js?v=20261016a"></script>
 <script src="assets/aicheck.js?v=20261010g"></script>
 <script src="assets/app.js?v=20261016a"></script>
-<script src="assets/teamai.js?v=20261019d"></script>
-<script src="assets/trees/ash.js?v=20261019d"></script>
-<script src="assets/treecheck.js?v=20261019d"></script>
-<script src="assets/reportsmap.js?v=20261019d"></script>
-<script src="assets/game-i18n.js?v=20261019d"></script>
-<script src="assets/game.js?v=20261019d"></script>
+<script src="assets/teamai.js?v=20261020b"></script>
+<script src="assets/trees/ash.js?v=20261020b"></script>
+<script src="assets/treecheck.js?v=20261020b"></script>
+<script src="assets/reportsmap.js?v=20261020b"></script>
+<script src="assets/game-i18n.js?v=20261020b"></script>
+<script src="assets/game.js?v=20261020b"></script>
 </body>
 </html>

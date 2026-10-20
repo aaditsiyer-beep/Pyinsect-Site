@@ -713,3 +713,32 @@ input[type=file] { display: none; }
 .game > .game-bar { z-index: 5; }   /* so the settings menu opens on top of the bug cards */
 .dex-slot.empty-slot { justify-content: center; min-height: 0; padding: 10px; }
 .dex-slot.empty-slot .bug-emoji { font-size: 22px; opacity: .6; }
+
+/* Night mode: from 8 PM to 6 AM the whole page goes dark (assets/game.js adds "night" to <html>).
+   These are the same as the dark-mode rules above, with a navy night sky. */
+html.night {
+  --ink: #e8efe9; --muted: #b4c2d6; --accent: #86d3a1; --accent-soft: rgba(134, 211, 161, .16);
+  --alert: #ff8f80; --alert-soft: rgba(255, 143, 128, .14); --line: rgba(255, 255, 255, .12);
+  --glass: rgba(20, 30, 50, .5); --glass-strong: rgba(28, 40, 64, .66); --glass-edge: rgba(255, 255, 255, .14);
+  --glass-shadow: 0 12px 38px rgba(0, 0, 0, .45), 0 1px 3px rgba(0, 0, 0, .3);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(255, 255, 255, .04);
+  --backdrop:
+    radial-gradient(40rem 30rem at 85% 8%, rgba(120, 140, 220, .28), transparent 60%),
+    radial-gradient(36rem 30rem at 10% 90%, rgba(40, 110, 80, .3), transparent 62%),
+    radial-gradient(1px 1px at 20% 15%, #fff, transparent), radial-gradient(1px 1px at 70% 25%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 40% 40%, #fff, transparent), radial-gradient(1px 1px at 85% 60%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 55%, #fff, transparent), radial-gradient(1.5px 1.5px at 55% 80%, #fff, transparent),
+    linear-gradient(180deg, #0b1226 0%, #121c33 60%, #14261f 100%);
+  --surface: #172036;
+  color-scheme: dark;
+}
+html.night .btn.primary, html.night .btn.primary:hover:not(:disabled),
+html.night .btn.answer.chosen, html.night .btn.answer.chosen:disabled, html.night .btn.answer.chosen:hover:not(:disabled),
+html.night .flag.tree { color: #0d1411; }
+html.night .flag.ai { background: #b9a2ff; color: #1a1426; }
+html.night .arena, html.night .battle-field { background: linear-gradient(180deg, #23402d 0%, #1b3324 100%); color: var(--ink); }
+html.night .fighter { background: rgba(0, 0, 0, .25); }
+html.night .game.night { background: rgba(11, 18, 38, .55); }   /* the page is already a night sky */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html.night { --glass: rgba(20, 30, 50, .9); --glass-strong: rgba(28, 40, 64, .94); }
+}

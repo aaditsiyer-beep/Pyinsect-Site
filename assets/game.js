@@ -355,6 +355,8 @@ const INTRO = [
   { scene: "mthood", ...HAZEL, text: "Battle trainers, beat the {n} forest gyms, and face the Oregon Champion.", vars: { n: GYMS.length - 1 } },
   { scene: "forest", ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
+// The first visit uses a short version of the intro. The whole story is in Settings → Watch intro.
+const INTRO_SHORT = [INTRO[0], INTRO[1], INTRO[4], INTRO[8], INTRO[9], INTRO[12]];
 const FIRST_CATCH = [
   { scene: "victory", ...HAZEL, text: "You caught your first invasive bug, {name}! It's in your Innvadex now." },
   { scene: "victory", ...PIP,   text: "Bzz bzz! That's one less bug bothering the trees. Great job!" },
@@ -1564,6 +1566,9 @@ function renderWorld(g) {
   const se = season();
   $("conditionsText").textContent = `${se.emoji} ${t(se.name)} · ${w.emoji} ${t(w.name)}${night ? ` · 🌙 ${t("Night Watch")}` : ""}`;
   $("game").classList.toggle("night", night);
+  // At night the whole page goes dark, not just the game (see "Night mode" in site.css)
+  document.documentElement.classList.toggle("night", night);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", night ? "#0e1730" : "#2f6b45");
   if (night && !$("game").querySelector(".fireflies")) {
     const sky = el("div", "fireflies");
     sky.setAttribute("aria-hidden", "true");
@@ -2123,13 +2128,13 @@ $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.st
 renderGame();
 $("introBtn").onclick = () => cutscene(INTRO);
 $("trainerBtn").onclick = () => editTrainer(false);
-// The first time: the intro story, then the trainer card, then how to play
+// The first time: a short intro, then pick a nickname. The "what to do next" box takes it from there.
 {
   const g = loadGame();
   if (!g.seenIntro) {
-    const firstTime = !g.seenHowTo;
     g.seenIntro = true; g.seenHowTo = true; saveGame(g);
-    cutscene(INTRO).then(() => g.trainer.name ? null : editTrainer(true)).then(() => firstTime && showInstructions());
+    cutscene(INTRO_SHORT).then(() => g.trainer.name ? null : editTrainer(true))
+      .then(() => $("nextStep").scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 }
 
