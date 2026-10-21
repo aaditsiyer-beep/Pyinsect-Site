@@ -549,7 +549,16 @@ const BUDDIES = {
     fact: "A native ladybug with two white lines behind its head. It eats aphids that hurt plants." },
   groundbeetle: { name: "Ground beetle", stages: ["🥚", "🐛", "🪲", "🪲"],
     fact: "A fast native beetle that hunts slugs and garden pests at night." },
+  // Squawk joins you after you beat Boss Burdock. Squawk is already grown up, so it's always Super.
+  squawk: { name: "Squawk", stages: ["🐦", "🐦", "🐦", "🐦"], grown: true, unlock: g => g.tangle.includes("boss"),
+    fact: "Team Tangle's old starling. Now Squawk helps you protect forests instead!" },
 };
+// What happens after you beat Boss Burdock for the first time
+const SQUAWK_JOINS = [
+  { scene: "forest", ...SQUAWK, text: "Squawk! Wait, {name}! Can I come with you? I want to help protect forests now!" },
+  { scene: "forest", ...PIP, text: "Bzz! A starling and a bumble bee on the same team? Sure, why not!" },
+  { scene: "victory", ...SQUAWK, text: "Squawk joined you as your Bug Buddy! Squawk cheers for your bugs in battles.", sound: "badge" },
+];
 const BUDDY_STAGES = [[0, "Egg"], [40, "Baby"], [150, "Grown-up"], [400, "Super"]];
 const BUDDY_TIPS = [
   "Look under leaves. Lots of bugs hide there!",
@@ -1282,6 +1291,7 @@ function battle(foe, gym) {
       g.wins++; addPoints(g, pts);
       if (gym && !beatenBefore) g.gyms.push(foe.id);
       if (firstTangleWin) g.tangle.push(foe.tangle);
+      if (firstTangleWin && foe.boss) g.buddy = { kind: "squawk", xp: g.buddy?.xp || 0, seen: BUDDY_STAGES.length - 1 };   // Squawk joins you!
       if (foe.swarm) { g.boss.beaten = true; g.bossWins++; }
       lines.push(...progress(g, { type: "win", pts }));
       checkUnlocks(g);
@@ -1581,7 +1591,7 @@ function renderWorld(g) {
 }
 
 // ---- Bug Buddy ----
-const buddyStage = g => g.buddy ? BUDDY_STAGES.filter(s => g.buddy.xp >= s[0]).length - 1 : -1;
+const buddyStage = g => !g.buddy ? -1 : BUDDIES[g.buddy.kind].grown ? BUDDY_STAGES.length - 1 : BUDDY_STAGES.filter(s => g.buddy.xp >= s[0]).length - 1;
 const buddyFace = g => BUDDIES[g.buddy.kind].stages[buddyStage(g)];
 const buddyName = g => t(BUDDIES[g.buddy.kind].name);
 const buddyBoost = g => Math.max(0, buddyStage(g) - 1);   // grown-up: +1 attack, super: +2
@@ -1591,17 +1601,21 @@ function renderBuddy(g) {
   b.classList.toggle("super", buddyStage(g) === BUDDY_STAGES.length - 1);
   b.textContent = g.buddy ? `${buddyFace(g)} ${buddyName(g)} · ${t(BUDDY_STAGES[buddyStage(g)][1])}` : `🥚 ${t("Pick a Bug Buddy")}`;
 }
+// Pick a buddy, or switch to another one. Switching keeps the points your buddy has earned.
 function pickBuddy() {
-  const picks = el("div", "buddy-picks");
+  const picks = el("div", "buddy-picks"), now = loadGame();
   for (const [kind, bd] of Object.entries(BUDDIES)) {
+    if (bd.unlock && !bd.unlock(now)) continue;
     const b = el("button", "buddy-pick");
     b.type = "button";
     b.append(el("span", "bug-emoji", bd.stages[2]), el("strong", null, t(bd.name)), el("span", "muted", t(bd.fact)));
     b.onclick = () => {
-      const g = loadGame();
-      g.buddy = { kind, xp: 0, seen: 0 };
+      const g = loadGame(), had = g.buddy;
+      g.buddy = { kind, xp: had?.xp || 0, seen: 0 };
+      g.buddy.seen = buddyStage(g);
       saveGame(g); closePopup(); renderGame(); sound("badge");
-      toast([`🥚 ${t("Your {buddy} egg is ready! Earn points to help it grow.", { buddy: t(bd.name) })}`]);
+      toast([had ? `${buddyFace(g)} ${t("{buddy} is your buddy now!", { buddy: t(bd.name) })}`
+        : `🥚 ${t("Your {buddy} egg is ready! Earn points to help it grow.", { buddy: t(bd.name) })}`]);
     };
     picks.append(b);
   }
@@ -1622,7 +1636,7 @@ function showBuddy() {
     el("p", "muted", t(BUDDIES[g.buddy.kind].fact)),
     el("p", "speech", `${buddyFace(g)} “${t(pickOne(BUDDY_TIPS))}”`),
     el("p", "muted", st >= 2 ? t("In battles, your buddy cheers: your bugs get +{n} attack.", { n: buddyBoost(g) }) : t("When your buddy is grown up, it cheers for your bugs in battles."))],
-    [["Close", true]]);
+    [["Close", true], ["Switch buddy", false, pickBuddy]]);
   sound("right");
 }
 
@@ -1638,6 +1652,7 @@ const blastOff = (foe, first) => [
   ...(first && foe.ending ? foe.ending : []),
   ...TANGLE_BLAST_OFF,
   ...(first && foe.lesson ? [{ scene: "lab", ...HAZEL, text: foe.lesson }] : []),
+  ...(first && foe.boss ? SQUAWK_JOINS : []),
 ];
 // Sometimes, after a catch, Team Tangle tries to grab your bug (once a day at most)
 function maybeAmbush(g, species) {

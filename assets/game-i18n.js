@@ -869,4 +869,11 @@ const GAME_I18N = {
   // ---- tidier front page ----
   "Settings": ["Ajustes", "Réglages", "सेटिंग्स"],
   "Night Watch": ["Vigilancia nocturna", "Veille de nuit", "रात की निगरानी"],
+  // ---- Squawk joins you ----
+  "Squawk! Wait, {name}! Can I come with you? I want to help protect forests now!": ["¡Cuac! ¡Espera, {name}! ¿Puedo ir contigo? ¡Ahora quiero ayudar a proteger los bosques!", "Croâ ! Attends, {name} ! Je peux venir avec toi ? Maintenant, je veux aider à protéger les forêts !", "काँव! रुको, {name}! क्या मैं तुम्हारे साथ चल सकता हूँ? अब मैं जंगलों को बचाने में मदद करना चाहता हूँ!"],
+  "Bzz! A starling and a bumble bee on the same team? Sure, why not!": ["¡Bzz! ¿Un estornino y un abejorro en el mismo equipo? ¡Claro, ¿por qué no?!", "Bzz ! Un étourneau et un bourdon dans la même équipe ? Bien sûr, pourquoi pas !", "भिन-भिन! एक स्टार्लिंग और एक भौंरा एक ही टीम में? हाँ, क्यों नहीं!"],
+  "Squawk joined you as your Bug Buddy! Squawk cheers for your bugs in battles.": ["¡Squawk se unió a ti como tu Bicho Amigo! Squawk anima a tus insectos en las batallas.", "Squawk te rejoint comme Insecte Copain ! Squawk encourage tes insectes pendant les combats.", "Squawk तुम्हारा कीड़ा दोस्त बन गया! Squawk लड़ाइयों में तुम्हारे कीड़ों का हौसला बढ़ाता है।"],
+  "Team Tangle's old starling. Now Squawk helps you protect forests instead!": ["El antiguo estornino del Team Tangle. ¡Ahora Squawk te ayuda a proteger los bosques!", "L'ancien étourneau de la Team Tangle. Maintenant, Squawk t'aide à protéger les forêts !", "Team Tangle का पुराना स्टार्लिंग। अब Squawk जंगलों को बचाने में तुम्हारी मदद करता है!"],
+  "{buddy} is your buddy now!": ["¡{buddy} es tu amigo ahora!", "{buddy} est ton copain maintenant !", "{buddy} अब तुम्हारा दोस्त है!"],
+  "Switch buddy": ["Cambiar de amigo", "Changer de copain", "दोस्त बदलो"],
 };
