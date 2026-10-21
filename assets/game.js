@@ -1545,6 +1545,8 @@ function applyBigText(g) { document.documentElement.classList.toggle("big-text",
 // ---------- version 8: Team Tangle, Swarm Boss, Bug Buddy, weather, night, outfits, minigames ----------
 
 const pickOne = list => list[Math.floor(Math.random() * list.length)];
+// Puts a list in random order (for cards, rounds, and teams)
+const shuffle = list => list.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
 const dayNumber = () => { const d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); };
 const weekNumber = () => Math.floor((dayNumber() + 3) / 7);   // a new week starts each Monday
 // The same "random" weather all day, for everyone
