@@ -45,6 +45,7 @@ function show(name) {
   // Leaving the Game screen closes its pop-up (like "How to play"), so it doesn't cover the next screen
   if (current === "game" && name !== "game" && !$("gamePopup").hidden) window.Innvadex?.closePopup();
   current = name;
+  document.body.dataset.screen = name;   // lets site.css style each screen (the Game screen hides the top bar)
   for (const s of SCREENS) $(`screen-${s}`).hidden = s !== name;
   document.querySelectorAll(".menubar a").forEach(a => {
     if (a.dataset.screen === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");

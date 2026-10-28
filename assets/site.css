@@ -998,3 +998,6 @@ body.app.onboarding { padding-bottom: 0; overflow: hidden; }
 body.camera-open .game-popup { z-index: 260; }
 body.camera-open .game-toast { z-index: 261; }
 @media (prefers-reduced-motion: reduce) { .connect-pad.connected .connect-dot, .connect-pad.shake { animation: none; } .half-tile:hover { transform: none; } }
+/* The Game screen has its own top row (logo, camera, settings), so the app's top bar hides there */
+body[data-screen="game"] .topbar { display: none; }
+body[data-screen="game"] #screens { padding-top: 14px; }

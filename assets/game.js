@@ -2323,6 +2323,7 @@ function connectPad(shape, done) {
 // It shows the species it sees at the top (it guesses every 1.5 seconds), and takes or picks photos.
 // Invasive bugs start a catch and are reported, like before. Other bugs give protector points.
 let camStream = null, camFacing = "environment", camTimer = null, camGuessing = false, camChallenge = null, camTorch = false;
+let camQuietUntil = 0;   // the live guess waits, so a photo's result stays on screen
 async function openGameCamera(challengeId) {
   camChallenge = monthlyChallenges().find(c => c.id === challengeId) || null;
   $("gameCamera").hidden = false;
@@ -2371,6 +2372,8 @@ function stopGameCamera() {
   document.body.classList.remove("camera-open");
 }
 // Leaves the camera: back to the challenge it came from, or the game home
+// Invasive bugs, and damage that invasive bugs leave (like ash borer holes), start a catch
+const gameInvasive = species => INVASIVE.has(species) || !!(typeof damagedTree === "function" && damagedTree(species));
 const closeGameCamera = () => goGame(camChallenge ? `challenge/${camChallenge.id}` : "");
 
 // The picture in the camera right now, on a canvas (smaller for the live guess)
@@ -2383,21 +2386,23 @@ function grabFrame(maxSide) {
 }
 async function liveGuess() {
   const v = $("gameVideo");
-  if (camGuessing || !camStream || !v.videoWidth || typeof identify !== "function") return;
+  if (camGuessing || Date.now() < camQuietUntil || !camStream || !v.videoWidth || typeof identify !== "function") return;
   camGuessing = true;
   try {
     await modelReady;
     const { top3, verdict } = await identify(grabFrame(640));
-    if ($("gameCamera").hidden) return;
+    if ($("gameCamera").hidden || Date.now() < camQuietUntil) return;
     const best = top3[0], s = SPECIES_ALIAS[best.species] || best.species;
     $("gcSpecies").textContent = verdict !== "ok" ? t("Looking for a bug…")
-      : `${SPECIES_FACTS[s]?.emoji || "🐞"} ${commonName(best.species)} · ${Math.round(best.confidence)}%` + (INVASIVE.has(best.species) ? ` · 🚫 ${t("Invasive")}` : ` · 🌼 ${t("Native")}`);
+      : `${SPECIES_FACTS[s]?.emoji || "🐞"} ${commonName(best.species)} · ${Math.round(best.confidence)}%` + (gameInvasive(best.species) ? ` · 🚫 ${t("Invasive")}` : ` · 🌼 ${t("Native")}`);
   } catch {} finally { camGuessing = false; }
 }
 // A photo from the camera or from "select images"
 async function gamePhoto(file, fromCamera) {
   const say = $("gcSpecies");
   say.textContent = t("Checking your photo…");
+  camQuietUntil = Infinity;
+  while (camGuessing) await wait(50);   // one guess at a time
   try {
     await modelReady;
     const { top3, verdict } = await identify(file);
@@ -2408,7 +2413,7 @@ async function gamePhoto(file, fromCamera) {
       const ai = await checkAI(file).catch(() => ({ verdict: "unknown" }));
       if (ai.verdict === "ai") { fakePhoto(); say.textContent = t("Point the camera at a bug."); return; }
     }
-    if (!INVASIVE.has(best.species)) {
+    if (!gameInvasive(best.species)) {
       native(best.species, best.confidence);
       say.textContent = `🌼 ${t("{bug} isn't invasive. Leave it be!", { bug: commonName(best.species) })}`;
       renderCameraChallenge();
@@ -2420,6 +2425,8 @@ async function gamePhoto(file, fromCamera) {
     encounter(s, url);
   } catch {
     say.textContent = t("Something went wrong. Try again!");
+  } finally {
+    camQuietUntil = Date.now() + 4000;   // keep the result on screen for 4 seconds
   }
 }
 // Reports an invasive bug (or tree damage) from the game's camera, the same way the app does
@@ -2477,6 +2484,8 @@ function renderHome(g) {
   $("badgesSub").textContent = t("{n} badges · {rank}", { n: g.badges.length, rank: t(rankOf(g.points)[2]) });
   $("dexCount").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: gameSpecies().length });
   renderMonthly(g);
+  // The challenge page shows progress too, so draw it again if it's open
+  if (gamePage === "challenge") renderChallenge(location.hash.split("/")[2]);
 }
 
 // ---------- wiring ----------
