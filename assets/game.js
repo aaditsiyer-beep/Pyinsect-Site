@@ -1099,7 +1099,7 @@ function encounter(species, photo) {
     confetti();
 
     await new Promise(r => { popupDone = r; openPopup([el("h2", null, t("Gotcha! +{pts} points", { pts })), ...extra, factCard(species, g.caught[species])],
-      [["Open Innvadex", true, () => { showTab("dex"); $("game").scrollIntoView({ behavior: "smooth" }); }], ["Keep playing", false]]); });
+      [["Open Innvadex", true, () => { showTab("dex"); if (window.flow) window.flow.go("game"); else $("game").scrollIntoView({ behavior: "smooth" }); }], ["Keep playing", false]]); });
     await playQueued();
   });
 }
@@ -2164,14 +2164,14 @@ $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.st
 renderGame();
 $("introBtn").onclick = () => cutscene(INTRO);
 $("trainerBtn").onclick = () => editTrainer(false);
-// The first time: a short intro, then pick a nickname. The "what to do next" box takes it from there.
-{
+// The first time you open the Game screen: a short intro, then pick a nickname.
+// assets/flow.js calls this when the Game screen opens (so it doesn't cover the Home screen).
+function firstHowTo() {
   const g = loadGame();
-  if (!g.seenIntro) {
-    g.seenIntro = true; g.seenHowTo = true; saveGame(g);
-    cutscene(INTRO_SHORT).then(() => g.trainer.name ? null : editTrainer(true))
-      .then(() => $("nextStep").scrollIntoView({ behavior: "smooth", block: "center" }));
-  }
+  if (g.seenIntro) return;
+  g.seenIntro = true; g.seenHowTo = true; saveGame(g);
+  cutscene(INTRO_SHORT).then(() => g.trainer.name ? null : editTrainer(true));
 }
+if (!$("screen-game")) firstHowTo();
 
-window.Innvadex = { encounter, native, fakePhoto };
+window.Innvadex = { encounter, native, fakePhoto, firstHowTo, closePopup };
