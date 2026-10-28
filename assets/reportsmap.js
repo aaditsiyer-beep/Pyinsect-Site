@@ -153,5 +153,34 @@ async function show() {
     : "No reports on the map yet. Yours will show here after you send one.");
 }
 
-window.reportsMap = { show };
+// A small copy of the map for the game (assets/game.js): everyone's squares, and (with you: true)
+// a blue dot where you are. The dot stays on this phone. It can't be dragged or zoomed: tapping it
+// opens the Map screen instead.
+const minis = {};
+async function mini(id, { you = false } = {}) {
+  try { await loadLeaflet(); } catch { return; }
+  let m = minis[id];
+  if (!m) {
+    m = minis[id] = { map: L.map(id, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+      boxZoom: false, keyboard: false, touchZoom: false }), layer: null, me: null };
+    m.map.attributionControl.setPrefix(false);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(m.map);
+    m.map.setView([44, -120.5], 6);   // Oregon
+  }
+  m.map.invalidateSize();
+  let reports = [];
+  try { reports = (await relay("/map")).reports || []; } catch {}
+  m.layer?.remove();
+  m.layer = L.layerGroup(reports.map(r => L.rectangle(squareBounds(r.lat, r.lon),
+    { color: COLORS.everyone, weight: 1, fillColor: COLORS.everyone, fillOpacity: 0.45, interactive: false }))).addTo(m.map);
+  if (reports.length && !you) m.map.fitBounds(L.latLngBounds(reports.map(r => squareBounds(r.lat, r.lon)).flat()).pad(0.2), { maxZoom: 13 });
+  if (you && navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => {
+    const here = [pos.coords.latitude, pos.coords.longitude];
+    m.me?.remove();
+    m.me = L.circleMarker(here, { radius: 6, color: "#fff", weight: 2, fillColor: "#1a73e8", fillOpacity: 1, interactive: false }).addTo(m.map);
+    m.map.setView(here, 14);
+  }, () => {}, { timeout: 15000, maximumAge: 60000 });
+}
+
+window.reportsMap = { show, mini };
 })();

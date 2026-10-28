@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
-<link rel="stylesheet" href="assets/site.css?v=20261027a">
+<link rel="stylesheet" href="assets/site.css?v=20261027b">
 </head>
 <body class="app">
 <!-- The screens: splash and permissions (first visit only), then Home, Detect, Game and Map.
@@ -132,46 +132,59 @@
   <!-- ===== Game ===== -->
   <section id="screen-game" class="screen" aria-label="Game" hidden>
     <section class="game" id="game" aria-label="Innvadex game">
-      <div class="game-head">
-        <h2>Innvadex</h2>
-        <span class="game-me"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <button id="buddyBtn" class="status buddy-btn" type="button"></button></span>
-      </div>
-      <p class="game-stats"><span id="gameRank"></span> · <span id="gamePoints">0 points</span> · <span id="gameProgress"></span> · <span id="gameProtector"></span></p>
-      <div id="nextStep" class="next-step" aria-live="polite"></div>
-      <div class="today">
-        <div id="daily" class="today-row"><span class="daily-label">📅 <span data-i18n="Today's challenge">Today's challenge</span></span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
-        <div class="today-row daily-game"><span class="daily-label">🎮 <span data-i18n="Today's minigame">Today's minigame</span></span> <strong id="dailyGameName"></strong> <span id="dailyGameState" class="daily-state"></span> <button id="dailyGameBtn" class="btn primary" type="button" data-i18n="Play!">Play!</button></div>
-      </div>
-      <details class="conditions"><summary id="conditionsText"></summary><p id="seasonText"></p><p id="weatherText"></p></details>
-      <div class="game-bar">
-        <div class="game-tabs" role="tablist">
-          <button class="tab" type="button" role="tab" data-tab="dex" aria-selected="true" data-i18n="My Innvadex">My Innvadex</button>
-          <button class="tab" type="button" role="tab" data-tab="badges" aria-selected="false" data-i18n="Badges">Badges</button>
-          <button class="tab" type="button" role="tab" data-tab="battle" aria-selected="false" data-i18n="Battle">Battle</button>
-          <button class="tab" type="button" role="tab" data-tab="protector" aria-selected="false" data-i18n="Protector-dex">Protector-dex</button>
-          <button class="tab" type="button" role="tab" data-tab="story" aria-selected="false" data-i18n="Story">Story</button>
-          <button class="tab" type="button" role="tab" data-tab="learn" aria-selected="false" data-i18n="Learn about species">Learn about species</button>
+      <!-- Game page 1: game home -->
+      <div id="gameHome" class="game-page">
+        <div class="game-top">
+          <span class="brand small"><img src="assets/favicon.svg" alt="" width="32" height="32">Pyinsect</span>
+          <button id="gameCameraBtn" class="cam-btn" type="button" aria-label="Open the camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+          <button class="gear-btn" type="button" data-settings aria-label="Settings">⚙️</button>
         </div>
-        <span class="actions">
-          <button id="howToPlay" class="btn" type="button">❓ <span data-i18n="How to play">How to play</span></button>
-          <details class="settings">
-            <summary class="btn">⚙️ <span data-i18n="Settings">Settings</span></summary>
-            <div class="settings-menu">
-              <label class="lang-pick">🌐 <span class="visually-hidden" data-i18n="Language">Language</span> <select id="langSelect"></select></label>
-              <button id="bigTextBtn" class="btn" type="button" aria-pressed="false">🔠 <span data-i18n="Big text">Big text</span></button>
-              <button id="muteBtn" class="btn" type="button" aria-pressed="false">🔊 Sound on</button>
-              <button id="readAloudBtn" class="btn" type="button" aria-pressed="false">🗣️ <span data-i18n="Read aloud">Read aloud</span></button>
-              <button id="introBtn" class="btn" type="button">🎬 <span data-i18n="Watch intro">Watch intro</span></button>
-            </div>
-          </details>
-        </span>
+        <div class="today">
+          <div id="daily" class="today-row"><span class="daily-label">📅 <span data-i18n="Today's challenge">Today's challenge</span></span> <strong id="dailyText"></strong> <span id="dailyState" class="daily-state"></span></div>
+          <div class="today-row daily-game"><span class="daily-label">🎮 <span data-i18n="Today's minigame">Today's minigame</span></span> <strong id="dailyGameName"></strong> <span id="dailyGameState" class="daily-state"></span> <button id="dailyGameBtn" class="btn primary" type="button" data-i18n="Play!">Play!</button></div>
+          <details class="conditions"><summary id="conditionsText"></summary><p id="seasonText"></p><p id="weatherText"></p></details>
+        </div>
+        <div class="game-halves">
+          <button id="battlesTile" class="half-tile" type="button"><span class="tile-emoji" aria-hidden="true">⚔️</span><strong data-i18n="Battles &amp; Forests">Battles &amp; Forests</strong><span id="battlesSub" class="muted"></span></button>
+          <button id="badgesTile" class="half-tile" type="button"><span class="tile-emoji" aria-hidden="true">🏅</span><strong data-i18n="Badges">Badges</strong><span id="badgesSub" class="muted"></span></button>
+        </div>
+        <section class="game-dex" aria-labelledby="dexTitle">
+          <div class="game-dex-head"><h2 id="dexTitle">📖 <span data-i18n="My Innvadex">My Innvadex</span></h2><span id="dexCount" class="muted"></span></div>
+          <div id="dexGrid" class="dex-grid"></div>
+        </section>
+        <div class="game-map-card">
+          <div class="game-map-head"><strong>🗺️ <span data-i18n="Reports map">Reports map</span></strong><a class="btn" href="#map" data-i18n="Open the map">Open the map</a></div>
+          <div id="gameMiniMap" class="mini-map" aria-label="A small map of reports"></div>
+        </div>
+        <section class="monthly" aria-labelledby="monthlyTitle">
+          <div class="monthly-head">
+            <h2 id="monthlyTitle" data-i18n="Monthly challenges">Monthly challenges</h2>
+            <button id="monthlyView" class="btn view-btn" type="button"></button>
+          </div>
+          <div id="monthlyList"></div>
+        </section>
       </div>
-      <div id="tab-dex" role="tabpanel"><div id="dexGrid" class="dex-grid"></div></div>
-      <div id="tab-badges" role="tabpanel" hidden><div id="certBox" class="cert-box"></div><div id="badgeList" class="badge-list"></div></div>
-      <div id="tab-battle" role="tabpanel" hidden><div id="battleList" class="battle-list"></div></div>
-      <div id="tab-protector" role="tabpanel" hidden><p id="protectorCount" class="muted"></p><div id="protectorList" class="dex-grid"></div></div>
-      <div id="tab-story" role="tabpanel" hidden><div id="storyList" class="story-list"></div></div>
-      <div id="tab-learn" role="tabpanel" hidden><div id="learnList" class="learn-list"></div></div>
+
+      <!-- Game page 2: a monthly challenge -->
+      <div id="gameChallenge" class="game-page" hidden></div>
+
+      <!-- Battles & Forests, and Badges (they open from the two halves on the game home) -->
+      <div id="gameBattles" class="game-page" hidden>
+        <div class="page-top"><a class="btn back-btn" href="#game">← <span data-i18n="Back">Back</span></a><h2 data-i18n="Battles &amp; Forests">Battles &amp; Forests</h2><button class="gear-btn" type="button" data-settings aria-label="Settings">⚙️</button></div>
+        <div id="battleList" class="battle-list"></div>
+      </div>
+      <div id="gameBadges" class="game-page" hidden>
+        <div class="page-top"><a class="btn back-btn" href="#game">← <span data-i18n="Back">Back</span></a><h2 data-i18n="Badges">Badges</h2><button class="gear-btn" type="button" data-settings aria-label="Settings">⚙️</button></div>
+        <div class="me-card">
+          <span class="game-me"><button id="trainerBtn" class="status trainer-btn" type="button"></button> <button id="buddyBtn" class="status buddy-btn" type="button"></button></span>
+          <p class="game-stats"><span id="gameRank"></span> · <span id="gamePoints"></span> · <span id="gameProgress"></span> · <span id="gameProtector"></span></p>
+        </div>
+        <div id="certBox" class="cert-box"></div>
+        <div id="badgeList" class="badge-list"></div>
+        <h3 data-i18n="Protector-dex">Protector-dex</h3>
+        <p id="protectorCount" class="muted"></p><div id="protectorList" class="dex-grid"></div>
+        <details class="learn-more"><summary data-i18n="Learn about species">Learn about species</summary><div id="learnList" class="learn-list"></div></details>
+      </div>
     </section>
   </section>
 
@@ -276,6 +289,22 @@
   <div id="viewerCaption" class="caption"></div>
 </div>
 
+<!-- Game page 3: the game's camera -->
+<div id="gameCamera" class="game-camera" role="dialog" aria-modal="true" aria-label="Camera" hidden>
+  <video id="gameVideo" playsinline muted autoplay></video>
+  <div class="gc-top"><p id="gcSpecies" class="gc-species" aria-live="polite"></p><button class="gear-btn" type="button" data-settings aria-label="Settings">⚙️</button></div>
+  <div id="gcChallenge" class="gc-challenge" hidden></div>
+  <div class="gc-side">
+    <button id="gcFlash" class="gc-btn" type="button" aria-label="Flash" aria-pressed="false">⚡</button>
+    <button id="gcShoot" class="gc-shoot" type="button" aria-label="Take photo"></button>
+    <button id="gcFlip" class="gc-btn" type="button" aria-label="Flip camera">🔄</button>
+  </div>
+  <div class="gc-bottom">
+    <label class="gc-btn gc-pick" aria-label="Select images">🖼️<input id="gcPick" type="file" accept="image/*" multiple hidden></label>
+    <button id="gcClose" class="gc-btn gc-close" type="button" aria-label="Close the camera">✕</button>
+    <a id="gcMapLink" class="gc-map" href="#map" aria-label="Open the reports map"><div id="gcMiniMap" class="mini-map"></div></a>
+  </div>
+</div>
 <div id="gameToast" class="game-toast" role="status" hidden></div>
 <div id="gamePopup" class="game-popup" role="dialog" aria-modal="true" aria-label="Innvadex" hidden>
   <div id="gamePopupBox" class="game-popup-box"></div>
@@ -289,8 +318,8 @@
 <script src="assets/app.js?v=20261025a"></script>
 <script src="assets/trees/ash.js?v=20261025a"></script>
 <script src="assets/reportsmap.js?v=20261025a"></script>
-<script src="assets/game-i18n.js?v=20261027a"></script>
-<script src="assets/game.js?v=20261027a"></script>
+<script src="assets/game-i18n.js?v=20261027b"></script>
+<script src="assets/game.js?v=20261027b"></script>
 <script src="assets/flow.js?v=20261025a"></script>
 </body>
 </html>

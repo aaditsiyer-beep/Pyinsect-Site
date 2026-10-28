@@ -34,8 +34,10 @@ function closeOverlays() {
   $("viewer").hidden || $("viewer").click();
 }
 
+// name can have more after a "/", like "game/challenge/2026-10-beetles": the game's own pages (assets/game.js)
 function show(name) {
-  if (!SCREENS.includes(name)) name = "home";
+  const [screen, ...sub] = (name || "").split("/");
+  name = SCREENS.includes(screen) ? screen : "home";
   closeOverlays();
   if (!$("results").hidden && !sending) closeResults();
   // Coming back to Detect from another screen starts again at Detect 1
@@ -50,7 +52,8 @@ function show(name) {
   window.scrollTo(0, 0);
   if (name === "detect") renderStep();
   if (name === "map") window.reportsMap?.show();
-  if (name === "game") window.Innvadex?.firstHowTo();
+  if (name === "game") { window.Innvadex?.route?.(sub); window.Innvadex?.firstHowTo(); }
+  else window.Innvadex?.route?.(null);   // leaving the Game screen closes the game's camera
   if (name === "home") autoNearby();
 }
 

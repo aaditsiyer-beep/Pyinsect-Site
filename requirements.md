@@ -548,6 +548,57 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [x] In the tree check, a damage photo ends with the warning and tips; a healthy-bark photo still says "Report made, thank you".
   - [ ] A grown-up redeployed the relay (version 13) before this was merged.
 
+## Game screen: new user flow (home, challenge page, camera)
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-10-27
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** The rest of the app now has clear screens (Home, Detect, Map), but the Game screen
+  was still one page with lots of tabs and pop-ups.
+- **Why it matters:** Monthly challenges give people a reason to come back and go outside to find
+  bugs, and the camera makes catching bugs feel like a real game.
+- **Our idea:** 3 game pages, and the menu bar stays at the bottom.
+  1. **Game home**
+     - Top: the Pyinsect logo, a camera button, and ⚙️ Settings in the top right.
+     - **Daily challenge** (and today's minigame).
+     - Two halves: **Battles & Forests** on the left (the gyms are now called "forests"), and
+       **Badges** on the right (badges, your Innvadex, and your Bug Buddy).
+     - A small **reports map**.
+     - **Monthly challenges:** each has a badge spot with no color, and the badge gets its color
+       when you finish. Old months stay, so you can finish them later. An **icon view / list view**
+       button. Sorted into **Completed**, **In progress**, and **Not started**.
+  2. **Challenge page**
+     - The logo and ⚙️ Settings at the top.
+     - A heading, the month it was made, and the badge spot next to the heading.
+     - **Connect the bugs:** draw a line through the bugs in the shape shown to start the challenge.
+       That opens the camera.
+     - The challenge description below.
+  3. **Camera**
+     - Top: the species the camera is pointing at, live. ⚙️ Settings in the top right.
+     - Middle right: flash, take photo, and flip camera.
+     - Bottom right: a small reports map with a dot where you are.
+     - Bottom middle: close the camera.
+     - Bottom left: select images.
+     - Invasive bugs start a catch and are reported, the same as before. Bugs that aren't invasive
+       give protector points.
+- **Privacy:** where you are only shows on this phone. Reports use the same rough area as Detect.
+- **Other ideas we talked about:** a game home with big tiles, or an adventure path. Aadit picked this
+  design.
+- **User flow:**
+  1. They tap Game in the menu bar and see the game home.
+  2. They tap a monthly challenge and see its page.
+  3. They connect the bugs in the shape, and the camera opens.
+  4. They point the camera at a bug and see its name at the top, then take a photo (or select one).
+  5. An invasive bug starts the catch minigame, and the challenge goes up by one.
+  6. When the challenge is done, its badge gets its color.
+- **Done when:**
+  - [ ] The game home has every part in the right place.
+  - [ ] Monthly challenges stay after their month, switch between icon and list view, and are sorted by status.
+  - [ ] Connecting the bugs starts a challenge and opens the camera.
+  - [ ] The camera shows the species name live, and flash and flip work on phones that allow them.
+  - [ ] Finishing a challenge colors its badge.
+  - [ ] Tried on a real phone.
+
 ## New user flow: splash, menu bar, home, Detect, results, and map
 
 - **Status:** Building

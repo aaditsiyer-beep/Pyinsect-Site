@@ -183,84 +183,84 @@ const TRAINERS = [
 // For the cutscenes: `place` and `story` (where you are), `intro` (the leader says hello),
 // `tip` (a real-world tip the leader gives you after you win).
 const GYMS = [
-  { id: "forestpark", emoji: "🌲", name: "Forest Park Gym", place: "Forest Park", badge: "Forest Park Badge", leader: "Ranger Fern", face: "👩‍🌾",
+  { id: "forestpark", emoji: "🌲", name: "Forest Park", place: "Forest Park", badge: "Forest Park Badge", leader: "Ranger Fern", face: "👩‍🌾",
     level: 1, bugLevel: 1, unlock: 1, reward: 50,
     team: ["exomala_orientalis", "anisandrus_dispar", "pieris_rapae"],
     story: "Forest Park is one of the biggest city forests in the country, right in Portland. Invasive beetles are sneaking in!",
     intro: "Hi! I'm Ranger Fern. I've hiked every single trail in Forest Park. That's more than 80 miles!",
     tip: "When you hike, brush off your boots and gear before you leave. Seeds and bugs love to hitchhike!",
     say: { hi: "Welcome to Forest Park! Let's see if you can protect it.", next: "The forest is counting on me!", lose: "You've earned the Forest Park Badge!", win: "Come back when you're stronger!" } },
-  { id: "siuslaw", emoji: "🌊", name: "Siuslaw Coast Gym", place: "the Siuslaw National Forest", badge: "Siuslaw Badge", leader: "Ranger Tide", face: "🏄",
+  { id: "siuslaw", emoji: "🌊", name: "Siuslaw National Forest", place: "the Siuslaw National Forest", badge: "Siuslaw Badge", leader: "Ranger Tide", face: "🏄",
     level: 2, bugLevel: 1, unlock: 2, reward: 60,
     team: ["linepithema_humile", "harmonia_axyridis", "pieris_rapae", "halyomorpha_halys"],
     story: "The Siuslaw National Forest goes all the way to the ocean, with foggy forests and giant sand dunes.",
     intro: "Hey there! I'm Ranger Tide. When I'm not surfing, I'm watching for bugs that wash in from far away.",
     tip: "Never move plants, soil, or sand from one beach or forest to another. Tiny bugs can hide in them!",
     say: { hi: "Surf's up! Let's see if you can ride this wave.", next: "Here comes another wave!", lose: "Totally awesome! You've earned the Siuslaw Badge!", win: "Wiped out! Try again, dude!" } },
-  { id: "tillamook", emoji: "🌧️", name: "Tillamook Forest Gym", place: "the Tillamook State Forest", badge: "Tillamook Badge", leader: "Ranger Moss", face: "🧔",
+  { id: "tillamook", emoji: "🌧️", name: "Tillamook State Forest", place: "the Tillamook State Forest", badge: "Tillamook Badge", leader: "Ranger Moss", face: "🧔",
     level: 2, bugLevel: 2, unlock: 3, reward: 70,
     team: ["macrodactylus_subspinosus", "solenopsis_invicta", "adelges_piceae"],
     story: "The Tillamook State Forest grew back after giant fires long ago. People planted millions of trees here by hand!",
     intro: "Name's Ranger Moss. I like rain, mud, and trees. Lots and lots of trees.",
     tip: "Look for white fuzzy spots on fir and hemlock trees. That can mean tiny sap-sucking bugs are there.",
     say: { hi: "Rain or shine, I'm ready to battle!", next: "A little rain won't stop me!", lose: "You've earned the Tillamook Badge!", win: "The rain is on my side today!" } },
-  { id: "gorge", emoji: "💦", name: "Columbia Gorge Gym", place: "the Columbia River Gorge", badge: "Gorge Badge", leader: "Ranger Falls", face: "🚣",
+  { id: "gorge", emoji: "💦", name: "Columbia River Gorge", place: "the Columbia River Gorge", badge: "Gorge Badge", leader: "Ranger Falls", face: "🚣",
     level: 2, bugLevel: 2, unlock: 3, reward: 80,
     team: ["halyomorpha_halys", "polistes_dominula", "popillia_japonica", "macrodactylus_subspinosus"],
     story: "The Columbia River Gorge has more than 90 waterfalls on the Oregon side. Bugs ride in on boats and trucks here!",
     intro: "I'm Ranger Falls! I paddle the Columbia River every day. I've seen bugs hitch rides on boats!",
     tip: "Brown marmorated stink bugs crawl into houses in fall. Sealing cracks around windows keeps them out.",
     say: { hi: "My bugs are as strong as a waterfall. Ready to get splashed?", next: "Keep paddling!", lose: "What a ride! You've earned the Gorge Badge!", win: "Swept away! Try again!" } },
-  { id: "umpqua", emoji: "🎣", name: "Umpqua River Gym", place: "the Umpqua National Forest", badge: "Umpqua Badge", leader: "Ranger River", face: "🧑‍🦱",
+  { id: "umpqua", emoji: "🎣", name: "Umpqua National Forest", place: "the Umpqua National Forest", badge: "Umpqua Badge", leader: "Ranger River", face: "🧑‍🦱",
     level: 2, bugLevel: 2, unlock: 4, reward: 85,
     team: ["halyomorpha_halys", "exomala_orientalis", "polistes_dominula", "solenopsis_invicta"],
     story: "The Umpqua National Forest has rushing rivers and tall waterfalls, like Watson Falls, one of the tallest in Oregon.",
     intro: "I'm Ranger River. I fish, I hike, and I never, ever let an invasive bug get past me.",
     tip: "Fire ants build dirt mounds. Never poke one! Take a photo from far away and tell a grown-up.",
     say: { hi: "Let's see if you can swim upstream against my team!", next: "The river keeps flowing!", lose: "Good catch! You've earned the Umpqua Badge!", win: "The current was too strong! Try again." } },
-  { id: "willamette", emoji: "🍄", name: "Willamette Forest Gym", place: "the Willamette National Forest", badge: "Willamette Badge", leader: "Ranger Cedar", face: "👩‍🦰",
+  { id: "willamette", emoji: "🍄", name: "Willamette National Forest", place: "the Willamette National Forest", badge: "Willamette Badge", leader: "Ranger Cedar", face: "👩‍🦰",
     level: 3, bugLevel: 2, unlock: 4, reward: 90,
     team: ["xyleborus_monographus", "lymantria_dispar", "coptotermes_formosanus", "popillia_japonica"],
     story: "The Willamette National Forest has some of the oldest, tallest trees in Oregon. Some are hundreds of years old!",
     intro: "I'm Ranger Cedar. Some of my trees were already old before your great-great-grandparents were born.",
     tip: "Tiny holes and sawdust on an oak tree can mean a beetle is inside. Take a photo and report it!",
     say: { hi: "These are the bugs that worry us most in the Willamette. Show me what you know!", next: "My forest won't give up!", lose: "You've earned the Willamette Badge!", win: "Train a bit more, then come back!" } },
-  { id: "rogue", emoji: "🪨", name: "Rogue-Siskiyou Gym", place: "the Rogue River-Siskiyou National Forest", badge: "Siskiyou Badge", leader: "Ranger Flint", face: "🤠",
+  { id: "rogue", emoji: "🪨", name: "Rogue River-Siskiyou National Forest", place: "the Rogue River-Siskiyou National Forest", badge: "Siskiyou Badge", leader: "Ranger Flint", face: "🤠",
     level: 3, bugLevel: 2, unlock: 5, reward: 100,
     team: ["lymantria_dispar", "popillia_japonica", "polistes_dominula", "adelges_piceae"],
     story: "The Rogue River-Siskiyou National Forest has wild rivers and rare plants that grow almost nowhere else on Earth.",
     intro: "Howdy, I'm Ranger Flint. These mountains are full of rare plants, and I aim to keep 'em safe.",
     tip: "Spongy moth caterpillars are hairy. Don't touch them, because the hairs can make your skin itchy!",
     say: { hi: "Rare plants need tough protectors. Let's see how tough you are!", next: "Don't get too comfortable, partner!", lose: "Well done, partner! You've earned the Siskiyou Badge!", win: "These mountains are rough. Try again!" } },
-  { id: "deschutes", emoji: "🌋", name: "Deschutes Forest Gym", place: "the Deschutes National Forest", badge: "Deschutes Badge", leader: "Ranger Ember", face: "👩‍🚒",
+  { id: "deschutes", emoji: "🌋", name: "Deschutes National Forest", place: "the Deschutes National Forest", badge: "Deschutes Badge", leader: "Ranger Ember", face: "👩‍🚒",
     level: 3, bugLevel: 3, unlock: 5, reward: 110,
     team: ["lymantria_dispar", "coptotermes_formosanus", "solenopsis_invicta", "adelges_piceae", "xyleborus_monographus"],
     story: "The Deschutes National Forest has huge ponderosa pines growing next to old lava flows.",
     intro: "I'm Ranger Ember. I help protect this forest from wildfires, and from bugs that weaken the trees.",
     tip: "Trees weakened by invasive bugs can burn more easily. Healthy forests are safer forests!",
     say: { hi: "My bugs are hot as lava. Think you can handle the heat?", next: "Things are heating up!", lose: "You put out my fire! You've earned the Deschutes Badge!", win: "Too hot to handle! Cool off and try again." } },
-  { id: "wallowa", emoji: "🏜️", name: "Wallowa Canyon Gym", place: "the Wallowa-Whitman National Forest", badge: "Wallowa Badge", leader: "Ranger Canyon", face: "👨‍🦳",
+  { id: "wallowa", emoji: "🏜️", name: "Wallowa-Whitman National Forest", place: "the Wallowa-Whitman National Forest", badge: "Wallowa Badge", leader: "Ranger Canyon", face: "👨‍🦳",
     level: 3, bugLevel: 3, unlock: 6, reward: 120,
     team: ["coptotermes_formosanus", "xyleborus_monographus", "solenopsis_invicta", "lymantria_dispar", "anoplophora_glabripennis"],
     story: "The Wallowa-Whitman National Forest includes Hells Canyon, the deepest river canyon in North America!",
     intro: "I'm Ranger Canyon. I've been a ranger out here for forty years. I've seen a lot of bugs come and go.",
     tip: "Buy firewood where you burn it. Moving firewood is one of the main ways tree-killing bugs spread.",
     say: { hi: "This canyon is deep, and so is my experience. Let's battle!", next: "We're just getting started!", lose: "You've got real skill. You've earned the Wallowa Badge!", win: "Experience wins today. Come back stronger!" } },
-  { id: "craterlake", emoji: "💧", name: "Crater Lake Gym", place: "Crater Lake", badge: "Crater Lake Badge", leader: "Ranger Blue", face: "🤿",
+  { id: "craterlake", emoji: "💧", name: "Crater Lake", place: "Crater Lake", badge: "Crater Lake Badge", leader: "Ranger Blue", face: "🤿",
     level: 3, bugLevel: 3, unlock: 6, reward: 130,
     team: ["anoplophora_glabripennis", "lycorma_delicatula", "popillia_japonica", "lymantria_dispar", "solenopsis_invicta"],
     story: "Crater Lake is the deepest lake in the United States. It sits inside an old volcano!",
     intro: "I'm Ranger Blue. I study the lake and the forests around it. My strategies run deep!",
     tip: "Asian longhorned beetles leave perfectly round holes in trees. If you see them, report them!",
     say: { hi: "My strategy is as deep as Crater Lake. Dive in!", next: "We're going deeper!", lose: "You've earned the Crater Lake Badge!", win: "You sank! Come back up and try again." } },
-  { id: "malheur", emoji: "🍂", name: "Malheur Mountain Gym", place: "the Malheur National Forest", badge: "Malheur Badge", leader: "Ranger Morel", face: "🧑‍🔬",
+  { id: "malheur", emoji: "🍂", name: "Malheur National Forest", place: "the Malheur National Forest", badge: "Malheur Badge", leader: "Ranger Morel", face: "🧑‍🔬",
     level: 3, bugLevel: 3, unlock: 6, reward: 140,
     team: ["anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "coptotermes_formosanus", "lymantria_dispar"],
     story: "The Malheur National Forest is home to a giant honey mushroom that spreads underground. It's one of the biggest living things on Earth!",
     intro: "I'm Ranger Morel. I study fungus, and some beetles carry fungus that can hurt trees. Fascinating, and dangerous!",
     tip: "Spotted lanternflies lay mud-like egg patches on cars and outdoor stuff. Check before you travel!",
     say: { hi: "My team grows stronger, like a giant mushroom. Let's battle!", next: "My roots run deep!", lose: "Amazing! You've earned the Malheur Badge!", win: "My fungus friends win this time!" } },
-  { id: "mthood", emoji: "🏔️", name: "Mount Hood Forest Gym", place: "Mount Hood", badge: "Mount Hood Badge", leader: "Ranger Summit", face: "🧗",
+  { id: "mthood", emoji: "🏔️", name: "Mount Hood National Forest", place: "Mount Hood", badge: "Mount Hood Badge", leader: "Ranger Summit", face: "🧗",
     level: 3, bugLevel: 3, unlock: 6, reward: 150,
     team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "coptotermes_formosanus", "popillia_japonica"],
     story: "Mount Hood is Oregon's tallest mountain. Only the best Bug Rangers make it this far!",
@@ -270,13 +270,13 @@ const GYMS = [
   { id: "champion", emoji: "🏆", name: "Oregon Champion", place: "the Champion's Hall", badge: "Champion Trophy", leader: "Champion Juniper", face: "🦸", champion: true,
     level: 3, bugLevel: 4, unlock: 6, reward: 250,
     team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "lymantria_dispar", "popillia_japonica"],
-    story: "This is the Champion's Hall. Only Bug Rangers with every gym badge are allowed inside.",
+    story: "This is the Champion's Hall. Only Bug Rangers with every forest badge are allowed inside.",
     intro: "I'm Juniper, the Oregon Champion. I've protected every forest in this state, from the coast to the mountains.",
     tip: "A real champion never stops learning. Keep watching for invasive bugs everywhere you go!",
-    say: { hi: "You beat every gym. Now face me, with my Level 4 bugs! This is the final battle!", next: "A Champion never gives up!", lose: "Incredible! You are the new Oregon Champion!", win: "Not yet! Train hard and come back, Bug Ranger." } },
+    say: { hi: "You beat every forest. Now face me, with my Level 4 bugs! This is the final battle!", next: "A Champion never gives up!", lose: "Incredible! You are the new Oregon Champion!", win: "Not yet! Train hard and come back, Bug Ranger." } },
 ];
 // One badge per gym
-BADGES.push(...GYMS.map(gym => ({ id: `gym-${gym.id}`, emoji: gym.emoji, name: gym.badge, desc: "Beat the {gym}.", gym: gym.name, earned: g => g.gyms.includes(gym.id) })));
+BADGES.push(...GYMS.map(gym => ({ id: `gym-${gym.id}`, emoji: gym.emoji, name: gym.badge, desc: "Win at {gym}.", gym: gym.name, earned: g => g.gyms.includes(gym.id) })));
 const gymBefore = gym => GYMS[GYMS.indexOf(gym) - 1];
 const gymOpen = (g, gym) => kindsCaught(g) >= gym.unlock && (!gymBefore(gym) || g.gyms.includes(gymBefore(gym).id));
 // A gym's strongest bug, for its cutscene
@@ -351,7 +351,7 @@ const INTRO = [
   { scene: "lab",    ...HAZEL, text: "That's where you come in, {name}! Here's your very own Innvadex." },
   { scene: "lab",    ...HAZEL, text: "Snap photos of bugs. If one is invasive, catch it! If it isn't, leave it be." },
   { scene: "forest", ...HAZEL, text: "Every invasive bug you find is reported, so experts know where to set traps. Real photos help real forests!" },
-  { scene: "mthood", ...HAZEL, text: "Battle trainers, beat the {n} forest gyms, and face the Oregon Champion.", vars: { n: GYMS.length - 1 } },
+  { scene: "mthood", ...HAZEL, text: "Battle trainers, beat the {n} forests, and face the Oregon Champion.", vars: { n: GYMS.length - 1 } },
   { scene: "forest", ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
 // The first visit uses a short version of the intro. The whole story is in Settings → Watch intro.
@@ -410,8 +410,8 @@ function checkUnlocks(g) {
     g.unlockSeen.push(gym.id);
     if (g.gyms.includes(gym.id)) continue;   // already beaten, no need to invite you
     queueScene([gym.champion
-      ? { scene: gym.id, who: gym.face, name: gym.leader, text: "So you have all {n} gym badges, {name}? I'm Juniper, the Oregon Champion. Come find me in the Battle tab!", vars: { n: GYMS.length - 1 } }
-      : { scene: gym.id, who: gym.face, name: gym.leader, text: "I'm {leader}. The {gym} is open now, {name}! Come battle me when you're ready.", vars: { leader: gym.leader, gym: t(gym.name) } }]);
+      ? { scene: gym.id, who: gym.face, name: gym.leader, text: "So you have all {n} forest badges, {name}? I'm Juniper, the Oregon Champion. Come find me in Battles & Forests!", vars: { n: GYMS.length - 1 } }
+      : { scene: gym.id, who: gym.face, name: gym.leader, text: "I'm {leader}. {gym} is open now, {name}! Come battle me when you're ready.", vars: { leader: gym.leader, gym: t(gym.name) } }]);
   }
   // Team Tangle tells you about their next scheme
   TANGLE.forEach((sc, i) => {
@@ -661,6 +661,54 @@ Object.assign(SCENES, {
   tower:  { bg: "linear-gradient(180deg, #4b3a63 0%, #1f1630 100%)", decor: "🏰 🪵 📦 🕸️ 📦 🏰" },
 });
 
+// ---------- version 11: monthly challenges ----------
+// New challenges come every month (3 a month, starting October 2026). Old ones never go away, so you
+// can finish them later. A challenge starts when you connect the bugs in its shape, and only things
+// you do after that count. Each kind says what counts (ev is something that just happened).
+const MONTHLY_START = [2026, 10], MONTHLY_PER_MONTH = 3;
+const MONTHLY_KINDS = [
+  { id: "truebugs", emoji: "🦗", name: "True Bug Hunter", n: 5, text: "Catch {n} true bugs.",
+    desc: "True bugs have mouths like straws, and many have backs shaped like a shield. Stink bugs and spotted lanternflies are true bugs. Look on fruit trees, grapevines, and the walls of houses.",
+    check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].group === "bug" },
+  { id: "beetles", emoji: "🪲", name: "Beetle Patrol", n: 5, text: "Catch {n} beetles.",
+    desc: "Beetles have hard wing covers that meet in a straight line down their backs. Look on tree bark, leaves, and flowers.",
+    check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].group === "beetle" },
+  { id: "natives", emoji: "🌼", name: "Native Friend", n: 5, text: "Find {n} bugs that aren't invasive.",
+    desc: "Most bugs are helpers, like bees and ladybugs. Take their photo, then leave them be!",
+    check: ev => ev.type === "native" },
+  { id: "moths", emoji: "🦋", name: "Moth Watch", n: 3, text: "Catch {n} moths or butterflies.",
+    desc: "Moths often visit porch lights at night. Their caterpillars munch on leaves, so look for chewed leaves too.",
+    check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].group === "moth" },
+  { id: "rare", emoji: "💎", name: "Rare Finder", n: 2, text: "Catch {n} Rare or Legendary bugs.",
+    desc: "Rare and Legendary bugs do the most harm, so experts really want to know where they are.",
+    check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].rarity !== "common" },
+  { id: "kinds", emoji: "🔍", name: "Bug Detective", n: 3, text: "Catch {n} different kinds of bugs.", distinct: true,
+    desc: "Every kind of bug is different. Look in lots of places: gardens, parks, trees, and porch lights.",
+    check: ev => ev.type === "catch" },
+  { id: "wasps", emoji: "🐝", name: "Sting Squad", n: 2, text: "Catch {n} invasive wasps or hornets.",
+    desc: "Wasps can sting, so always take their photo from far away, and bring a grown-up. Never go near a nest!",
+    check: ev => ev.type === "catch" && SPECIES_FACTS[ev.species].group === "wasp" },
+  { id: "any", emoji: "📸", name: "Snap Happy", n: 8, text: "Catch {n} invasive bugs.",
+    desc: "Any invasive bug counts. Every one you find is reported, so experts know where to look.",
+    check: ev => ev.type === "catch" },
+];
+// The shapes for "connect the bugs". The 9 bugs are numbered like this:
+//   0 1 2
+//   3 4 5
+//   6 7 8
+const SHAPES = [
+  { name: "L", path: [0, 3, 6, 7, 8] },
+  { name: "Z", path: [0, 1, 2, 4, 6, 7, 8] },
+  { name: "U", path: [0, 3, 6, 7, 8, 5, 2] },
+  { name: "V", path: [0, 4, 2] },
+  { name: "N", path: [6, 3, 0, 4, 8, 5, 2] },
+  { name: "7", path: [0, 1, 2, 4, 6] },
+  { name: "square", path: [0, 1, 2, 5, 8, 7, 6, 3, 0] },
+  { name: "C", path: [2, 1, 0, 3, 6, 7, 8] },
+];
+const SHAPE_BUGS = ["🐞", "🦋", "🪲", "🐝", "🦗", "🐜", "🐛", "🪰", "🐌"];
+const LIVE_EVERY = 1500;   // the camera guesses the species this often (milliseconds)
+
 // ---------- saving ----------
 function loadGame() {
   let g = null;
@@ -668,7 +716,7 @@ function loadGame() {
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     spots: [], muted: false, trainer: { name: "", avatar: AVATARS[0] }, unlockSeen: null,
     protectorDex: {}, bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, readAloud: false, games: {}, miniWins: {}, ambushDay: null, ...(g || {}) };
+    buddy: null, readAloud: false, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", ...(g || {}) };
   // Things from older versions that the game doesn't use anymore
   for (const old of ["items", "coins", "quiz", "streak", "missions", "outfits", "useMap"]) delete g[old];
   // Gyms that were already open before gym cutscenes existed don't need one
@@ -701,6 +749,7 @@ function progress(g, ev) {
     g.daily = todayKey(); g.dailyDone++; addPoints(g, DAILY_REWARD);
     lines.push(t("📅 Daily challenge done! +{pts} points", { pts: DAILY_REWARD }));
   }
+  lines.push(...monthlyProgress(g, ev));
   const had = new Set(g.badges);
   const fresh = BADGES.filter(b => !had.has(b.id) && b.earned(g));
   g.badges.push(...fresh.map(b => b.id));
@@ -753,8 +802,6 @@ function renderGame() {
   const rank = rankOf(g.points), next = RANKS[RANKS.indexOf(rank) + 1];
   $("gameRank").textContent = `${rank[1]} ${t(rank[2])}${next ? ` · ${t("{n} to {rank}", { n: next[0] - g.points, rank: t(next[2]) })}` : ""}`;
   $("trainerBtn").textContent = `${trainerLook(g)} ${g.trainer.name || t("Make your trainer card")}`;
-  $("muteBtn").textContent = g.muted ? `🔇 ${t("Sound off")}` : `🔊 ${t("Sound on")}`;
-  $("muteBtn").setAttribute("aria-pressed", g.muted);
   $("gameProgress").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: all.length });
   $("gameProtector").textContent = `🛡️ ${t("{n} protector", { n: g.protector })}`;
   const doneToday = g.daily === todayKey();
@@ -764,14 +811,11 @@ function renderGame() {
   const se = season();
   $("seasonText").textContent = `${se.emoji} ${t(se.name)}: ${t(se.text)}`;
   renderProtectorDex(g);
-  renderStory(g);
   applyBigText(g);
-  $("bigTextBtn").setAttribute("aria-pressed", !!g.bigText);
-  $("readAloudBtn").setAttribute("aria-pressed", !!g.readAloud);
   renderWorld(g);
   renderBuddy(g);
   renderDailyGame(g);
-  renderNextStep(g);
+  renderHome(g);
   renderCertificate(g);
 
   const dex = $("dexGrid"); dex.innerHTML = "";
@@ -834,7 +878,7 @@ function renderBattles(g) {
   };
   list.append(el("h3", null, t("Trainers")));
   TRAINERS.forEach(tr => row(tr, false));
-  list.append(el("h3", null, t("Forest gyms (beat them in order)")));
+  list.append(el("h3", null, t("Forests (beat them in order)")));
   GYMS.forEach(gym => row(gym, true));
 
   // Team Tangle's schemes, in order
@@ -852,7 +896,7 @@ function renderBattles(g) {
     const done = g.tangle.includes(sc.id), open = tangleOpen(g, i);
     const label = done ? `✅ ${t("Battle again")}` : open ? t("Stop them!")
       : kinds < 2 ? `🔒 ${t("Catch {n} kinds", { n: 2 })}` : i && !g.tangle.includes(TANGLE[i - 1].id) ? `🔒 ${t("Stop the last scheme first")}`
-      : `🔒 ${t("Get {n} gym badges first", { n: sc.gyms })}`;
+      : `🔒 ${t("Get {n} forest badges first", { n: sc.gyms })}`;
     const about = `${sc.boss ? BURDOCK.name : "Bramble & Thistle"} · ${t("{n} bugs", { n: sc.team.length })}${sc.bugLevel > 1 ? ` (${t("Lv {lv}", { lv: sc.bugLevel })})` : ""}`;
     simpleRow(sc.emoji, t(sc.name), about, label, !open && !done, done,
       () => done ? battle(tangleFoe(sc), false) : cutscene(tanglePlan(sc)).then(() => battle(tangleFoe(sc), false)));
@@ -865,14 +909,6 @@ function renderBattles(g) {
     sw.beaten ? t("Beaten this week! A new swarm comes on Monday.") : t("{hp} of {max} HP left. Your damage is saved all week!", { hp: sw.hp, max: BOSS_HP }),
     sw.beaten ? `✅ ${t("Beaten")}` : kinds < BOSS_UNLOCK ? `🔒 ${t("Catch {n} kinds", { n: BOSS_UNLOCK })}` : t("Battle!"),
     sw.beaten || kinds < BOSS_UNLOCK, sw.beaten, () => battle(swarmFoe(loadGame()), false));
-}
-
-function showTab(name) {
-  for (const t of document.querySelectorAll(".game-tabs [data-tab]")) {
-    const on = t.dataset.tab === name;
-    t.setAttribute("aria-selected", on);
-    $(`tab-${t.dataset.tab}`).hidden = !on;
-  }
 }
 
 // ---------- pop-up windows ----------
@@ -912,11 +948,12 @@ function showFact(species, n, spots = []) {
 function showInstructions() {
   const list = el("ol", "howto");
   for (const step of [
-    "Take a photo of a bug with “Take photo” at the top of the page.",
-    "If it's invasive, a wild bug appears! Tap it 3 times to catch it.",
+    "Tap the camera at the top of the Game screen, and point it at a bug. Its name shows at the top.",
+    "Take a photo. If the bug is invasive, a wild bug appears! Tap it 3 times to catch it.",
     "If it isn't invasive, leave it be. You still get protector points!",
-    "Do “Today's challenge” and “Today's minigame” for bonus points.",
-    "Use your caught bugs to battle in the “Battle” tab. Beat the {n} forest gyms, then the Oregon Champion!",
+    "Do the daily challenge and today's minigame for bonus points.",
+    "Start a monthly challenge by connecting the bugs in the shape shown. Finish it to give its badge color!",
+    "Battle trainers and the {n} forests with the bugs you caught, then face the Oregon Champion!",
   ]) list.append(el("li", null, t(step, { n: GYMS.length - 1 })));
   const safety = el("div", "safety");
   safety.append(el("strong", null, t("Stay safe")));
@@ -1099,7 +1136,7 @@ function encounter(species, photo) {
     confetti();
 
     await new Promise(r => { popupDone = r; openPopup([el("h2", null, t("Gotcha! +{pts} points", { pts })), ...extra, factCard(species, g.caught[species])],
-      [["Open Innvadex", true, () => { showTab("dex"); if (window.flow) window.flow.go("game"); else $("game").scrollIntoView({ behavior: "smooth" }); }], ["Keep playing", false]]); });
+      [["Open Innvadex", true, () => { goGame(); setTimeout(() => $("dexGrid").scrollIntoView({ behavior: "smooth", block: "center" }), 100); }], ["Keep playing", false]]); });
     await playQueued();
   });
 }
@@ -1318,12 +1355,12 @@ function battle(foe, gym) {
     cutscene([
       { scene: foe.id, who: foe.face, name: foe.leader, text: foe.say.lose },
       { scene: foe.id, who: foe.face, name: foe.leader, text: "Here, {name}. You've earned this." },
-      { scene: "victory", who: foe.emoji, name: foe.badge, text: "You got the {badge}! That's {n} of {total} gym badges.",
+      { scene: "victory", who: foe.emoji, name: foe.badge, text: "You got the {badge}! That's {n} of {total} forest badges.",
         vars: { badge: t(foe.badge), n: loadGame().gyms.filter(id => GYMS.some(gy => gy.id === id && !gy.champion)).length, total: GYMS.length - 1 } },
       { scene: foe.id, who: foe.face, name: foe.leader, text: "One more thing, a real-world tip: {tip}", vars: { tip: t(foe.tip) } },
       { scene: next.id, ...PIP, text: "Bzz! You did it! I knew you could!" },
       next.champion
-        ? { scene: next.id, ...HAZEL, text: "You have all {n} gym badges! There's only one battle left: the Oregon Champion.", vars: { n: GYMS.length - 1 } }
+        ? { scene: next.id, ...HAZEL, text: "You have all {n} forest badges! There's only one battle left: the Oregon Champion.", vars: { n: GYMS.length - 1 } }
         : { scene: next.id, ...HAZEL, text: "Next stop: {place}. {leader} is waiting for you there!", vars: { place: t(next.place), leader: next.leader } },
     ]).then(result);
   }
@@ -1539,17 +1576,6 @@ function storyScenes(g) {
   for (const sc of TANGLE) if (g.tangle.includes(sc.id)) list.push({ name: `${sc.emoji} ${t(sc.name)}`, slides: [...tanglePlan(sc), ...blastOff(tangleFoe(sc), true)] });
   return list;
 }
-function renderStory(g) {
-  const list = $("storyList"); list.innerHTML = "";
-  for (const sc of storyScenes(g)) {
-    const b = el("button", "btn", `▶ ${sc.name}`);
-    b.type = "button";
-    b.onclick = () => cutscene(sc.slides);
-    list.append(b);
-  }
-  list.append(el("p", "muted", t("Keep playing to unlock more of the story!")));
-}
-
 function applyBigText(g) { document.documentElement.classList.toggle("big-text", !!g.bigText); }
 
 // ---------- version 8: Team Tangle, Swarm Boss, Bug Buddy, weather, night, outfits, minigames ----------
@@ -1691,32 +1717,6 @@ function renderDailyGame(g) {
   $("dailyGameName").textContent = `${mg.emoji} ${t(mg.name)}`;
   $("dailyGameState").textContent = won ? t("✅ Won! Play again for fun.") : t("+{pts} points", { pts: GAME_WIN_POINTS });
   $("dailyGameBtn").disabled = !gameSpecies().length;
-}
-
-// ---------- what to do next ----------
-// One clear next step at the top of the game, so new players always know what to do
-function nextStep(g) {
-  const all = gameSpecies();
-  if (!totalCaught(g)) return { emoji: "📸", text: "Take a photo of a bug outside. If it's invasive, you get to catch it!", btn: "Take a photo", go: takePhoto };
-  const gym = GYMS.find(gy => gymOpen(g, gy) && !g.gyms.includes(gy.id));
-  if (gym) return { emoji: gym.emoji, text: "Battle {leader} at the {gym}!", vars: { leader: gym.leader, gym: t(gym.name) }, btn: "Battle!",
-    go: () => { showTab("battle"); cutscene(gymIntroScenes(gym)).then(() => battle(gym, true)); } };
-  const i = TANGLE.findIndex((sc, k) => tangleOpen(g, k) && !g.tangle.includes(sc.id));
-  if (i >= 0) return { emoji: "🦹", text: "Stop Team Tangle's plan: {scheme}!", vars: { scheme: t(TANGLE[i].name) }, btn: "Stop them!",
-    go: () => { showTab("battle"); cutscene(tanglePlan(TANGLE[i])).then(() => battle(tangleFoe(TANGLE[i]), false)); } };
-  if (kindsCaught(g) < all.length) return { emoji: "📸", text: "Find more bugs! You've caught {n} of {total} kinds.", vars: { n: kindsCaught(g), total: all.length }, btn: "Take a photo", go: takePhoto };
-  return { emoji: "🏆", text: "You've caught every kind of bug! Keep reporting the ones you find." };
-}
-function takePhoto() {
-  const cam = $("openCamera");
-  $("tray")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  if (cam && !cam.disabled) cam.click();
-}
-function renderNextStep(g) {
-  const st = nextStep(g), box = $("nextStep");
-  box.innerHTML = "";
-  box.append(el("span", "next-emoji", st.emoji), el("p", null, t(st.text, st.vars)));
-  if (st.btn) { const b = el("button", "btn primary", t(st.btn)); b.type = "button"; b.onclick = st.go; box.append(b); }
 }
 
 // Points for a minigame win: more for the first win of the day
@@ -2123,7 +2123,7 @@ function showCertificate() {
   sign.append(el("span", null, "👩‍🏫 Professor Hazel"), el("span", null, new Date().toLocaleDateString(gameLang)), el("span", null, "🦸 Champion Juniper"));
   cert.append(el("p", "cert-top", "🌲 🦫 🌲"), el("h2", null, t("Forest Protector Certificate")), el("p", null, t("This certificate goes to")),
     el("p", "cert-name", `${trainerLook(g)} ${g.trainer.name || t("Ranger")}`),
-    el("p", null, t("for beating all {n} forest gyms, becoming the Oregon Champion, and helping protect Oregon from invasive bugs.", { n: GYMS.length - 1 })),
+    el("p", null, t("for beating all {n} forests, becoming the Oregon Champion, and helping protect Oregon from invasive bugs.", { n: GYMS.length - 1 })),
     el("p", "cert-stats", t("{kinds} kinds of bugs caught · {badges} badges · {pts} points", { kinds: kindsCaught(g), badges: g.badges.length, pts: g.points })),
     sign, el("p", "cert-foot", "Pyinsect · Innvadex"));
   const print = el("button", "btn primary", `🖨️ ${t("Print")}`);
@@ -2133,36 +2133,380 @@ function showCertificate() {
 }
 addEventListener("afterprint", () => document.body.classList.remove("printing"));
 
-// ---------- wiring ----------
-for (const t of document.querySelectorAll(".game-tabs [data-tab]")) t.onclick = () => {
-  showTab(t.dataset.tab);
+// ---------- version 11: the game's pages (home, challenge, camera) ----------
+// The Game screen has its own pages. Their addresses start with #game, so the phone's Back button works:
+//   #game                    the game home
+//   #game/challenge/<id>     one monthly challenge
+//   #game/battles            Battles & Forests
+//   #game/badges             Badges
+//   #game/camera[/<id>]      the camera (for a challenge, when there's an id)
+// assets/flow.js calls route() when the address changes.
+const goGame = path => {
+  const hash = "#game" + (path ? "/" + path : "");
+  if (window.flow) location.hash = hash; else route(path ? path.split("/") : []);
 };
-$("muteBtn").onclick = () => { const g = loadGame(); g.muted = !g.muted; saveGame(g); renderGame(); };
-for (const [code, label] of Object.entries(GAME_LANGS)) {
-  const o = document.createElement("option");
-  o.value = code; o.textContent = label;
-  $("langSelect").append(o);
+let gamePage = null;
+function route(sub) {
+  const [page, id] = sub || [];
+  if (page !== "camera") stopGameCamera();
+  if (!sub) return;   // another screen is open
+  const pages = { challenge: "gameChallenge", battles: "gameBattles", badges: "gameBadges" };
+  // The camera opens over the page you were on, so the page under it doesn't change
+  if (page !== "camera") {
+    gamePage = pages[page] ? page : null;
+    for (const [p, elId] of Object.entries({ home: "gameHome", ...pages })) $(elId).hidden = p !== (gamePage || "home");
+    window.scrollTo(0, 0);
+  }
+  if (page === "challenge") renderChallenge(id);
+  if (page === "camera") openGameCamera(id);
+  if (!gamePage && page !== "camera") window.reportsMap?.mini?.("gameMiniMap");
 }
-$("langSelect").onchange = e => {
-  const g = loadGame(); g.lang = e.target.value; saveGame(g);
-  renderGame();
+
+// ---- monthly challenges ----
+const monthId = (y, m) => `${y}-${String(m).padStart(2, "0")}`;
+const monthName = id => { const [y, m] = id.split("-").map(Number); return new Date(y, m - 1, 15).toLocaleDateString(gameLang, { month: "long", year: "numeric" }); };
+// Every month's challenges, from the first month to this one (newest first)
+function monthlyChallenges() {
+  const list = [], now = new Date();
+  let [y, m] = MONTHLY_START, i = 0;
+  while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth() + 1)) {
+    for (let k = 0; k < MONTHLY_PER_MONTH; k++) {
+      const n = i * MONTHLY_PER_MONTH + k, kind = MONTHLY_KINDS[n % MONTHLY_KINDS.length];
+      list.push({ id: `${monthId(y, m)}-${kind.id}`, month: monthId(y, m), kind, shape: SHAPES[n % SHAPES.length] });
+    }
+    i++; m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return list.reverse();
+}
+const challengeState = (g, ch) => g.monthly[ch.id] || null;
+const challengeStatus = (g, ch) => { const st = challengeState(g, ch); return !st ? "new" : st.done ? "done" : "going"; };
+const STATUS_NAMES = { done: "Completed", going: "In progress", new: "Not started" };
+
+// Counts something that just happened toward every challenge that has started. Called by progress().
+function monthlyProgress(g, ev) {
+  const lines = [];
+  for (const ch of monthlyChallenges()) {
+    const st = challengeState(g, ch);
+    if (!st || st.done || !ch.kind.check(ev)) continue;
+    if (ch.kind.distinct) { st.kinds = st.kinds || []; if (st.kinds.includes(ev.species)) continue; st.kinds.push(ev.species); }
+    st.count++;
+    if (st.count >= ch.kind.n) {
+      st.done = new Date().toLocaleDateString(gameLang);
+      lines.push(`${ch.kind.emoji} ${t("Monthly challenge done: {name}! Its badge has its color now.", { name: t(ch.kind.name) })}`);
+    }
+  }
+  return lines;
+}
+
+// A challenge's badge: no color until it's done
+function badgeSlot(ch, done, big) {
+  const b = el("span", "badge-slot" + (done ? " done" : "") + (big ? " big" : ""), ch.kind.emoji);
+  b.setAttribute("aria-label", done ? t("Badge earned") : t("Badge not earned yet"));
+  return b;
+}
+
+// The monthly challenges on the game home: grouped by status, as icons or a list
+function renderMonthly(g) {
+  const list = $("monthlyList"), icons = g.monthlyView !== "list";
+  list.innerHTML = "";
+  $("monthlyView").textContent = icons ? `☰ ${t("List view")}` : `▦ ${t("Icon view")}`;
+  $("monthlyView").setAttribute("aria-label", icons ? t("Show as a list") : t("Show as icons"));
+  const all = monthlyChallenges();
+  for (const status of ["done", "going", "new"]) {
+    const group = all.filter(ch => challengeStatus(g, ch) === status);
+    if (!group.length) continue;
+    list.append(el("h3", "monthly-group", `${t(STATUS_NAMES[status])} (${group.length})`));
+    const box = el("div", icons ? "monthly-icons" : "monthly-rows");
+    for (const ch of group) {
+      const st = challengeState(g, ch), item = el("button", "monthly-item");
+      item.type = "button";
+      item.onclick = () => goGame(`challenge/${ch.id}`);
+      const name = el("strong", null, t(ch.kind.name)), when = el("span", "muted", monthName(ch.month));
+      if (icons) item.append(badgeSlot(ch, status === "done"), name, when);
+      else {
+        const info = el("span", "monthly-info"), bar = el("div", "track"), fill = el("div", "fill");
+        fill.style.width = `${Math.min(1, (st?.count || 0) / ch.kind.n) * 100}%`; bar.append(fill);
+        info.append(name, el("span", "muted", `${t(ch.kind.text, { n: ch.kind.n })} · ${monthName(ch.month)}`), bar);
+        item.append(badgeSlot(ch, status === "done"), info, el("span", "monthly-count", `${st?.count || 0}/${ch.kind.n}`));
+      }
+      box.append(item);
+    }
+    list.append(box);
+  }
+}
+
+// ---- the challenge page ----
+function renderChallenge(id) {
+  const page = $("gameChallenge"), ch = monthlyChallenges().find(c => c.id === id);
+  page.innerHTML = "";
+  if (!ch) { goGame(); return; }
+  const g = loadGame(), st = challengeState(g, ch), status = challengeStatus(g, ch);
+  const top = el("div", "game-top");
+  const back = el("a", "btn back-btn", "←"); back.href = "#game"; back.setAttribute("aria-label", t("Back"));
+  const brand = el("span", "brand small"), logo = el("img"); logo.src = "assets/favicon.svg"; logo.alt = ""; logo.width = logo.height = 32;
+  brand.append(logo, "Pyinsect");
+  const gear = el("button", "gear-btn", "⚙️"); gear.type = "button"; gear.dataset.settings = ""; gear.setAttribute("aria-label", t("Settings"));
+  top.append(back, brand, gear);
+  // The heading, when it was made, and the badge (no color until it's done)
+  const head = el("div", "challenge-head"), words = el("div");
+  words.append(el("h1", null, t(ch.kind.name)), el("p", "muted", t("Made in {month}", { month: monthName(ch.month) })));
+  head.append(words, badgeSlot(ch, status === "done", true));
+  // Connect the bugs to start (or keep going)
+  const pad = el("section", "connect");
+  const said = status === "done" ? `✅ ${t("You finished this challenge on {date}!", { date: st.done })}`
+    : status === "going" ? t("{count} of {n} done. Connect the bugs to open the camera.", { count: st.count, n: ch.kind.n })
+    : t("Connect the bugs in the shape to start the challenge!");
+  pad.append(el("p", "connect-say", said));
+  if (status === "going") { const bar = el("div", "track"), fill = el("div", "fill"); fill.style.width = `${st.count / ch.kind.n * 100}%`; bar.append(fill); pad.append(bar); }
+  if (status !== "done") pad.append(connectPad(ch.shape, () => {
+    const g = loadGame();
+    if (!g.monthly[ch.id]) { g.monthly[ch.id] = { started: new Date().toLocaleDateString(gameLang), count: 0 }; saveGame(g); renderGame(); }
+    sound("badge");
+    goGame(`camera/${ch.id}`);
+  }));
+  // What the challenge is
+  const about = el("section", "challenge-about");
+  about.append(el("h2", null, t(ch.kind.text, { n: ch.kind.n })), el("p", null, t(ch.kind.desc)));
+  page.append(top, head, pad, about);
+}
+
+// "Connect the bugs": draw a line through the bugs in the shape shown (either direction), or tap
+// them one at a time. A wrong bug starts it over.
+function connectPad(shape, done) {
+  const box = el("div", "connect-pad"), svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 300 300"); svg.setAttribute("aria-hidden", "true");
+  const xy = i => [50 + (i % 3) * 100, 50 + Math.floor(i / 3) * 100];
+  const line = (pts, cls) => { const pl = document.createElementNS(svg.namespaceURI, "polyline"); pl.setAttribute("points", pts.map(i => xy(i).join(",")).join(" ")); pl.setAttribute("class", cls); svg.append(pl); return pl; };
+  line(shape.path, "guide");
+  const drawn = line([], "drawn");
+  box.append(svg);
+  const dots = SHAPE_BUGS.map((bug, i) => {
+    const d = el("button", "connect-dot" + (i === shape.path[0] || i === shape.path[shape.path.length - 1] ? " ends" : ""), bug);
+    d.type = "button"; d.dataset.i = i;
+    d.style.left = `${xy(i)[0] / 3}%`; d.style.top = `${xy(i)[1] / 3}%`;
+    d.setAttribute("aria-label", t("Bug {n}", { n: i + 1 }));
+    box.append(d);
+    return d;
+  });
+  const hint = el("p", "muted connect-hint", t("Start at a glowing bug and follow the dotted line."));
+  let path = [], drawing = false;
+  const want = [shape.path, [...shape.path].reverse()];
+  const show = () => {
+    drawn.setAttribute("points", path.map(i => xy(i).join(",")).join(" "));
+    dots.forEach((d, i) => d.classList.toggle("on", path.includes(i)));
+  };
+  const fits = () => want.some(w => path.every((p, k) => w[k] === p));
+  const reset = () => { path = []; show(); };
+  const add = i => {
+    if (path[path.length - 1] === i) return;
+    // Going straight past a bug (like 0 to 2) also connects the one in the middle (1)
+    const last = path[path.length - 1];
+    if (last != null) { const [ax, ay] = xy(last), [bx, by] = xy(i), mid = SHAPE_BUGS.findIndex((_, k) => { const [mx, my] = xy(k); return mx === (ax + bx) / 2 && my === (ay + by) / 2; }); if (mid >= 0 && mid !== last && mid !== i) path.push(mid); }
+    path.push(i);
+    if (!fits()) { sound("wrong"); box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); hint.textContent = t("Not quite. Follow the dotted line!"); return reset(); }
+    sound("tick"); show();
+    if (path.length === shape.path.length) { box.classList.add("connected"); drawing = false; setTimeout(done, 600); }
+  };
+  const dotAt = (x, y) => { const e = document.elementFromPoint(x, y)?.closest?.(".connect-dot"); return e && box.contains(e) ? +e.dataset.i : null; };
+  box.addEventListener("pointerdown", e => { const i = dotAt(e.clientX, e.clientY); if (i == null) return; e.preventDefault(); drawing = true; add(i); });
+  box.addEventListener("pointermove", e => { if (!drawing) return; const i = dotAt(e.clientX, e.clientY); if (i != null) add(i); });
+  for (const ev of ["pointerup", "pointercancel"]) box.addEventListener(ev, () => { drawing = false; });
+  // Keyboard: tab to a bug and press Enter, one at a time
+  dots.forEach((d, i) => d.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); add(i); } }));
+  const wrap = el("div", "connect-wrap");
+  wrap.append(box, hint);
+  return wrap;
+}
+
+// ---- the camera ----
+// It shows the species it sees at the top (it guesses every 1.5 seconds), and takes or picks photos.
+// Invasive bugs start a catch and are reported, like before. Other bugs give protector points.
+let camStream = null, camFacing = "environment", camTimer = null, camGuessing = false, camChallenge = null, camTorch = false;
+async function openGameCamera(challengeId) {
+  camChallenge = monthlyChallenges().find(c => c.id === challengeId) || null;
+  $("gameCamera").hidden = false;
+  document.body.classList.add("camera-open");
+  renderCameraChallenge();
+  window.reportsMap?.mini?.("gcMiniMap", { you: true });
+  await startGameStream();
+  clearInterval(camTimer);
+  camTimer = setInterval(liveGuess, LIVE_EVERY);
+}
+function renderCameraChallenge() {
+  const box = $("gcChallenge"), g = loadGame();
+  box.hidden = !camChallenge;
+  if (!camChallenge) return;
+  const st = challengeState(g, camChallenge);
+  box.textContent = `${camChallenge.kind.emoji} ${t(camChallenge.kind.name)} · ${st?.count || 0}/${camChallenge.kind.n}`;
+}
+async function startGameStream() {
+  camStream?.getTracks().forEach(tr => tr.stop());
+  camStream = null; camTorch = false;
+  const video = $("gameVideo"), say = $("gcSpecies");
+  say.textContent = t("Starting the camera…");
+  $("gcShoot").disabled = true;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: camFacing }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+    if ($("gameCamera").hidden) { camStream.getTracks().forEach(tr => tr.stop()); camStream = null; return; }   // closed while starting
+    video.srcObject = camStream;
+    await video.play().catch(() => {});
+    const track = camStream.getVideoTracks()[0], caps = track.getCapabilities?.() || {};
+    $("gcFlash").hidden = !caps.torch;   // only phones that allow it
+    $("gcFlash").setAttribute("aria-pressed", "false");
+    const cams = (await navigator.mediaDevices.enumerateDevices().catch(() => [])).filter(d => d.kind === "videoinput");
+    $("gcFlip").hidden = cams.length < 2;
+    $("gcShoot").disabled = false;
+    say.textContent = t("Point the camera at a bug.");
+  } catch {
+    say.textContent = t("The camera is off. You can still select images.");
+    $("gcFlash").hidden = $("gcFlip").hidden = true;
+  }
+}
+function stopGameCamera() {
+  clearInterval(camTimer); camTimer = null;
+  camStream?.getTracks().forEach(tr => tr.stop());
+  camStream = null;
+  if ($("gameCamera")) $("gameCamera").hidden = true;
+  document.body.classList.remove("camera-open");
+}
+// Leaves the camera: back to the challenge it came from, or the game home
+const closeGameCamera = () => goGame(camChallenge ? `challenge/${camChallenge.id}` : "");
+
+// The picture in the camera right now, on a canvas (smaller for the live guess)
+function grabFrame(maxSide) {
+  const v = $("gameVideo"), s = Math.min(1, maxSide / Math.max(v.videoWidth, v.videoHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return c;
+}
+async function liveGuess() {
+  const v = $("gameVideo");
+  if (camGuessing || !camStream || !v.videoWidth || typeof identify !== "function") return;
+  camGuessing = true;
+  try {
+    await modelReady;
+    const { top3, verdict } = await identify(grabFrame(640));
+    if ($("gameCamera").hidden) return;
+    const best = top3[0], s = SPECIES_ALIAS[best.species] || best.species;
+    $("gcSpecies").textContent = verdict !== "ok" ? t("Looking for a bug…")
+      : `${SPECIES_FACTS[s]?.emoji || "🐞"} ${commonName(best.species)} · ${Math.round(best.confidence)}%` + (INVASIVE.has(best.species) ? ` · 🚫 ${t("Invasive")}` : ` · 🌼 ${t("Native")}`);
+  } catch {} finally { camGuessing = false; }
+}
+// A photo from the camera or from "select images"
+async function gamePhoto(file, fromCamera) {
+  const say = $("gcSpecies");
+  say.textContent = t("Checking your photo…");
+  try {
+    await modelReady;
+    const { top3, verdict } = await identify(file);
+    const best = top3[0], s = SPECIES_ALIAS[best.species] || best.species;
+    if (verdict !== "ok") { say.textContent = t("I couldn't tell what that is. Try getting closer!"); sound("wrong"); return; }
+    // AI-made pictures don't count in the game (photos from the camera are real)
+    if (!fromCamera && typeof checkAI === "function") {
+      const ai = await checkAI(file).catch(() => ({ verdict: "unknown" }));
+      if (ai.verdict === "ai") { fakePhoto(); say.textContent = t("Point the camera at a bug."); return; }
+    }
+    if (!INVASIVE.has(best.species)) {
+      native(best.species, best.confidence);
+      say.textContent = `🌼 ${t("{bug} isn't invasive. Leave it be!", { bug: commonName(best.species) })}`;
+      renderCameraChallenge();
+      return;
+    }
+    gameReport(file, best, top3);
+    const url = URL.createObjectURL(file);
+    closeGameCamera();
+    encounter(s, url);
+  } catch {
+    say.textContent = t("Something went wrong. Try again!");
+  }
+}
+// Reports an invasive bug (or tree damage) from the game's camera, the same way the app does
+async function gameReport(file, best, top3) {
+  if (typeof queueReport !== "function" || typeof RELAY_URL === "undefined" || !RELAY_URL) return;
+  try {
+    const bmp = await createImageBitmap(file), tree = damagedTree(best.species);
+    const r = tree ? buildInfestedReport(bmp, tree, top3) : buildReport(bmp, best.species, best.confidence, top3);
+    bmp.close?.();
+    const area = await getArea();
+    if (area) r.report.spot = area;
+    queueReport(r, `${t("From the game")} · ${area ? "📍" : t("no area")}`);
+  } catch {}
+}
+
+// ---- settings ----
+// One pop-up for every ⚙️ button: language, sound, big text, read aloud, how to play, the story
+function openSettings() {
+  const g = loadGame(), items = [];
+  const pick = el("label", "lang-pick"), sel = el("select");
+  for (const [code, label] of Object.entries(GAME_LANGS)) { const o = el("option", null, label); o.value = code; sel.append(o); }
+  sel.value = gameLang;
+  sel.onchange = () => { const g = loadGame(); g.lang = sel.value; saveGame(g); renderGame(); refreshPage(); openSettings(); };
+  pick.append("🌐 ", sel);
+  const toggle = (on, onText, offText, flip) => {
+    const b = el("button", "btn", on ? onText : offText); b.type = "button"; b.setAttribute("aria-pressed", on);
+    b.onclick = () => { const g = loadGame(); flip(g); saveGame(g); renderGame(); openSettings(); };
+    return b;
+  };
+  items.push(pick,
+    toggle(!g.muted, `🔊 ${t("Sound on")}`, `🔇 ${t("Sound off")}`, g => { g.muted = !g.muted; }),
+    toggle(!!g.bigText, `🔠 ${t("Big text")} ✓`, `🔠 ${t("Big text")}`, g => { g.bigText = !g.bigText; }));
+  if (window.speechSynthesis) items.push(toggle(!!g.readAloud, `🗣️ ${t("Read aloud")} ✓`, `🗣️ ${t("Read aloud")}`, g => { g.readAloud = !g.readAloud; if (!g.readAloud) hush(); }));
+  const action = (text, fn) => { const b = el("button", "btn", text); b.type = "button"; b.onclick = () => { closePopup(); fn(); }; return b; };
+  items.push(action(`✏️ ${t("Your trainer card")}`, () => editTrainer(false)), action(`❓ ${t("How to play")}`, showInstructions));
+  const story = el("details", "settings-story"), list = el("div", "story-list");
+  story.append(el("summary", null, `🎬 ${t("Story")}`), list);
+  for (const sc of storyScenes(g)) list.append(action(`▶ ${sc.name}`, () => cutscene(sc.slides)));
+  items.push(story);
+  const box = el("div", "settings-list");
+  box.append(...items);
+  openPopup([el("h2", null, `⚙️ ${t("Settings")}`), box], [["Close", true]]);
+}
+// Draws the game page that's open again (after the language changes)
+function refreshPage() {
+  if (gamePage === "challenge") renderChallenge(location.hash.split("/")[2]);
+  if (!$("gameCamera").hidden) renderCameraChallenge();
+}
+
+// ---- the game home ----
+function renderHome(g) {
+  const next = GYMS.find(gy => gymOpen(g, gy) && !g.gyms.includes(gy.id));
+  $("battlesSub").textContent = !kindsCaught(g) ? t("Catch a bug to start battling")
+    : next ? t("Next: {leader}", { leader: next.leader }) : t("All forests beaten!");
+  $("badgesSub").textContent = t("{n} badges · {rank}", { n: g.badges.length, rank: t(rankOf(g.points)[2]) });
+  $("dexCount").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: gameSpecies().length });
+  renderMonthly(g);
+}
+
+// ---------- wiring ----------
+// Every ⚙️ button opens the settings
+document.addEventListener("click", e => { if (e.target.closest("[data-settings]")) openSettings(); });
+$("gameCameraBtn").onclick = () => goGame("camera");
+$("battlesTile").onclick = () => goGame("battles");
+$("badgesTile").onclick = () => goGame("badges");
+$("monthlyView").onclick = () => { const g = loadGame(); g.monthlyView = g.monthlyView === "list" ? "icons" : "list"; saveGame(g); renderGame(); };
+$("gcClose").onclick = closeGameCamera;
+$("gcShoot").onclick = () => {
+  if (!camStream) return;
+  const c = grabFrame(4096);
+  sound("click");
+  c.toBlob(blob => blob && gamePhoto(blob, true), "image/jpeg", 0.92);
 };
-$("bigTextBtn").onclick = () => { const g = loadGame(); g.bigText = !g.bigText; saveGame(g); renderGame(); };
-$("readAloudBtn").hidden = !window.speechSynthesis;
-$("readAloudBtn").onclick = () => { const g = loadGame(); g.readAloud = !g.readAloud; saveGame(g); renderGame(); if (!g.readAloud) hush(); };
+$("gcPick").onchange = async e => { for (const f of [...e.target.files]) await gamePhoto(f, false); e.target.value = ""; };
+$("gcFlip").onclick = () => { camFacing = camFacing === "environment" ? "user" : "environment"; startGameStream(); };
+$("gcFlash").onclick = async () => {
+  const track = camStream?.getVideoTracks()[0];
+  if (!track) return;
+  try { await track.applyConstraints({ advanced: [{ torch: !camTorch }] }); camTorch = !camTorch; $("gcFlash").setAttribute("aria-pressed", camTorch); } catch {}
+};
+$("gameCamera").addEventListener("keydown", e => { if (e.key === "Escape" && $("gamePopup").hidden) closeGameCamera(); });
 $("buddyBtn").onclick = showBuddy;
 $("dailyGameBtn").onclick = () => MINIGAME_PLAY[dailyGame().id]();
 // Night starts and ends while you play, so check the clock every minute
 setInterval(() => renderWorld(loadGame()), 60000);
-$("howToPlay").onclick = showInstructions;
-// The settings menu closes when you tap anywhere else, or pick something in it
-document.addEventListener("click", e => {
-  const menu = document.querySelector(".game .settings");
-  if (menu?.open && (!menu.contains(e.target) || e.target.closest(".settings-menu button"))) menu.open = false;
-});
 $("gamePopup").addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closePopup(); } });
 renderGame();
-$("introBtn").onclick = () => cutscene(INTRO);
 $("trainerBtn").onclick = () => editTrainer(false);
 // The first time you open the Game screen: a short intro, then pick a nickname.
 // assets/flow.js calls this when the Game screen opens (so it doesn't cover the Home screen).
@@ -2174,4 +2518,4 @@ function firstHowTo() {
 }
 if (!$("screen-game")) firstHowTo();
 
-window.Innvadex = { encounter, native, fakePhoto, firstHowTo, closePopup };
+window.Innvadex = { encounter, native, fakePhoto, firstHowTo, closePopup, route };
