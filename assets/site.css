@@ -995,9 +995,23 @@ body.app.onboarding { padding-bottom: 0; overflow: hidden; }
 .game-camera .gear-btn { background: rgba(0, 0, 0, .5); border-color: rgba(255, 255, 255, .3); }
 .gc-btn:focus-visible, .gc-shoot:focus-visible, .gc-map:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 /* Pop-ups and messages show over the camera */
-body.camera-open .game-popup { z-index: 260; }
-body.camera-open .game-toast { z-index: 261; }
+/* Game pop-ups, messages, and cutscenes show over the menu bar (200) and the game's camera (250) */
+.game-popup { z-index: 260; }
+.game-toast { z-index: 261; }
+.cutscene { z-index: 270; }
 @media (prefers-reduced-motion: reduce) { .connect-pad.connected .connect-dot, .connect-pad.shake { animation: none; } .half-tile:hover { transform: none; } }
 /* The Game screen has its own top row (logo, camera, settings), so the app's top bar hides there */
 body[data-screen="game"] .topbar { display: none; }
 body[data-screen="game"] #screens { padding-top: 14px; }
+/* The cutscenes under the map on the game home */
+.game-scenes { display: flex; flex-direction: column; gap: 8px; }
+.game-scenes h2 { margin: 0; font-size: 20px; }
+.game-scenes > p { margin: 0; font-size: 13px; }
+.scene-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.scene-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 12px; border-radius: 16px; cursor: pointer; font: inherit; color: var(--ink); text-align: left;
+  background: var(--glass); border: 1px solid var(--glass-edge); }
+.scene-card .scene-emoji { font-size: 24px; }
+.scene-card strong { font-size: 14px; line-height: 1.2; }
+.scene-card .scene-play { color: var(--accent); }
+.scene-card:hover { transform: translateY(-1px); }
+.scene-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }

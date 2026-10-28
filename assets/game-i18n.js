@@ -942,4 +942,7 @@ const GAME_I18N = {
   "Catch {n} invasive bugs.": ["Atrapa {n} insectos invasores.", "Attrape {n} insectes envahissants.", "{n} आक्रामक कीड़े पकड़ो।"],
   "Any invasive bug counts. Every one you find is reported, so experts know where to look.": ["Cualquier insecto invasor cuenta. Cada uno que encuentras se reporta, así los expertos saben dónde buscar.", "N'importe quel insecte envahissant compte. Chacun que tu trouves est signalé, pour que les experts sachent où chercher.", "कोई भी आक्रामक कीड़ा गिना जाएगा। तुम्हें जो भी मिले, उसकी रिपोर्ट जाती है, ताकि विशेषज्ञों को पता चले कि कहाँ देखना है।"],
   "{n} badges · {rank}": ["{n} medallas · {rank}", "{n} badges · {rank}", "{n} बैज · {rank}"],
+  // ---- cutscenes on the game home ----
+  "Cutscenes": ["Escenas", "Cinématiques", "कहानी के दृश्य"],
+  "Here's how to play, {name}!": ["¡Así se juega, {name}!", "Voici comment jouer, {name} !", "ऐसे खेलते हैं, {name}!"],
 };

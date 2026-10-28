@@ -945,28 +945,22 @@ function showFact(species, n, spots = []) {
   openPopup([factCard(species, n), where], [["Close", true]]);
 }
 
-function showInstructions() {
-  const list = el("ol", "howto");
-  for (const step of [
-    "Tap the camera at the top of the Game screen, and point it at a bug. Its name shows at the top.",
-    "Take a photo. If the bug is invasive, a wild bug appears! Tap it 3 times to catch it.",
-    "If it isn't invasive, leave it be. You still get protector points!",
-    "Do the daily challenge and today's minigame for bonus points.",
-    "Start a monthly challenge by connecting the bugs in the shape shown. Finish it to give its badge color!",
-    "Battle trainers and the {n} forests with the bugs you caught, then face the Oregon Champion!",
-  ]) list.append(el("li", null, t(step, { n: GYMS.length - 1 })));
-  const safety = el("div", "safety");
-  safety.append(el("strong", null, t("Stay safe")));
-  const tips = el("ul");
-  for (const tip of [
-    "Don't touch bugs with bare hands. Some sting or bite.",
-    "Never carry an invasive bug (or firewood) to a new place.",
-    "Bring a grown-up, and watch where you walk.",
-  ]) tips.append(el("li", null, t(tip)));
-  safety.append(tips);
-  const why = el("p", "muted", t("Every invasive bug you find is also reported to the Pyinsect team, so experts can learn where invasive bugs are and where to put traps."));
-  openPopup([el("h2", null, t("How to play")), list, safety, why], [["Let's go!", true]]);
-}
+// How to play: a short cutscene with Professor Hazel and Pip
+const HOW_TO_PLAY = [
+  { scene: "lab",     ...HAZEL, text: "Here's how to play, {name}!" },
+  { scene: "lab",     ...HAZEL, text: "Tap the camera at the top of the Game screen, and point it at a bug. Its name shows at the top." },
+  { scene: "forest",  ...PIP,   text: "Take a photo. If the bug is invasive, a wild bug appears! Tap it 3 times to catch it." },
+  { scene: "forest",  ...PIP,   text: "If it isn't invasive, leave it be. You still get protector points!" },
+  { scene: "lab",     ...HAZEL, text: "Do the daily challenge and today's minigame for bonus points." },
+  { scene: "victory", ...HAZEL, text: "Start a monthly challenge by connecting the bugs in the shape shown. Finish it to give its badge color!" },
+  { scene: "mthood",  ...HAZEL, text: "Battle trainers and the {n} forests with the bugs you caught, then face the Oregon Champion!", vars: { n: GYMS.length - 1 } },
+  { scene: "danger",  ...PIP,   text: "Don't touch bugs with bare hands. Some sting or bite." },
+  { scene: "danger",  ...PIP,   text: "Never carry an invasive bug (or firewood) to a new place." },
+  { scene: "forest",  ...PIP,   text: "Bring a grown-up, and watch where you walk." },
+  { scene: "lab",     ...HAZEL, text: "Every invasive bug you find is also reported to the Pyinsect team, so experts can learn where invasive bugs are and where to put traps." },
+  { scene: "forest",  ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
+];
+const showInstructions = () => cutscene(HOW_TO_PLAY);
 
 // ---------- the Innva-Orb ----------
 // Our catching orb: a glowing crystal ball where green and purple swirl together, with a glowing leaf inside.
@@ -2462,10 +2456,6 @@ function openSettings() {
   if (window.speechSynthesis) items.push(toggle(!!g.readAloud, `🗣️ ${t("Read aloud")} ✓`, `🗣️ ${t("Read aloud")}`, g => { g.readAloud = !g.readAloud; if (!g.readAloud) hush(); }));
   const action = (text, fn) => { const b = el("button", "btn", text); b.type = "button"; b.onclick = () => { closePopup(); fn(); }; return b; };
   items.push(action(`✏️ ${t("Your trainer card")}`, () => editTrainer(false)), action(`❓ ${t("How to play")}`, showInstructions));
-  const story = el("details", "settings-story"), list = el("div", "story-list");
-  story.append(el("summary", null, `🎬 ${t("Story")}`), list);
-  for (const sc of storyScenes(g)) list.append(action(`▶ ${sc.name}`, () => cutscene(sc.slides)));
-  items.push(story);
   const box = el("div", "settings-list");
   box.append(...items);
   openPopup([el("h2", null, `⚙️ ${t("Settings")}`), box], [["Close", true]]);
@@ -2477,6 +2467,20 @@ function refreshPage() {
 }
 
 // ---- the game home ----
+// The cutscenes under the map: How to play, then every story cutscene you've unlocked
+function renderScenes(g) {
+  const list = $("sceneList");
+  list.innerHTML = "";
+  for (const sc of [{ name: `❓ ${t("How to play")}`, slides: HOW_TO_PLAY }, ...storyScenes(g)]) {
+    const [emoji, ...words] = sc.name.split(" ");
+    const b = el("button", "scene-card");
+    b.type = "button";
+    b.append(el("span", "scene-emoji", emoji), el("strong", null, words.join(" ")), el("span", "scene-play", "▶"));
+    b.onclick = () => cutscene(sc.slides);
+    list.append(b);
+  }
+  $("sceneMore").textContent = t("Keep playing to unlock more of the story!");
+}
 function renderHome(g) {
   const next = GYMS.find(gy => gymOpen(g, gy) && !g.gyms.includes(gy.id));
   $("battlesSub").textContent = !kindsCaught(g) ? t("Catch a bug to start battling")
@@ -2484,6 +2488,7 @@ function renderHome(g) {
   $("badgesSub").textContent = t("{n} badges · {rank}", { n: g.badges.length, rank: t(rankOf(g.points)[2]) });
   $("dexCount").textContent = t("{n} of {total} caught", { n: kindsCaught(g), total: gameSpecies().length });
   renderMonthly(g);
+  renderScenes(g);
   // The challenge page shows progress too, so draw it again if it's open
   if (gamePage === "challenge") renderChallenge(location.hash.split("/")[2]);
 }
