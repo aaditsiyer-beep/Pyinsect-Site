@@ -2159,11 +2159,12 @@ function route(sub) {
 // ---- monthly challenges ----
 const monthId = (y, m) => `${y}-${String(m).padStart(2, "0")}`;
 const monthName = id => { const [y, m] = id.split("-").map(Number); return new Date(y, m - 1, 15).toLocaleDateString(gameLang, { month: "long", year: "numeric" }); };
-// Every month's challenges, from the first month to this one (newest first)
-function monthlyChallenges() {
-  const list = [], now = new Date();
+// Every month's challenges, from the first month to this one (newest first).
+// ahead = 1 also makes next month's, for the preview (they can't be started yet).
+function monthlyChallenges(ahead = 0) {
+  const list = [], now = new Date(), last = new Date(now.getFullYear(), now.getMonth() + ahead, 1);
   let [y, m] = MONTHLY_START, i = 0;
-  while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth() + 1)) {
+  while (y < last.getFullYear() || (y === last.getFullYear() && m <= last.getMonth() + 1)) {
     for (let k = 0; k < MONTHLY_PER_MONTH; k++) {
       const n = i * MONTHLY_PER_MONTH + k, kind = MONTHLY_KINDS[n % MONTHLY_KINDS.length];
       list.push({ id: `${monthId(y, m)}-${kind.id}`, month: monthId(y, m), kind, shape: SHAPES[n % SHAPES.length] });
@@ -2173,6 +2174,9 @@ function monthlyChallenges() {
   }
   return list.reverse();
 }
+// Next month's challenges, and the day they start
+const comingChallenges = () => { const now = new Date(), next = monthId(now.getFullYear() + (now.getMonth() === 11), (now.getMonth() + 1) % 12 + 1); return monthlyChallenges(1).filter(ch => ch.month === next); };
+const startDay = ch => { const [y, m] = ch.month.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString(gameLang, { month: "long", day: "numeric" }); };
 const challengeState = (g, ch) => g.monthly[ch.id] || null;
 const challengeStatus = (g, ch) => { const st = challengeState(g, ch); return !st ? "new" : st.done ? "done" : "going"; };
 const STATUS_NAMES = { done: "Completed", going: "In progress", new: "Not started" };
@@ -2206,12 +2210,13 @@ function renderMonthly(g) {
   list.innerHTML = "";
   $("monthlyView").textContent = icons ? `☰ ${t("List view")}` : `▦ ${t("Icon view")}`;
   $("monthlyView").setAttribute("aria-label", icons ? t("Show as a list") : t("Show as icons"));
-  const all = monthlyChallenges();
-  for (const status of ["done", "going", "new"]) {
-    const group = all.filter(ch => challengeStatus(g, ch) === status);
+  const all = monthlyChallenges(), coming = comingChallenges();
+  for (const status of ["done", "coming", "going", "new"]) {
+    const group = status === "coming" ? coming : all.filter(ch => challengeStatus(g, ch) === status);
     if (!group.length) continue;
-    list.append(el("h3", "monthly-group", `${t(STATUS_NAMES[status])} (${group.length})`));
-    const box = el("div", icons ? "monthly-icons" : "monthly-rows");
+    list.append(el("h3", "monthly-group", status === "coming"
+      ? `🔜 ${t("Coming in {month}", { month: monthName(group[0].month) })}` : `${t(STATUS_NAMES[status])} (${group.length})`));
+    const box = el("div", (icons ? "monthly-icons" : "monthly-rows") + (status === "coming" ? " coming" : ""));
     for (const ch of group) {
       const st = challengeState(g, ch), item = el("button", "monthly-item");
       item.type = "button";
@@ -2222,7 +2227,7 @@ function renderMonthly(g) {
         const info = el("span", "monthly-info"), bar = el("div", "track"), fill = el("div", "fill");
         fill.style.width = `${Math.min(1, (st?.count || 0) / ch.kind.n) * 100}%`; bar.append(fill);
         info.append(name, el("span", "muted", `${t(ch.kind.text, { n: ch.kind.n })} · ${monthName(ch.month)}`), bar);
-        item.append(badgeSlot(ch, status === "done"), info, el("span", "monthly-count", `${st?.count || 0}/${ch.kind.n}`));
+        item.append(badgeSlot(ch, status === "done"), info, el("span", "monthly-count", status === "coming" ? "🔒" : `${st?.count || 0}/${ch.kind.n}`));
       }
       box.append(item);
     }
@@ -2232,7 +2237,8 @@ function renderMonthly(g) {
 
 // ---- the challenge page ----
 function renderChallenge(id) {
-  const page = $("gameChallenge"), ch = monthlyChallenges().find(c => c.id === id);
+  const page = $("gameChallenge"), ch = monthlyChallenges(1).find(c => c.id === id);
+  const soon = comingChallenges().some(c => c.id === id);   // next month's: a preview only
   page.innerHTML = "";
   if (!ch) { goGame(); return; }
   const g = loadGame(), st = challengeState(g, ch), status = challengeStatus(g, ch);
@@ -2244,16 +2250,17 @@ function renderChallenge(id) {
   top.append(back, brand, gear);
   // The heading, when it was made, and the badge (no color until it's done)
   const head = el("div", "challenge-head"), words = el("div");
-  words.append(el("h1", null, t(ch.kind.name)), el("p", "muted", t("Made in {month}", { month: monthName(ch.month) })));
+  words.append(el("h1", null, t(ch.kind.name)), el("p", "muted", t(soon ? "Coming in {month}" : "Made in {month}", { month: monthName(ch.month) })));
   head.append(words, badgeSlot(ch, status === "done", true));
   // Connect the bugs to start (or keep going)
   const pad = el("section", "connect");
-  const said = status === "done" ? `✅ ${t("You finished this challenge on {date}!", { date: st.done })}`
+  const said = soon ? `🔒 ${t("This challenge starts on {date}. Come back then!", { date: startDay(ch) })}`
+    : status === "done" ? `✅ ${t("You finished this challenge on {date}!", { date: st.done })}`
     : status === "going" ? t("{count} of {n} done. Connect the bugs to open the camera.", { count: st.count, n: ch.kind.n })
     : t("Connect the bugs in the shape to start the challenge!");
   pad.append(el("p", "connect-say", said));
   if (status === "going") { const bar = el("div", "track"), fill = el("div", "fill"); fill.style.width = `${st.count / ch.kind.n * 100}%`; bar.append(fill); pad.append(bar); }
-  if (status !== "done") pad.append(connectPad(ch.shape, () => {
+  if (status !== "done" && !soon) pad.append(connectPad(ch.shape, () => {
     const g = loadGame();
     if (!g.monthly[ch.id]) { g.monthly[ch.id] = { started: new Date().toLocaleDateString(gameLang), count: 0 }; saveGame(g); renderGame(); }
     sound("badge");
@@ -2319,7 +2326,7 @@ function connectPad(shape, done) {
 let camStream = null, camFacing = "environment", camTimer = null, camGuessing = false, camChallenge = null, camTorch = false;
 let camQuietUntil = 0;   // the live guess waits, so a photo's result stays on screen
 async function openGameCamera(challengeId) {
-  camChallenge = monthlyChallenges().find(c => c.id === challengeId) || null;
+  camChallenge = monthlyChallenges().find(c => c.id === challengeId) || null;   // (next month's previews aren't in this list)
   $("gameCamera").hidden = false;
   document.body.classList.add("camera-open");
   renderCameraChallenge();

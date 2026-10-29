@@ -945,4 +945,7 @@ const GAME_I18N = {
   // ---- cutscenes on the game home ----
   "Cutscenes": ["Escenas", "Cinématiques", "कहानी के दृश्य"],
   "Here's how to play, {name}!": ["¡Así se juega, {name}!", "Voici comment jouer, {name} !", "ऐसे खेलते हैं, {name}!"],
+  // ---- next month's preview ----
+  "Coming in {month}": ["Llega en {month}", "Arrive en {month}", "{month} में आएगी"],
+  "This challenge starts on {date}. Come back then!": ["Este reto empieza el {date}. ¡Vuelve ese día!", "Ce défi commence le {date}. Reviens à ce moment-là !", "यह चुनौती {date} को शुरू होगी। तब वापस आना!"],
 };
