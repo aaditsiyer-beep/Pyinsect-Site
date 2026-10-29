@@ -2215,7 +2215,7 @@ function renderMonthly(g) {
     const group = status === "coming" ? coming : all.filter(ch => challengeStatus(g, ch) === status);
     if (!group.length) continue;
     list.append(el("h3", "monthly-group", status === "coming"
-      ? `🔜 ${t("Coming in {month}", { month: monthName(group[0].month) })}` : `${t(STATUS_NAMES[status])} (${group.length})`));
+      ? `🔜 ${t("Coming next month")}` : `${t(STATUS_NAMES[status])} (${group.length})`));
     const box = el("div", (icons ? "monthly-icons" : "monthly-rows") + (status === "coming" ? " coming" : ""));
     for (const ch of group) {
       const st = challengeState(g, ch), item = el("button", "monthly-item");
@@ -2250,7 +2250,7 @@ function renderChallenge(id) {
   top.append(back, brand, gear);
   // The heading, when it was made, and the badge (no color until it's done)
   const head = el("div", "challenge-head"), words = el("div");
-  words.append(el("h1", null, t(ch.kind.name)), el("p", "muted", t(soon ? "Coming in {month}" : "Made in {month}", { month: monthName(ch.month) })));
+  words.append(el("h1", null, t(ch.kind.name)), el("p", "muted", soon ? t("Coming next month") : t("Made in {month}", { month: monthName(ch.month) })));
   head.append(words, badgeSlot(ch, status === "done", true));
   // Connect the bugs to start (or keep going)
   const pad = el("section", "connect");
