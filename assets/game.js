@@ -179,7 +179,7 @@ const TRAINERS = [
 // Gyms are named after real Oregon places. You beat them in order: each one opens when your
 // Innvadex has `unlock` kinds of bugs AND you've beaten the gym before it. Later gyms are harder:
 //   level    = how smart the leader is (see foeMove)
-//   bugLevel = how strong the leader's bugs are (yours go up to Lv 3, the Champion's are Lv 4)
+//   bugLevel = how strong the leader's bugs are (yours go up to Lv 3, the Champion's are Lv 10)
 // For the cutscenes: `place` and `story` (where you are), `intro` (the leader says hello),
 // `tip` (a real-world tip the leader gives you after you win).
 const GYMS = [
@@ -268,12 +268,13 @@ const GYMS = [
     tip: "Emerald ash borers leave D-shaped holes in ash trees. Spotting them early can save a whole forest!",
     say: { hi: "You made it to the top! My Legendary bugs are the toughest in Oregon.", next: "A Legendary bug never gives up!", lose: "Amazing! You've earned the Mount Hood Badge!", win: "The mountain wins this time. Keep training!" } },
   { id: "champion", emoji: "🏆", name: "Oregon Champion", place: "the Champion's Hall", badge: "Champion Trophy", leader: "Champion Juniper", face: "🦸", champion: true,
-    level: 3, bugLevel: 4, unlock: 6, reward: 250,
-    team: ["agrilus_planipennis", "anoplophora_glabripennis", "lycorma_delicatula", "vespa_mandarinia", "lymantria_dispar", "popillia_japonica"],
+    level: 3, bugLevel: 10, unlock: 6, reward: 250,
+    // Every bug in the game, all at Level 10 (the list comes from the model, so it's read when you battle)
+    get team() { return gameSpecies(); },
     story: "This is the Champion's Hall. Only Bug Rangers with every forest badge are allowed inside.",
     intro: "I'm Juniper, the Oregon Champion. I've protected every forest in this state, from the coast to the mountains.",
     tip: "A real champion never stops learning. Keep watching for invasive bugs everywhere you go!",
-    say: { hi: "You beat every forest. Now face me, with my Level 4 bugs! This is the final battle!", next: "A Champion never gives up!", lose: "Incredible! You are the new Oregon Champion!", win: "Not yet! Train hard and come back, Bug Ranger." } },
+    say: { hi: "You beat every forest. Now face me, with every bug in Oregon at Level 10! This is the final battle!", next: "A Champion never gives up!", lose: "Incredible! You are the new Oregon Champion!", win: "Not yet! Train hard and come back, Bug Ranger." } },
 ];
 // One badge per gym
 BADGES.push(...GYMS.map(gym => ({ id: `gym-${gym.id}`, emoji: gym.emoji, name: gym.badge, desc: "Win at {gym}.", gym: gym.name, earned: g => g.gyms.includes(gym.id) })));
