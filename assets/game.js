@@ -1455,11 +1455,14 @@ function cutscene(slides) {
     actor.append(face);
     const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary");
     const skip = el("button", "btn cs-skip", `${t("Skip")} ⏭`);
+    const logo = el("span", "logo-chip cs-logo"), logoImg = el("img");
+    logoImg.src = "assets/favicon.svg"; logoImg.alt = ""; logoImg.width = logoImg.height = 22;
+    logo.append(logoImg, "Pyinsect"); logo.setAttribute("aria-hidden", "true");
     next.type = skip.type = "button";
     text.setAttribute("aria-live", "polite");
     box.append(who, text, next);
     stage.append(decor, actor);
-    wrap.append(stage, box, skip);
+    wrap.append(stage, box, skip, logo);
 
     let i = -1, typing = null, full = "";
     const finishTyping = () => { clearInterval(typing); typing = null; text.textContent = full; face.classList.remove("talking"); };
