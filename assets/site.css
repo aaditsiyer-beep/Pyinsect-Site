@@ -23,9 +23,9 @@
     radial-gradient(30rem 26rem at 45% 52%, rgba(150, 225, 205, .45), transparent 65%),
     linear-gradient(160deg, #eef6ef 0%, #f3f1ea 100%);
 
-  --display: "Bricolage Grotesque", "Noto Sans Devanagari", "Segoe UI", system-ui, sans-serif;
-  --body: "IBM Plex Sans", "Noto Sans Devanagari", "Segoe UI", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", "Noto Sans Devanagari", ui-monospace, Consolas, monospace;
+  --display: "Bricolage Grotesque", "Noto Sans SC", "Noto Sans TC", "Noto Sans KR", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Noto Sans SC", "Noto Sans TC", "Noto Sans KR", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Noto Sans SC", "Noto Sans TC", "Noto Sans KR", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Malgun Gothic", ui-monospace, Consolas, monospace;
   --surface: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
@@ -519,8 +519,6 @@ input[type=file] { display: none; }
 .lang-pick select { font: 500 14px var(--body); color: var(--ink); padding: 9px 12px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass-strong); cursor: pointer; }
 .lang-pick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-/* Hindi uses the Devanagari script */
-:lang(hi) .cs-box p, :lang(hi) .speech { line-height: 1.7; }
 
 /* The Innva-Orb: a glowing green-and-purple ball */
 .innva-orb { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; pointer-events: none; z-index: 2; border-radius: 50%;

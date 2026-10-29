@@ -1453,7 +1453,7 @@ function cutscene(slides) {
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const wrap = el("div", "cutscene");
     wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-label", t("Story"));
-    wrap.lang = gameLang;
+    wrap.lang = langTag();
     const stage = el("div", "cs-stage"), decor = el("div", "cs-decor"), actor = el("div", "cs-actor"), face = el("span", "cs-face");
     actor.append(face);
     const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary");
@@ -2071,7 +2071,7 @@ function bugPop() {
 // The browser reads the cutscenes out loud, in the game's language (if the device has that voice).
 // Devices often have several voices. The good ones sound like real people ("Natural", "Neural",
 // Google, Siri, and so on), and the old ones sound like robots, so we pick the best one we can.
-const VOICE_LANG = { en: "en-US", es: "es-ES", fr: "fr-FR", hi: "hi-IN" };
+const VOICE_LANG = GAME_LANG_TAGS;   // en-US, es-ES, ... (see assets/game-i18n.js)
 // Small changes only. Pitch that's very high or very low is what makes a voice sound robotic.
 const VOICE_STYLE = { Pip: { pitch: 1.2, rate: 1.05 }, Squawk: { pitch: 1.3, rate: 1.1 }, Bramble: { pitch: 1.1 }, Thistle: { pitch: .92 }, "Boss Burdock": { pitch: .85, rate: .92 } };
 // Characters who get a different voice than Professor Hazel, when the device has more than one good voice
@@ -2120,7 +2120,7 @@ function showCertificate() {
   const g = loadGame();
   const cert = el("div", "certificate");
   const sign = el("div", "cert-sign");
-  sign.append(el("span", null, "👩‍🏫 Professor Hazel"), el("span", null, new Date().toLocaleDateString(gameLang)), el("span", null, "🦸 Champion Juniper"));
+  sign.append(el("span", null, "👩‍🏫 Professor Hazel"), el("span", null, new Date().toLocaleDateString(langTag())), el("span", null, "🦸 Champion Juniper"));
   cert.append(el("p", "cert-top", "🌲 🦫 🌲"), el("h2", null, t("Forest Protector Certificate")), el("p", null, t("This certificate goes to")),
     el("p", "cert-name", `${trainerLook(g)} ${g.trainer.name || t("Ranger")}`),
     el("p", null, t("for beating all {n} forests, becoming the Oregon Champion, and helping protect Oregon from invasive bugs.", { n: GYMS.length - 1 })),
@@ -2164,7 +2164,7 @@ function route(sub) {
 
 // ---- monthly challenges ----
 const monthId = (y, m) => `${y}-${String(m).padStart(2, "0")}`;
-const monthName = id => { const [y, m] = id.split("-").map(Number); return new Date(y, m - 1, 15).toLocaleDateString(gameLang, { month: "long", year: "numeric" }); };
+const monthName = id => { const [y, m] = id.split("-").map(Number); return new Date(y, m - 1, 15).toLocaleDateString(langTag(), { month: "long", year: "numeric" }); };
 // Every month's challenges, from the first month to this one (newest first).
 // ahead = 1 also makes next month's, for the preview (they can't be started yet).
 function monthlyChallenges(ahead = 0) {
@@ -2182,7 +2182,7 @@ function monthlyChallenges(ahead = 0) {
 }
 // Next month's challenges, and the day they start
 const comingChallenges = () => { const now = new Date(), next = monthId(now.getFullYear() + (now.getMonth() === 11), (now.getMonth() + 1) % 12 + 1); return monthlyChallenges(1).filter(ch => ch.month === next); };
-const startDay = ch => { const [y, m] = ch.month.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString(gameLang, { month: "long", day: "numeric" }); };
+const startDay = ch => { const [y, m] = ch.month.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString(langTag(), { month: "long", day: "numeric" }); };
 const challengeState = (g, ch) => g.monthly[ch.id] || null;
 const challengeStatus = (g, ch) => { const st = challengeState(g, ch); return !st ? "new" : st.done ? "done" : "going"; };
 const STATUS_NAMES = { done: "Completed", going: "In progress", new: "Not started" };
@@ -2196,7 +2196,7 @@ function monthlyProgress(g, ev) {
     if (ch.kind.distinct) { st.kinds = st.kinds || []; if (st.kinds.includes(ev.species)) continue; st.kinds.push(ev.species); }
     st.count++;
     if (st.count >= ch.kind.n) {
-      st.done = new Date().toLocaleDateString(gameLang);
+      st.done = new Date().toLocaleDateString(langTag());
       lines.push(`${ch.kind.emoji} ${t("Monthly challenge done: {name}! Its badge has its color now.", { name: t(ch.kind.name) })}`);
     }
   }
@@ -2268,7 +2268,7 @@ function renderChallenge(id) {
   if (status === "going") { const bar = el("div", "track"), fill = el("div", "fill"); fill.style.width = `${st.count / ch.kind.n * 100}%`; bar.append(fill); pad.append(bar); }
   if (status !== "done" && !soon) pad.append(connectPad(ch.shape, () => {
     const g = loadGame();
-    if (!g.monthly[ch.id]) { g.monthly[ch.id] = { started: new Date().toLocaleDateString(gameLang), count: 0 }; saveGame(g); renderGame(); }
+    if (!g.monthly[ch.id]) { g.monthly[ch.id] = { started: new Date().toLocaleDateString(langTag()), count: 0 }; saveGame(g); renderGame(); }
     sound("badge");
     goGame(`camera/${ch.id}`);
   }));
