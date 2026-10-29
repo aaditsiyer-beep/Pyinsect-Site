@@ -948,4 +948,5 @@ const GAME_I18N = {
   // ---- next month's preview ----
   "Coming next month": ["Llega el próximo mes", "Arrive le mois prochain", "अगले महीने आएगी"],
   "This challenge starts on {date}. Come back then!": ["Este reto empieza el {date}. ¡Vuelve ese día!", "Ce défi commence le {date}. Reviens à ce moment-là !", "यह चुनौती {date} को शुरू होगी। तब वापस आना!"],
+  "Catch the same bug again and again to level it up. Every 3 catches is one more level, all the way to Level 10!": ["Atrapa el mismo insecto una y otra vez para subirlo de nivel. ¡Cada 3 capturas sube un nivel, hasta el nivel 10!", "Attrape le même insecte encore et encore pour le faire monter de niveau. Toutes les 3 captures, il gagne un niveau, jusqu'au niveau 10 !", "एक ही कीड़े को बार-बार पकड़ो और उसका स्तर बढ़ाओ। हर 3 बार पकड़ने पर एक स्तर बढ़ता है, स्तर 10 तक!"],
 };

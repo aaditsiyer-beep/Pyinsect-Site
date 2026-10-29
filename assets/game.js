@@ -179,7 +179,7 @@ const TRAINERS = [
 // Gyms are named after real Oregon places. You beat them in order: each one opens when your
 // Innvadex has `unlock` kinds of bugs AND you've beaten the gym before it. Later gyms are harder:
 //   level    = how smart the leader is (see foeMove)
-//   bugLevel = how strong the leader's bugs are (yours go up to Lv 3, the Champion's are Lv 10)
+//   bugLevel = how strong the leader's bugs are (yours go up to Lv 10, by catching the same bug again and again)
 // For the cutscenes: `place` and `story` (where you are), `intro` (the leader says hello),
 // `tip` (a real-world tip the leader gives you after you win).
 const GYMS = [
@@ -299,7 +299,8 @@ const signatureBug = gym => [...gym.team].sort((a, b) => Object.keys(RARITY).ind
 // ---------- version 3: evolution, ranks, sounds ----------
 
 // Catch the same kind of bug 3 times and it levels up. Each level makes it stronger in battles.
-const CATCHES_PER_LEVEL = 3, MAX_LEVEL = 3, LEVEL_BONUS = { hp: 6, atk: 2 };
+// Every 3 catches of the same bug is one more level, all the way to Level 10 (as strong as the Champion's)
+const CATCHES_PER_LEVEL = 3, MAX_LEVEL = 10, LEVEL_BONUS = { hp: 6, atk: 2 };
 const bugLevel = n => Math.min(MAX_LEVEL, 1 + Math.floor(n / CATCHES_PER_LEVEL));
 
 // Ranks go up with your points
@@ -954,6 +955,7 @@ const HOW_TO_PLAY = [
   { scene: "forest",  ...PIP,   text: "If it isn't invasive, leave it be. You still get protector points!" },
   { scene: "lab",     ...HAZEL, text: "Do the daily challenge and today's minigame for bonus points." },
   { scene: "victory", ...HAZEL, text: "Start a monthly challenge by connecting the bugs in the shape shown. Finish it to give its badge color!" },
+  { scene: "forest",  ...PIP,   text: "Catch the same bug again and again to level it up. Every 3 catches is one more level, all the way to Level 10!" },
   { scene: "mthood",  ...HAZEL, text: "Battle trainers and the {n} forests with the bugs you caught, then face the Oregon Champion!", vars: { n: GYMS.length - 1 } },
   { scene: "danger",  ...PIP,   text: "Don't touch bugs with bare hands. Some sting or bite." },
   { scene: "danger",  ...PIP,   text: "Never carry an invasive bug (or firewood) to a new place." },
