@@ -603,9 +603,21 @@ function fillUnsureCard(card, top3, verdict) {
   return false;
 }
 
+// Damage (like bark beetle galleries) and egg masses are judged on the whole photo, never on a
+// zoomed-in part: the tree around them is part of the evidence. Same rule as the Oregon executor.
+const wholeScene = species => /_(damage|egg_mass)$/.test(species);
+
 // Runs the AI on one photo: the top 3 guesses (confidence in %) and the verdict (see verdictFor).
-// sim is null when there's no fingerprint check.
+// sim is null when there's no fingerprint check. For a zoomed-in photo (file.original is the whole
+// photo), the whole photo is checked too, and its answer wins when either answer is damage or an egg mass.
 async function identify(file) {
+  const result = await identifyOne(file);
+  if (!file.original) return result;
+  const whole = await identifyOne(file.original);
+  return wholeScene(whole.top3[0].species) || wholeScene(result.top3[0].species) ? whole : result;
+}
+
+async function identifyOne(file) {
   // The model gets the photo's raw colours, like Pillow in training and in the executor. Browsers
   // otherwise convert photos with a colour profile (like iPhone "Display P3") first, which changes
   // the answer. The report photo keeps the normal colours.
@@ -947,6 +959,9 @@ function showCrop(file, source) {
   img.onload = () => {
     minBox = { w: Math.min(1, MIN_CROP / img.naturalWidth), h: Math.min(1, MIN_CROP / img.naturalHeight) };
     setBox({ x: 0, y: 0, w: 1, h: 1 });
+    // The insect finder (assets/insect-finder.js) moves the box onto the bug by itself. The person
+    // can still move it. If it finds no bug, the box stays on the whole photo, like before.
+    window.findInsect?.(img, minBox).then(b => { if (b && cropFile === file) setBox(b); }).catch(console.error);
     $("checkIt").disabled = false;
     $("checkIt").focus({ preventScroll: true });
   };

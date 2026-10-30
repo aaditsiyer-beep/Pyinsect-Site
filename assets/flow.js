@@ -302,6 +302,9 @@ function photoLine(p) {
   const best = p.top3[0], sure = p.verdict === "ok" && best.confidence >= SURE ? best.species : null;
   if (p.step === "tree") return "Photo saved. A person on our team will look at it.";
   if (sure && TREE.damageClass === sure) return "This looks like emerald ash borer damage.";
+  if (p.step === "damage" && sure && INVASIVE.has(sure) && !EAB.has(sure)) {
+    return `This looks like ${commonName(sure)}. It's a sign of an invasive species, so we'll report it.`;
+  }
   if (p.step === "damage") {
     const said = p.sign === "holes" ? "a D-shaped hole" : p.sign === "galleries" ? "a gallery" : null;
     return said ? `You marked ${said}. Our team will take a close look.` : "The AI didn't find damage here. Our team will still look.";
@@ -310,6 +313,22 @@ function photoLine(p) {
   if (EAB.has(sure)) return "This looks like an emerald ash borer!";
   if (INVASIVE.has(sure)) return `This looks like a ${commonName(sure)}. It's invasive too, so we'll report it.`;
   return `This looks like a ${commonName(sure)}. It isn't invasive. Thanks for checking!`;
+}
+
+// The AI's top 3 guesses for one photo: common name, scientific name, and how sure it was (%).
+// Not for tree photos: the bug AI would just name whichever bug looks closest to bark.
+function guessList(top3) {
+  const box = el("div", "guesses");
+  box.append(el("p", "guesses-title", "The AI's top 3 guesses:"));
+  const ol = el("ol");
+  for (const g of top3) {
+    const li = el("li");
+    li.append(el("span", "guess-name", commonName(g.species)), " ", el("i", "guess-sci", sciName(g.species)),
+              el("span", "guess-pct", `${g.confidence.toFixed(1)}%`));
+    ol.append(li);
+  }
+  box.append(ol);
+  return box;
 }
 
 // What was found in all the photos (the relay works this out again by itself)
@@ -321,7 +340,7 @@ function summarize(list) {
     if (p.step === "bug" && EAB.has(sure)) found.eab = true;
     if (sure && sure === TREE.damageClass) found.damage = true;
     if (p.sign) found.signs = true;
-    if (p.step === "bug" && sure && INVASIVE.has(sure) && !EAB.has(sure) && sure !== TREE.damageClass) {
+    if (p.step !== "tree" && sure && INVASIVE.has(sure) && !EAB.has(sure) && sure !== TREE.damageClass) {
       const name = commonName(sure);
       if (!found.others.includes(name)) found.others.push(name);
     }
@@ -380,6 +399,7 @@ async function showResults() {
       const row = el("div", "result-row"), img = el("img"), words = el("div");
       img.src = p.url; img.alt = "";
       words.append(el("p", null, photoLine(p)));
+      if (p.step !== "tree" && p.ai !== "ai") words.append(guessList(p.top3));
       if (p.blurry && p.ai !== "ai") words.append(el("p", "muted", "A bit blurry, but we'll still send it."));
       row.append(img, words);
       sec.append(row);

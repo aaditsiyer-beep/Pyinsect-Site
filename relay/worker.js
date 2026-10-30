@@ -22,6 +22,8 @@ const INVASIVE = new Set([
   "agrilus_planipennis_damage", "cydalima_perspectalis", "drosophila_melanogaster_suzukii",
   "drosophila_suzukii", "ips_typographus", "lymantria_monacha", "operophtera_brumata",
   "scolytus_multistriatus",
+  // Pyinsect 2.8 Oregon damage_girdler (Oct 27 2026): signs of invasive species (galleries, egg masses)
+  "scolytus_multistriatus_damage", "ips_typographus_damage", "lymantria_dispar_egg_mass",
   // Older names (Pyinsect 2.7 and before), so reports still waiting on a phone go through
   "ambrosia_beetle", "argentine_ant", "asian_giant_hornet", "asian_lady_beetle",
   "asian_longhorned_beetle", "balsam_woolly_adelgid", "brown_marmorated_stink_bug",
@@ -149,7 +151,7 @@ async function submit(request, env) {
   }
   if (request.method === "GET") {
     // Says whether the reports page is set up, never what its address or password is
-    return reply(200, { ok: true, service: "pyinsect-relay", version: 15, reports_page: Boolean(viewWord(env) && env.VIEW_PASSWORD) });
+    return reply(200, { ok: true, service: "pyinsect-relay", version: 16, reports_page: Boolean(viewWord(env) && env.VIEW_PASSWORD) });
   }
   if (request.method !== "POST") return reply(405, { error: "Use POST." });
   if (!SITE_ORIGINS.includes(origin)) return reply(403, { error: "Reports are only accepted from the Pyinsect site." });
@@ -371,7 +373,9 @@ function checkDetect(r, photos) {
     const best = sure(it);
     if (it.step === "bug" && EAB.has(best)) found.eab = true;
     if (best && INFESTED[best] === "ash") found.damage = true;
-    if (it.step === "bug" && best && INVASIVE.has(best) && !EAB.has(best) && !Object.hasOwn(INFESTED, best)) {
+    // Other invasive finds: bugs in the bug step, and signs of other invasive species (like elm bark beetle
+    // galleries or spongy moth egg masses) in the damage or bug step
+    if (it.step !== "tree" && best && INVASIVE.has(best) && !EAB.has(best) && !Object.hasOwn(INFESTED, best)) {
       const name = label(it.top3[0].name, best);
       if (!found.others.includes(name)) found.others.push(name);
     }
