@@ -686,6 +686,72 @@ const SHAPES = [
 const SHAPE_BUGS = ["🐞", "🦋", "🪲", "🐝", "🦗", "🐜", "🐛", "🪰", "🐌"];
 const LIVE_EVERY = 1500;   // the camera guesses the species this often (milliseconds)
 
+// ---------- limited-time badges: 5 new ones every 3 months ----------
+// Each season (3 months, starting November 2026) has 5 badges. Only what you do during those 3
+// months counts, like limited-time awards. New seasons keep coming by themselves.
+const SEASON_BADGE_START = [2026, 11];
+const SEASON_NAMES = ["Winter", "Spring", "Summer", "Fall"];   // Nov–Jan, Feb–Apr, May–Jul, Aug–Oct
+const SEASON_GOALS = [
+  { key: "catch",   n: 5, desc: "Catch {n} invasive bugs between {start} and {end}." },
+  { key: "natives", n: 3, desc: "Find {n} bugs that aren't invasive between {start} and {end}." },
+  { key: "wins",    n: 5, desc: "Win {n} battles between {start} and {end}." },
+  { key: "games",   n: 3, desc: "Win {n} minigames between {start} and {end}." },
+  { key: "kinds",   n: 3, desc: "Catch {n} different kinds of invasive bugs between {start} and {end}." },
+];
+const SEASON_BADGE_NAMES = {
+  Winter: ["Snowflake Seeker", "Winter Friend", "Frosty Fighter", "Cozy Gamer", "Icy Investigator"],
+  Spring: ["Blossom Bug Hunter", "Spring Helper", "Spring Battler", "Rainy Day Gamer", "Sprout Spotter"],
+  Summer: ["Sunshine Seeker", "Summer Protector", "Summer Champion", "Beach Day Gamer", "Sunny Scout"],
+  Fall:   ["Falling Leaf Finder", "Harvest Helper", "Autumn Ace", "Spooky Season Gamer", "Acorn Explorer"],
+};
+// Which 3-month season a date is in, like { id: "2026-11", index: 0, season: "Winter", start, end }
+function seasonBlock(date = new Date()) {
+  const months = (date.getFullYear() - SEASON_BADGE_START[0]) * 12 + date.getMonth() + 1 - SEASON_BADGE_START[1];
+  if (months < 0) return null;
+  const index = Math.floor(months / 3), first = new Date(SEASON_BADGE_START[0], SEASON_BADGE_START[1] - 1 + index * 3, 1);
+  const end = new Date(first.getFullYear(), first.getMonth() + 3, 0);   // the last day of the third month
+  const id = `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, "0")}`;
+  return { id, index, season: SEASON_NAMES[index % 4], start: first, end, year: first.getFullYear() };
+}
+// Every season's 5 badges, from November 2026 to now
+function seasonBadges() {
+  const list = [], now = seasonBlock();
+  for (let k = 0; now && k <= now.index; k++) {
+    const block = seasonBlock(new Date(SEASON_BADGE_START[0], SEASON_BADGE_START[1] - 1 + k * 3, 1));
+    SEASON_GOALS.forEach((goal, j) => list.push({
+      id: `s${block.id}-${goal.key}`, block, goal, limited: true, emoji: ["❄️", "🌸", "☀️", "🍂"][k % 4],
+      name: SEASON_BADGE_NAMES[block.season][j], desc: goal.desc,
+      earned: g => (goal.key === "kinds" ? (g.seasonCounts?.[block.id]?.kinds || []).length : g.seasonCounts?.[block.id]?.[goal.key] || 0) >= goal.n,
+    }));
+  }
+  return list;
+}
+BADGES.push(...seasonBadges());
+// Counts things you do toward this season's badges. Called by progress().
+// Badges from seasons that are over stay open: what you do now counts toward the ones you missed,
+// so you can still catch up and earn them.
+function seasonProgress(g, ev) {
+  const now = seasonBlock();
+  if (!now) return;
+  const blocks = new Map(BADGES.filter(b => b.limited).map(b => [b.block.id, b.block]));
+  for (const block of blocks.values()) {
+    const open = block.id === now.id || BADGES.some(b => b.limited && b.block.id === block.id && !g.badges.includes(b.id));
+    if (!open) continue;
+    const c = g.seasonCounts[block.id] ??= { catch: 0, natives: 0, wins: 0, games: 0, kinds: [] };
+    if (ev.type === "catch") { c.catch++; if (!c.kinds.includes(ev.species)) c.kinds.push(ev.species); }
+    if (ev.type === "native") c.natives++;
+    if (ev.type === "win") c.wins++;
+    if (ev.type === "minigame") c.games++;
+  }
+}
+// A badge's "why you got it" words (season badges say their dates)
+function badgeDesc(b) {
+  if (b.monthly) return `${t(b.monthly.kind.text, { n: b.monthly.kind.n })} ${t("Made in {month}", { month: monthName(b.monthly.month) })}`;
+  const day = d => d.toLocaleDateString(langTag(), { month: "long", day: "numeric", year: "numeric" });
+  const words = t(b.desc, { gym: b.gym && t(b.gym), ...(b.limited ? { n: b.goal.n, start: day(b.block.start), end: day(b.block.end) } : {}) });
+  return b.limited && b.block.id !== seasonBlock()?.id ? `${words} ${t("This season is over, but you can still catch up and earn it!")}` : words;
+}
+
 // ---------- saving ----------
 function loadGame() {
   let g = null;
@@ -693,7 +759,7 @@ function loadGame() {
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     spots: [], muted: false, trainer: { name: "", avatar: AVATARS[0] }, unlockSeen: null,
     protectorDex: {}, bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, readAloud: true, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", badgeDates: {}, ...(g || {}) };
+    buddy: null, readAloud: true, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", badgeDates: {}, seasonCounts: {}, ...(g || {}) };
   // Read aloud is on for everyone (once). After that, turning it off in Settings keeps it off.
   if (!g.readAloudOnce) { g.readAloud = true; g.readAloudOnce = true; }
   // Things from older versions that the game doesn't use anymore
@@ -729,6 +795,7 @@ function progress(g, ev) {
     lines.push(t("📅 Daily challenge done! +{pts} points", { pts: DAILY_REWARD }));
   }
   lines.push(...monthlyProgress(g, ev));
+  seasonProgress(g, ev);
   const had = new Set(g.badges);
   const fresh = BADGES.filter(b => !had.has(b.id) && b.earned(g));
   g.badges.push(...fresh.map(b => b.id));
@@ -1046,7 +1113,9 @@ function renderGame() {
   }
 
   const badges = $("badgeList"); badges.innerHTML = "";
-  for (const b of BADGES) {
+  renderSeasonBadges(g);
+  renderMonthlyBadges(g);
+  for (const b of BADGES.filter(x => !x.limited)) {
     const has = g.badges.includes(b.id);
     const item = el("button", "medal-item" + (has ? " earned" : ""));
     item.type = "button";
@@ -1175,6 +1244,10 @@ const showInstructions = () => cutscene(HOW_TO_PLAY);
 
 // ---------- badge shapes and cartoons ----------
 // Every badge has its own shape (no two are the same) and its own cartoon. They're drawn as SVG.
+// After the list runs out, new badges get new shapes made from a pattern, so no two ever match
+const badgeShape = i => i < BADGE_SHAPES.length ? BADGE_SHAPES[i]
+  : [{ kind: "star", n: 13 + Math.floor((i - BADGE_SHAPES.length) / 3), inner: .86 }, { kind: "flower", n: 13 + Math.floor((i - BADGE_SHAPES.length) / 3) },
+    { kind: "gear", n: 13 + Math.floor((i - BADGE_SHAPES.length) / 3) }][(i - BADGE_SHAPES.length) % 3];
 const BADGE_SHAPES = [
   { kind: "circle" }, { kind: "poly", n: 6 }, { kind: "shield" }, { kind: "poly", n: 8 }, { kind: "star", n: 5, inner: .62 },
   { kind: "flower", n: 8 }, { kind: "heart" }, { kind: "poly", n: 4, rot: 0 }, { kind: "star", n: 6, inner: .7 }, { kind: "flower", n: 6 },
@@ -1195,6 +1268,7 @@ function shapePath(sh, r = 46) {
   if (sh.kind === "flower") for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2; pts.push(P(a, r * (.84 + .16 * Math.abs(Math.cos(a * sh.n / 2))))); }
   if (sh.kind === "gear") for (let i = 0; i < sh.n * 4; i++) pts.push(P((i + .5) / (sh.n * 4) * Math.PI * 2, i % 4 < 2 ? r : r * .82));
   if (sh.kind === "squircle") for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, c = Math.cos(a), s = Math.sin(a); pts.push([Math.sign(s) * Math.abs(s) ** .45 * r * .92, -Math.sign(c) * Math.abs(c) ** .45 * r * .92]); }
+  if (sh.kind === "seal") for (let i = 0; i < 160; i++) { const a = i / 160 * Math.PI * 2; pts.push(P(a, r * (.93 + .07 * Math.cos(a * sh.n)))); }
   if (sh.kind === "shield") return `M0 ${-r} L${r * .9} ${-r * .72} L${r * .82} ${r * .2} Q${r * .5} ${r * .78} 0 ${r} Q${-r * .5} ${r * .78} ${-r * .82} ${r * .2} L${-r * .9} ${-r * .72} Z`;
   if (sh.kind === "heart") return `M0 ${r * .95} C${-r * 1.3} ${r * .1} ${-r * .9} ${-r * 1.05} 0 ${-r * .45} C${r * .9} ${-r * 1.05} ${r * 1.3} ${r * .1} 0 ${r * .95} Z`;
   if (sh.kind === "leaf") return `M0 ${-r} C${r * .95} ${-r * .55} ${r * .95} ${r * .55} 0 ${r} C${-r * .95} ${r * .55} ${-r * .95} ${-r * .55} 0 ${-r} Z`;
@@ -1252,12 +1326,28 @@ const GYM_ART = {
   champion: () => BADGE_ART.all() + `<path d="M-14 -30 L-10 -40 L-4 -32 L0 -42 L4 -32 L10 -40 L14 -30 Z" fill="#ffd23f" ${ink}/>`,
 };
 
+// A season badge's cartoon: the season (snowflake, flower, sun, or leaf), what the goal is, and the year
+function seasonArt(b) {
+  const season = {
+    Winter: `<rect x="-40" y="-40" width="80" height="80" fill="#cfe9ff"/>` + [0, 60, 120].map(a => `<g transform="rotate(${a})"><line x1="0" y1="-30" x2="0" y2="30" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M-6 -24 L0 -18 L6 -24 M-6 24 L0 18 L6 24" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></g>`).join(""),
+    Spring: `<rect x="-40" y="-40" width="80" height="80" fill="#e7f8de"/>` + [0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-17" rx="10" ry="15" fill="#ffc2dd" transform="rotate(${a})"/>`).join("") + `<circle r="8" fill="#ffd23f"/>`,
+    Summer: `<rect x="-40" y="-40" width="80" height="80" fill="#fff1c2"/>` + [...Array(12)].map((_, k) => `<line x1="0" y1="-20" x2="0" y2="-34" stroke="#ffb020" stroke-width="5" stroke-linecap="round" transform="rotate(${k * 30})"/>`).join("") + `<circle r="18" fill="#ffd23f"/>`,
+    Fall: `<rect x="-40" y="-40" width="80" height="80" fill="#ffe2c7"/><path d="M0 -32 L8 -14 L26 -18 L16 -2 L30 8 L10 10 L4 30 L0 18 L-4 30 L-10 10 L-30 8 L-16 -2 L-26 -18 L-8 -14 Z" fill="#f07d1d" opacity=".75"/>`,
+  }[b.block.season];
+  const goal = {
+    catch: bugG("popillia_japonica", 0, -2, .45), natives: bugG("Western bumble bee", 0, -2, .45), kinds: BADGE_ART.kinds3().replace(/scale\(\.55\)/, "scale(.4)"),
+    wins: `<g transform="scale(.7)">${BADGE_ART.trainer()}</g>`, games: `<g transform="scale(.7)">${BADGE_ART.games5()}</g>`,
+  }[b.goal.key];
+  const year = `<rect x="-22" y="22" width="44" height="14" rx="4" fill="#2f6b45" stroke="#1b1b1b" stroke-width="1.2"/><text x="0" y="33" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="11" fill="#fff">${b.block.year}</text>`;
+  return season + goal + year;
+}
+
 // The whole medal: its shape filled with shiny metal, a rim, and the cartoon inside
 let medalCount = 0;
 function medalSVG(b, has, i) {
-  const sh = BADGE_SHAPES[i % BADGE_SHAPES.length], id = `m${++medalCount}`, { colors } = medalStyle(b);
+  const sh = b.shape || badgeShape(i), id = `m${++medalCount}`, { colors } = medalStyle(b);
   const d = shapePath(sh), inner = shapePath(sh, 36);
-  const art = has ? (b.gym ? GYM_ART[b.id.slice(4)] : BADGE_ART[b.id])?.() || `<text y="12" text-anchor="middle" font-size="34">${b.emoji}</text>` : `<text y="12" text-anchor="middle" font-size="30">🔒</text>`;
+  const art = has ? (b.art || (b.limited ? () => seasonArt(b) : null) || b.gym ? GYM_ART[b.id.slice(4)] : BADGE_ART[b.id])?.() || `<text y="12" text-anchor="middle" font-size="34">${b.emoji}</text>` : `<text y="12" text-anchor="middle" font-size="30">🔒</text>`;
   return `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs><radialGradient id="${id}g" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="${colors[0]}"/><stop offset=".8" stop-color="${colors[1]}"/><stop offset="1" stop-color="${colors[1]}" stop-opacity=".9"/></radialGradient>
     <clipPath id="${id}c"><path d="${inner}"/></clipPath></defs>
@@ -1273,7 +1363,7 @@ function medalSVG(b, has, i) {
 // spin it around: the back is engraved with the date and time you earned it.
 const MEDAL_COLORS = [["#ffe17a", "#d39b12"], ["#f3f5f8", "#9aa3ad"], ["#f6b48a", "#b8652e"], ["#8ee3a8", "#2f8f55"],
   ["#9fd0ff", "#2f6fb3"], ["#d6b5ff", "#7a4bc2"], ["#ff9e9e", "#c2403a"], ["#9ff0e6", "#25a08f"]];
-const medalStyle = b => ({ colors: MEDAL_COLORS[BADGES.indexOf(b) % MEDAL_COLORS.length] });
+const medalStyle = b => ({ colors: MEDAL_COLORS[(b.colorIndex ?? BADGES.indexOf(b)) % MEDAL_COLORS.length] });
 // The front of a medal (small, for the badge list)
 function medalFace(b, has) {
   const m = el("span", `medal${has ? "" : " locked"}`);
@@ -1282,9 +1372,9 @@ function medalFace(b, has) {
 }
 // The big medal in its own pop-up. Drag it (or use the arrow keys or the button) to spin it.
 function showMedal(b) {
-  const g = loadGame(), has = g.badges.includes(b.id), when = g.badgeDates[b.id];
+  const g = loadGame(), has = b.isEarned ? b.isEarned(g) : g.badges.includes(b.id), when = b.when ? b.when(g) : g.badgeDates[b.id];
   const { colors } = medalStyle(b), calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const sh = BADGE_SHAPES[BADGES.indexOf(b) % BADGE_SHAPES.length], outline = shapePath(sh);
+  const sh = b.shape || badgeShape(BADGES.indexOf(b)), outline = shapePath(sh);
   const stage = el("div", "medal3d"), spin = el("div", `medal-spin${has ? "" : " locked"}`);
   stage.tabIndex = 0;
   stage.setAttribute("role", "img");
@@ -1334,11 +1424,60 @@ function showMedal(b) {
   const spinBtn = el("button", "btn", `🔄 ${t("Spin")}`);
   spinBtn.type = "button"; spinBtn.onclick = () => turn(360 + 180);
   const why = el("div", "medal-why");
-  why.append(el("strong", null, t("Why you got it")), el("p", null, t(b.desc, { gym: b.gym && t(b.gym) })));
-  openPopup([stage, el("h2", null, t(b.name)), why, el("p", "muted medal-hint", t("Drag to spin the badge. The back shows when you got it.")), spinBtn], [["Close", true]]);
+  why.append(el("strong", null, t("Why you got it")), el("p", null, badgeDesc(b)));
+  openPopup([stage, el("h2", null, t(b.name)), why, el("p", "muted medal-hint", t("Drag to spin the badge. The back shows when you got it.")), spinBtn],
+    [["Close", true], ...(b.monthly ? [["Open challenge", false, () => goGame(`challenge/${b.monthly.id}`)]] : [])]);
   draw();
   if (!calm) { angle = -360; speed = 0; faceUp = true; draw(); requestAnimationFrame(() => { speed = 14; settle(); }); }   // it spins in when it opens
   sound(has ? "badge" : "tick");
+}
+
+// Every monthly challenge as a medal for the Badges page (its own seal shape, and a cartoon of its goal)
+const MONTHLY_ART = { truebugs: () => bugG("halyomorpha_halys", 0, -4, .5), beetles: () => bugG("agrilus_planipennis", 0, -4, .5),
+  natives: () => bugG("Western bumble bee", 0, -4, .5), moths: () => bugG("pieris_rapae", 0, -4, .5), rare: () => BADGE_ART.rare(),
+  kinds: () => BADGE_ART.kinds3(), wasps: () => bugG("polistes_dominula", 0, -4, .5), any: () => BADGE_ART.first() };
+function monthlyMedals() {
+  return monthlyChallenges().slice().reverse().map((ch, k) => ({
+    id: `mc-${ch.id}`, name: ch.kind.name, emoji: ch.kind.emoji, monthly: ch, colorIndex: k + 3, shape: { kind: "seal", n: 9 + k },
+    isEarned: g => challengeStatus(g, ch) === "done", when: g => challengeState(g, ch)?.doneAt,
+    art: () => `<rect x="-40" y="-40" width="80" height="80" fill="#f4f8ef"/>` + MONTHLY_ART[ch.kind.id]() +
+      `<rect x="-24" y="22" width="48" height="14" rx="4" fill="#2f6fb3" stroke="#1b1b1b" stroke-width="1.2"/><text x="0" y="32.5" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="9" fill="#fff">${new Date(...ch.month.split("-").map((v, i) => i ? v - 1 : +v), 15).toLocaleDateString(langTag(), { month: "short", year: "numeric" })}</text>`,
+  })).reverse();
+}
+function renderMonthlyBadges(g) {
+  const grid = $("monthlyBadges"); grid.innerHTML = "";
+  for (const b of monthlyMedals()) {
+    const has = b.isEarned(g), st = challengeState(g, b.monthly), item = el("button", "medal-item" + (has ? " earned" : ""));
+    item.type = "button";
+    item.setAttribute("aria-label", `${t(b.name)}: ${has ? t("Badge earned") : t("Badge not earned yet")}`);
+    item.append(medalFace(b, has), el("strong", null, t(b.name)), el("span", "muted medal-month", monthName(b.monthly.month)),
+      el("span", "medal-progress", has ? "✅" : `${st?.count || 0}/${b.monthly.kind.n}`));
+    item.onclick = () => showMedal(b);
+    grid.append(item);
+  }
+}
+
+// The limited-time badges, newest season first, with their dates. Missed ones stay grey.
+function renderSeasonBadges(g) {
+  const box = $("seasonBadges"); box.innerHTML = "";
+  const now = seasonBlock(), blocks = [...new Map(BADGES.filter(b => b.limited).map(b => [b.block.id, b.block])).values()].reverse();
+  const day = d => d.toLocaleDateString(langTag(), { month: "long", day: "numeric" });
+  for (const block of blocks) {
+    const current = block.id === now?.id;
+    box.append(el("h3", "season-badges-title", `${["❄️", "🌸", "☀️", "🍂"][block.index % 4]} ${t("{season} {year}", { season: t(block.season), year: block.year })} · ${current
+      ? t("Ends {date}", { date: day(block.end) }) : `${t("Ended {date}", { date: day(block.end) })} · ${t("You can still catch up!")}`}`));
+    const grid = el("div", "badge-list");
+    for (const b of BADGES.filter(x => x.limited && x.block.id === block.id)) {
+      const has = g.badges.includes(b.id), item = el("button", "medal-item" + (has ? " earned" : current ? "" : " late"));
+      item.type = "button";
+      item.setAttribute("aria-label", `${t(b.name)}: ${has ? t("Badge earned") : t("Badge not earned yet")}`);
+      const c = g.seasonCounts?.[block.id], count = b.goal.key === "kinds" ? (c?.kinds || []).length : c?.[b.goal.key] || 0;
+      item.append(medalFace(b, has), el("strong", null, t(b.name)), el("span", "medal-progress", has ? "✅" : `${Math.min(count, b.goal.n)}/${b.goal.n}${current ? "" : ` · ${t("Catch up")}`}`));
+      item.onclick = () => showMedal(b);
+      grid.append(item);
+    }
+    box.append(grid);
+  }
 }
 
 // ---------- the Innva-Orb ----------
@@ -2660,7 +2799,7 @@ function monthlyProgress(g, ev) {
     if (ch.kind.distinct) { st.kinds = st.kinds || []; if (st.kinds.includes(ev.species)) continue; st.kinds.push(ev.species); }
     st.count++;
     if (st.count >= ch.kind.n) {
-      st.done = new Date().toLocaleDateString(langTag());
+      st.done = new Date().toLocaleDateString(langTag()); st.doneAt = new Date().toISOString();
       lines.push(`${ch.kind.emoji} ${t("Monthly challenge done: {name}! Its badge has its color now.", { name: t(ch.kind.name) })}`);
     }
   }

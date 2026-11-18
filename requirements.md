@@ -574,6 +574,24 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [x] In the tree check, a damage photo ends with the warning and tips; a healthy-bark photo still says "Report made, thank you".
   - [ ] A grown-up redeployed the relay (version 13) before this was merged.
 
+## Innvadex: limited-time badges and monthly challenge badges
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-11-18
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Our idea:**
+  - **5 new badges every 3 months**, starting November 2026 (Winter, then Spring, Summer, Fall,
+    and so on, forever): catch bugs, find native bugs, win battles, win minigames, and catch
+    different kinds. They count what you do during those 3 months.
+  - **Missed badges can still be earned:** after a season ends, what you do still counts toward
+    its badges you didn't get yet ("Catch up").
+  - **Monthly challenge badges** show on the Badges page too, as medals you can spin.
+  - Every badge, now and in the future, gets its own shape and cartoon.
+- **Done when:**
+  - [ ] The 5 new badges show each season with their dates.
+  - [ ] A missed badge can still be earned after its season.
+  - [ ] Monthly challenge badges show on the Badges page.
+
 ## Innvadex: badges as medals (like Apple Watch awards)
 
 - **Status:** Building

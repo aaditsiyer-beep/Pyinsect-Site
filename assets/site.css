@@ -1224,3 +1224,10 @@ body[data-screen="game"] #screens { padding-top: 14px; }
 .medal-back-art { position: absolute; inset: 0; z-index: -1; }
 .medal-back > :not(.medal-back-art) { max-width: 66%; }
 .medal3d { width: 240px; height: 240px; }
+/* Limited-time badges (5 every 3 months) */
+.season-badges { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.season-badges > p { margin: 0; }
+.season-badges-title { margin: 6px 0 0; font-size: 16px; }
+.medal-progress { font: 600 12px var(--mono); color: var(--accent); }
+.medal-item.late .medal-progress { color: #c77b00; }
+.medal-month { font-size: 11px; margin-top: -4px; }
