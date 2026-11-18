@@ -686,3 +686,132 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [x] After "Send report", the map opens and your new report is a different color.
   - [ ] Tried on a real phone (camera, location, and sending a real report).
   - [ ] A grown-up redeployed the relay (version 15) before this was merged.
+
+## Innvadex: live online battles and quick bot battles
+
+- **Status:** Building
+- **Asked by:** edafawd, 2026-10-31
+- **Who it's for:** Our team, for the FLL demo (and then every Innvadex player).
+- **Problem or need:** You can only battle the computer's trainers and gyms, never another person.
+  And to battle a bot you have to go through the trainer and gym list.
+- **Why they have it:** Showing judges that two players can battle each other with the bugs they
+  caught makes the game more exciting, and more catching means more real invasive bugs reported.
+- **Our idea:**
+  - **Battle a friend online:** one player taps "Make a room" and gets a 4-letter code. The other
+    types the code and taps "Join". They take turns live (Tackle, special move, or Switch bug), with
+    the same rules as the trainer battles. The connection goes straight between the two devices
+    (PeerJS, free, no accounts). Only your nickname, avatar, and bugs are shared. No chat.
+  - **Battle a bot:** a button for a quick battle any time, picking Easy, Medium, or Hard. The bot
+    gets random invasive bugs, as many as your team, a bit weaker, the same, or a bit stronger.
+  - The code is in a new file, `assets/game-online.js`, so the game file barely changes.
+- **Other ideas we talked about:**
+  - Battle a friend's team played by the bot (nobody has to be online together): not live.
+  - Pass-and-play on one device: easy, but not online.
+- **User flow:**
+  1. Both players open the Game screen → Battles. They see "Battle a friend online" and "Battle a bot".
+  2. Player 1 taps "Make a room" and sees a code, like "KTMB".
+  3. Player 2 taps "Join a room", types KTMB, and taps "Join".
+  4. Both see the battle. The one whose turn it is picks a move; the other sees "Waiting for …".
+  5. When all of one player's bugs faint, the battle ends. The winner gets +15 points.
+  6. If someone leaves or loses the connection, the other sees "… left the battle."
+- **Done when:**
+  - [x] Two browsers can make and join a room, battle to the end, and both see the same result.
+  - [x] A wrong code says the room wasn't found.
+  - [x] Closing one browser tells the other that the player left.
+  - [x] "Battle a bot" starts a battle at the chosen level.
+  - [ ] Tried on two real phones (on different Wi-Fi or mobile data).
+
+## Innvadex: online lobby, friends, and watching battles
+
+- **Status:** Building
+- **Asked by:** edafawd, 2026-11-01
+- **Who it's for:** Our team, for the FLL demo (and then every Innvadex player).
+- **Problem or need:** Room codes only work if your friend is online and you tell them the code. There's
+  no place to meet other players, find your friends, or see what they're doing.
+- **Why they have it:** A busy online world makes the game exciting, so players keep catching (and
+  reporting) real invasive bugs. There aren't many players yet, so bots fill the lobby.
+- **Our idea:**
+  - **The game server** (`server/`, a free Cloudflare Worker with a Durable Object) keeps the lobby.
+    It rolls the dice in every online battle, so both players see the same thing and nobody can cheat.
+  - **Online names:** you pick a made-up name like "BraveBeetle42" (nobody types their real name).
+  - **The lobby:** who's online, "Find a match" (a player, or a bot after a few seconds), "Make a room"
+    and "Join a room" with a code, "Find a player" by name, and Challenge.
+  - **Friends:** add friends (they say yes or no), see what they're doing right now (in the lobby,
+    catching bugs, battling someone, watching), challenge them, and **watch** their battle live.
+  - **Bots:** about 20 bots are always online. They wander around, catch bugs, battle each other (so
+    there's always a battle to watch), and say yes to every challenge and friend request. They're marked "bot".
+  - No chat. Only names, avatars, wins, and bugs are shared.
+- **Other ideas we talked about:**
+  - Typing your own username: kids might use their real name, so we picked made-up names.
+  - Phone-to-phone room codes only (the last version): no lobby, friends, or watching.
+- **User flow:**
+  1. Game screen → Battles → "Online lobby" → **Go online**.
+  2. The first time, pick your online name from 4 made-up names.
+  3. In the lobby: Find a match, Make a room, Join a room, or Find a player by name.
+  4. Tap **Add friend** next to someone. They see the request and tap Accept (bots always do).
+  5. Friends show what they're doing. Tap **Challenge** to battle, or **Watch** to see their battle live.
+  6. After a battle, "Back to the lobby". "Leave lobby" goes offline.
+- **Done when:**
+  - [x] Two browsers pick names and see each other and the bots in the lobby.
+  - [x] A friend request is accepted, and a bot says yes right away.
+  - [x] A challenge is accepted and battled to the end; both see the same winner, only the winner gets points.
+  - [x] Find a match pairs two players; alone, a bot steps in.
+  - [x] A room code works.
+  - [x] You can watch a live battle, and your friends see that you're watching.
+  - [ ] A grown-up deployed the game server (server/README.md) before this was merged.
+  - [ ] Tried on two real phones.
+
+## Change permissions button
+
+- **Status:** Building
+- **Asked by:** Eshan, 2026-10-27
+- **Who it's for:** Anyone who used Pyinsect before and answered the camera or location question.
+- **Problem or need:** They want to change their answer, but the permissions screen only shows on
+  the first visit, so there was no way back to it.
+- **Why they have it:** People tap "Don't allow" by accident, or change their mind later. Without
+  location, their reports don't show on the map.
+- **Our idea:** One **⚙️ Change permissions** button at the bottom of Home, near the photo credits.
+  It opens the permissions screen again, with a **← Back to Home** button. If the browser won't ask
+  again (because they said no before), the message says to tap the 🔒 next to the web address.
+- **Other ideas we talked about:**
+  - A Back button on the first-visit permissions screen: it doesn't help on later visits.
+  - Putting the button near "Check my area" or at the top of Home: we picked the bottom, so it
+    stays out of the way.
+- **User flow:**
+  1. They scroll to the bottom of Home and tap ⚙️ Change permissions.
+  2. The permissions screen opens. They tap Continue, and the browser asks again (if it can).
+  3. If they allow both, they go back to Home. If not, the message says how to change it with the 🔒.
+  4. Or they tap ← Back to Home without changing anything.
+- **Done when:**
+  - [ ] The button is at the bottom of Home and opens the permissions screen.
+  - [ ] ← Back to Home goes back to Home.
+  - [ ] After saying no, the message explains how to change it with the 🔒.
+
+## Website analytics (GoatCounter)
+
+- **Status:** Building
+- **Asked by:** Eshan, 2026-11-13 (switched to GoatCounter by a grown-up, 2026-11-16)
+- **Who it's for:** Our team, so we can see how people use Pyinsect.
+- **Problem or need:** We don't know how many people visit, which screens they use, or what devices
+  they have, so we can't tell what to make better.
+- **Why they have it:** The site has no visitor numbers at all. A grown-up agreed to analytics and
+  added it to the privacy policy (`privacy.html`, part 6).
+- **Our idea:** Add GoatCounter (site `wizkidz-pyinsect`, just for Pyinsect) to the main page and the
+  privacy page. Its dashboard is private: a grown-up shares a secret, view-only link with our team. Each screen (Home, Detect, Game, Map) counts as a page. GoatCounter uses no
+  cookies and doesn't save IP addresses, so kids who visit stay private and no cookie pop-up is
+  needed. Photos, reports, and locations are never sent to it.
+- **Other ideas we talked about:**
+  - Google Analytics: we tried it first (#47), but it uses cookies that follow visitors, which isn't
+    a good fit for a site kids use.
+  - Cloudflare Web Analytics: no cookies too, but fewer details and each site needs a grown-up's login.
+  - Running GoatCounter on our own server: more control, but someone has to keep it updated and safe.
+  - Count visits on our own relay: no cookies, but much more work, and no device or country numbers.
+- **User flow:**
+  1. A visitor opens Pyinsect. Nothing looks different.
+  2. They move between Home, Detect, Game, and Map. Each screen counts as a page view.
+  3. Our team opens our secret dashboard link and sees visits, screens, browsers, and countries.
+- **Done when:**
+  - [ ] Opening the site shows up in the wizkidz-pyinsect dashboard as `/pyinsect/`.
+  - [ ] Moving to another screen shows up as a new page, like `/pyinsect/#map`.
+  - [ ] The browser saves no cookies for the site (F12 → Application → Cookies is empty).
+  - [ ] No photos, reports, or locations are sent to GoatCounter.

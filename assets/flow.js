@@ -98,17 +98,34 @@ $("permsNext").onclick = async () => {
     s.getTracks().forEach(t => t.stop());   // we only wanted to ask; the camera opens again when they take a photo
     camera = true;
   } catch {}
+  // Only "Don't allow" counts as no. Saying yes but the computer can't find the spot yet (no GPS,
+  // or too slow) still counts as yes, because the permission is what we asked for.
   place = await new Promise(ok => navigator.geolocation
-    ? navigator.geolocation.getCurrentPosition(() => ok(true), () => ok(false), { timeout: 30000, maximumAge: 600000 })
+    ? navigator.geolocation.getCurrentPosition(() => ok(true), err => ok(err.code !== err.PERMISSION_DENIED), { timeout: 30000, maximumAge: 600000 })
     : ok(false));
   store.set(WELCOME_KEY, true);
   btn.disabled = false;
   if (camera && place) { startApp(); return; }
-  msg.textContent = "That's okay! You can still choose photos." + (place ? "" : " Without your location, your reports just won't show on the map.");
+  msg.textContent = "That's okay! You can still choose photos." + (place ? "" : " Without your location, your reports just won't show on the map.")
+    + " To change your answer later, tap the 🔒 next to the web address and allow Camera and Location.";
   btn.textContent = "Go to the home screen";
   btn.dataset.done = "1";
   btn.focus();
 };
+
+// "Change permissions" at the bottom of Home opens the permissions screen again.
+// If they said no before, the browser won't ask again, so the message says how to change it.
+$("permsAgain").onclick = () => {
+  const btn = $("permsNext");
+  delete btn.dataset.done;
+  btn.textContent = "Continue";
+  $("permsMsg").hidden = true;
+  $("permsBack").hidden = false;
+  document.body.classList.add("onboarding");
+  $("perms").hidden = false;
+  btn.focus();
+};
+$("permsBack").onclick = startApp;
 
 // ---------- home: parallax and "Is EAB near you?" ----------
 // The background picture moves slower than the page, so it looks deeper (parallax)
@@ -211,6 +228,16 @@ function carousel(slides) {
   return box;
 }
 
+// Line icons for the Detect step tiles, drawn the same way as the menu bar icons (index.html)
+const ICONS = {
+  back: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+  camera: '<path d="M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/>',
+  photos: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-9 9"/>',
+  skip: '<path d="m5 5 7 7-7 7"/><path d="m13 5 7 7-7 7"/>',
+  next: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  done: '<path d="m5 12 5 5 9-10"/>',
+};
+
 function renderStep() {
   const key = STEPS[step], d = TREE.detect[key], list = photos[key], box = $("detectStep");
   box.innerHTML = "";
@@ -248,25 +275,25 @@ function renderStep() {
     box.append(el("p", "thumbs-title", `Your photos (${list.length} of ${MAX_PHOTOS})`), thumbs);
   }
 
+  // One row of big tiles that look like the menu bar: Back, Camera, Choose photos, Skip (or Next).
+  // The long camera words from the tree settings ("Take a picture of the tree") go just above the row.
   const actions = el("div", "step-actions");
-  const button = (text, cls, onclick) => { const b = el("button", "btn " + cls, text); b.type = "button"; b.onclick = onclick; actions.append(b); return b; };
+  const tile = (icon, text, cls, onclick) => {
+    const b = el("button", "step-tile " + cls); b.type = "button"; b.onclick = onclick;
+    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>`;
+    b.append(el("span", null, text));
+    actions.append(b);
+  };
+  if (step > 0) tile(ICONS.back, "Back", "back", () => { step--; renderStep(); window.scrollTo(0, 0); });
   if (list.length < MAX_PHOTOS) {
-    const cam = button(list.length ? "📷 Add another photo" : `📷 ${d.button}`, list.length ? "big" : "primary big", () => openCamera());
-    cam.classList.add("take");
+    tile(ICONS.camera, "Camera", "take", () => openCamera());
+    tile(ICONS.photos, "Choose photos", "pick", () => $("photoInput").click());
   }
   const last = step === STEPS.length - 1;
-  button(list.length ? (last ? "See results →" : "Next →") : "Skip", list.length ? "primary big next" : "big skip", nextStep);
+  if (list.length) tile(last ? ICONS.done : ICONS.next, last ? "See results" : "Next", "next", nextStep);
+  else tile(ICONS.skip, "Skip", "skip", nextStep);
+  if (list.length < MAX_PHOTOS) box.append(el("p", "step-ask", d.button));
   box.append(actions);
-  if (list.length < MAX_PHOTOS) {
-    const pick = el("button", "link", "Or choose a photo from your phone");
-    pick.type = "button"; pick.onclick = () => $("photoInput").click();
-    box.append(pick);
-  }
-  if (step > 0) {
-    const back = el("button", "link back", "← Back");
-    back.type = "button"; back.onclick = () => { step--; renderStep(); window.scrollTo(0, 0); };
-    box.append(back);
-  }
   if (document.activeElement === document.body || !box.contains(document.activeElement)) title.focus({ preventScroll: true });
 }
 
@@ -287,6 +314,10 @@ function closeResults() {
   document.body.style.overflow = "";
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("results").hidden && !sending) closeResults(); });
+
+// The button bar is moved up into the results (under the picture) while they show; put it back before the body is cleared
+function homeActions() { $("resultsArea").after($("resultsActions")); }
+$("resultsClose").onclick = () => { if (!sending) closeResults(); };
 
 function resultsActions(...buttons) {
   const bar = $("resultsActions"); bar.innerHTML = "";
@@ -354,13 +385,14 @@ function summarize(list) {
 async function showResults() {
   const list = STEPS.flatMap(k => photos[k].map(p => ({ ...p, step: k })));
   const body = $("resultsBody");
+  homeActions();
   body.innerHTML = "";
   $("resultsArea").hidden = true;
   openResults();
   const title = el("h2", null, "Your results"); title.id = "resultsTitle";
   if (!list.length) {
     body.append(title, el("p", "big-note", "No activity"), el("p", null, "You skipped every step, so there's nothing to send. That's okay!"));
-    resultsActions(["See the map", "primary", () => { closeResults(); go("map"); }], ["Back", "", closeResults]);
+    resultsActions(["See the map", "primary", () => { closeResults(); go("map"); }]);
     return;
   }
   const wait = el("p", "checking", "Checking your photos…");
@@ -383,56 +415,58 @@ async function showResults() {
   } catch (e) {
     console.error(e);
     wait.textContent = "The AI couldn't check your photos. Check your internet and try again.";
-    resultsActions(["Try again", "primary", showResults], ["Back", "", closeResults]);
+    resultsActions(["Try again", "primary", showResults]);
     return;
   }
   wait.remove();
   checked = list;
   const found = summarize(list);
 
-  for (const k of STEPS) {
-    const mine = list.filter(p => p.step === k);
-    const sec = el("section", "result-step");
-    sec.append(el("h3", null, `${STEP_ICON[k]} ${STEP_NAME[k]}`));
-    if (!mine.length) sec.append(el("p", "muted", "Skipped"));
-    for (const p of mine) {
-      const row = el("div", "result-row"), img = el("img"), words = el("div");
-      img.src = p.url; img.alt = "";
-      words.append(el("p", null, photoLine(p)));
-      if (p.step !== "tree" && p.ai !== "ai") words.append(guessList(p.top3));
-      if (p.blurry && p.ai !== "ai") words.append(el("p", "muted", "A bit blurry, but we'll still send it."));
-      row.append(img, words);
-      sec.append(row);
-    }
-    body.append(sec);
-  }
-
   // The calm summary, and how to reach the experts directly if they want to
   const note = el("div", "result-note");
+  // Every reading the AI had for each photo, big, with a percentage bar and "Is this right?"
+  const alertBars = () => {
+    const box = el("div", "alert-readings");
+    for (const p of list) {
+      if (p.ai === "ai" || p.step === "tree" || p.verdict !== "ok") continue;
+      const sec = el("div", "alert-photo");
+      sec.append(el("p", "alert-photo-title", (p.step === "damage" ? "Signs of damage" : "The bug")));
+      for (const g of p.top3) {
+        const row = el("div", "alert-reading"), track = el("div", "track"), fill = el("div", "fill");
+        fill.style.width = `${g.confidence.toFixed(1)}%`; track.append(fill);
+        const name = g.species === TREE.damageClass ? "Emerald ash borer damage" : commonName(g.species);
+        row.append(el("span", "alert-name", name), el("span", "pct", `${g.confidence.toFixed(1)}%`), track);
+        sec.append(row);
+      }
+      box.append(sec);
+    }
+    return box;
+  };
   if (found.eab || found.damage || found.signs) {
     note.classList.add("care");
-    note.append(el("p", null, `🌳 ${TREE.infested.text}`));
-    const tips = el("ul");
-    for (const t of TREE.infested.tips) tips.append(el("li", null, t));
-    note.append(tips);
-    for (const l of TREE.infested.links || []) {
-      const a = el("a", null, l.text); a.href = l.url; a.target = "_blank"; a.rel = "noopener";
-      const p = el("p"); p.append(a); note.append(p);
-    }
+    note.append(el("p", "alert-line", `🚨 ${found.eab || found.damage ? "Emerald ash borer" : "Possible emerald ash borer"} detected`));
+    const big = el("img", "alert-eab-img");   // a big picture of the beetle at the top
+    big.src = "assets/trees/eab-closeup.jpg";
+    big.alt = "Emerald ash borer, a shiny green beetle";
+    note.append(big, $("resultsActions"), alertBars());
   } else if (found.others.length) {
-    note.append(el("p", null, `Thanks! Invasive bugs like the ${found.others.join(" and ")} are reported to the experts too.`));
+    note.append(el("p", "alert-line", `🚨 ${found.others.join(" and ")} detected`));
+    const bug = list.find(p => p.step === "bug" && p.ai !== "ai" && p.verdict === "ok");
+    if (bug) { const big = el("img", "alert-eab-img"); big.src = bug.url; big.alt = "Your photo of the invasive insect"; note.append(big); }
+    note.append($("resultsActions"), alertBars(), el("p", null, `This is an invasive species. It is reported to the experts.`));
   } else {
-    note.append(el("p", null, "We didn't find signs of the emerald ash borer. Great news! Your report still helps: it shows where trees were checked."));
+    note.append(el("p", null, "We didn't find signs of the emerald ash borer. Great news! Your report still helps: it shows where trees were checked."), $("resultsActions"));
   }
   body.append(note);
 
   if (!list.some(p => p.ai !== "ai")) {
     body.append(el("p", "muted", "There are no photos left to send."));
-    resultsActions(["Back", "primary", closeResults]);
+    resultsActions();
     return;
   }
   $("resultsArea").hidden = false;
-  resultsActions(["Send report", "primary", () => sendReport(found)], ["Back", "", closeResults]);
+  if (found.eab || found.damage || found.signs || found.others.length) invasiveAlarm(true);   // red glow + siren; the words are in the box above (assets/app.js)
+  resultsActions(["Send report", "primary", () => sendReport(found)]);
 }
 
 // One report with every photo (except AI-made ones), then the map
@@ -454,6 +488,7 @@ async function sendReport(found) {
   const ok = queueReport({ report, photos: list.map(p => p.photo) }, detail);
   sending = false;
   const body = $("resultsBody");
+  homeActions();
   body.innerHTML = "";
   $("resultsArea").hidden = true;
   const title = el("h2", null, ok ? "✅ Report sent" : "Report not sent"); title.id = "resultsTitle";

@@ -79,10 +79,11 @@ async function getLowresSession() {
 
 // What the answer is, like the Oregon executor: "not_listed" (the model picked "Other insect", or the
 // photo is unlike every known insect), "unable" (less than minConfidence % sure), or "ok".
-// sim is null when there's no fingerprint check (old models, or the low-res model).
-function verdictFor(best, sim) {
+// sim is null when there's no fingerprint check (old models, or a low-res model without one).
+// cutoff is the "not in my list" line for the model that looked at the photo (the low-res model has its own).
+function verdictFor(best, sim, cutoff = MODEL.notInListCutoff) {
   if (MODEL.otherClass && best.species === MODEL.otherClass) return "not_listed";
-  if (sim != null && MODEL.notInListCutoff != null && sim < MODEL.notInListCutoff) return "not_listed";
+  if (sim != null && cutoff != null && sim < cutoff) return "not_listed";
   if (MODEL.minConfidence && best.confidence < MODEL.minConfidence) return "unable";
   return "ok";
 }
@@ -560,6 +561,33 @@ function altName(species) {
   return name;
 }
 
+// Invasive species alarm: bright red text, a pulsing red glow around the screen, and a siren beep.
+// It goes away by itself after a few seconds, or when you tap it.
+let alarmEl = null, alarmTimer = 0;
+function invasiveAlarm(glowOnly = false) {   // glowOnly: just the red glow and siren (the words are shown somewhere else)
+  if (alarmEl) return;
+  alarmEl = el("div", "invasive-alarm" + (glowOnly ? " glow-only" : ""));
+  alarmEl.setAttribute("role", "alert");
+  if (!glowOnly) alarmEl.append(el("div", "invasive-alarm-text", "INVASIVE SPECIES DETECTED"), el("div", "invasive-alarm-hint", "Tap to close"));
+  const close = () => { clearTimeout(alarmTimer); alarmEl?.remove(); alarmEl = null; };
+  alarmEl.addEventListener("click", close);
+  document.body.append(alarmEl);
+  alarmTimer = setTimeout(close, 7000);
+  try {   // a fast, high fire-alarm beeping made by the browser (no sound file); silent if the browser blocks sound
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = "sawtooth"; osc.frequency.value = 1500;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    for (let i = 0; i < 14; i++) {   // beep-beep-beep... (0.1s on, 0.1s off)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.2);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.2 + 0.1);
+    }
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 2.8);
+    osc.onended = () => ctx.close();
+  } catch {}
+}
+
 function fillCard(card, top3, verdict = "ok") {
   if (verdict !== "ok") return fillUnsureCard(card, top3, verdict);
   const best = top3[0], invasive = INVASIVE.has(best.species), sick = damagedTree(best.species);
@@ -604,8 +632,9 @@ function fillUnsureCard(card, top3, verdict) {
 }
 
 // Damage (like bark beetle galleries) and egg masses are judged on the whole photo, never on a
-// zoomed-in part: the tree around them is part of the evidence. Same rule as the Oregon executor.
-const wholeScene = species => /_(damage|egg_mass)$/.test(species);
+// zoomed-in part: the tree around them is part of the evidence. Same rule as the Oregon executor (v8.10).
+// Some whole-photo classes don't end in _damage, so the model settings can list them (wholeScene).
+const wholeScene = species => /_(damage|egg_mass)$/.test(species) || (MODEL.wholeScene || []).includes(species);
 
 // Runs the AI on one photo: the top 3 guesses (confidence in %) and the verdict (see verdictFor).
 // sim is null when there's no fingerprint check. For a zoomed-in photo (file.original is the whole
@@ -628,10 +657,12 @@ async function identifyOne(file) {
   const out = await s.run({ [s.inputNames[0]]: preprocess(raw) });
   raw.close?.();
   const probs = softmax(Array.from((out.logits || out[s.outputNames[0]]).data));
-  const sim = !small && out.sim ? out.sim.data[0] : null;   // fingerprint check (main model only)
+  // Fingerprint check. Small photos use the low-res model's own fingerprints and cutoff, if it has them.
+  const cutoff = small ? MODEL.lowres.notInListCutoff : MODEL.notInListCutoff;
+  const sim = out.sim && cutoff != null ? out.sim.data[0] : null;
   const top3 = [...probs.keys()].sort((a, b) => probs[b] - probs[a]).slice(0, 3)
     .map(i => ({ species: CLASS_NAMES[i] ?? `idx_${i}`, confidence: probs[i] * 100 }));
-  return { top3, sim, verdict: verdictFor(top3[0], sim) };
+  return { top3, sim, verdict: verdictFor(top3[0], sim, cutoff) };
 }
 
 function classify(file) {
@@ -642,9 +673,9 @@ function classify(file) {
     try {
       setStatus(`Analysing ${file.name}…`, "busy");
       const bmp = await createImageBitmap(file);   // for the report photo (normal colours)
-      const { top3, sim, verdict } = await identify(file);
+      const { top3, verdict } = await identify(file);
       if (file.tree) {
-        await treePhoto(file, bmp, top3, card, sim);
+        await treePhoto(file, bmp, top3, card, verdict);
         bmp.close?.();
         setStatus(readyText(), "ready");
         return;
@@ -661,8 +692,10 @@ function classify(file) {
         if (ai.verdict === "ai") { blockReport(card, ai); window.Innvadex?.fakePhoto(); }
         else if (infested) {
           // Sent right away, so the team knows about the infested tree
+          invasiveAlarm();
           fileReport(buildInfestedReport(bmp, infested, top3), card, "Infested tree: action needed");
         } else {
+          invasiveAlarm();
           fileReport(buildReport(bmp, top3[0].species, top3[0].confidence, top3), card);
           window.Innvadex?.encounter(top3[0].species, card.querySelector("img").src);   // the game (assets/game.js)
         }
@@ -688,9 +721,9 @@ function classify(file) {
 // just name whichever bug looks closest, which would be confusing.
 // If the bug model is sure it sees this tree's damage (like emerald ash borer damage), the tree is
 // infested: the card and the tree check's last step warn and say what to do, and the report says so.
-async function treePhoto(file, bmp, top3, card, sim) {
+async function treePhoto(file, bmp, top3, card, verdict) {
   const tree = file.tree, info = card.querySelector(".info"), fileLine = info.querySelector(".file");
-  const sick = verdictFor(top3[0], sim) === "ok" ? damagedTree(top3[0].species) : null;
+  const sick = verdict === "ok" ? damagedTree(top3[0].species) : null;
   const infested = sick?.id === tree.id;
   card.className = "card tree" + (infested ? " infested" : "");
   info.innerHTML = "";
@@ -703,6 +736,7 @@ async function treePhoto(file, bmp, top3, card, sim) {
   }
   const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown", reasons: [] }));
   if (ai.verdict === "ai") { blockReport(card, ai); return; }
+  if (infested) invasiveAlarm();
   fileReport(buildTreeReport(bmp, tree, top3, infested), card, infested ? "Infested tree: action needed" : tree.signsText);
   window.treeCheck?.reported(infested);
 }
@@ -752,6 +786,7 @@ async function startCamera() {
     cameraMessage("");
     setupZoom();
     setupFocus();
+    recheckControls(stream);
     $("shutter").disabled = false;
     $("useCameraApp").hidden = true;
     const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
@@ -765,6 +800,20 @@ async function startCamera() {
       : "Couldn't start the camera here. You can use your camera app instead.");
     $("useCameraApp").hidden = false;
     $("switchCamera").hidden = true;
+  }
+}
+
+// Chrome on Android tells us about the camera's own zoom and focus a moment AFTER the camera
+// starts, so the first look can miss them (tap to focus then never turned on). Look again a few
+// times in the first 2 seconds. s = the camera we started with, so an old check stops when it changes.
+async function recheckControls(s) {
+  for (const wait of [250, 500, 1000]) {
+    await new Promise(r => setTimeout(r, wait));
+    if (stream !== s) return;
+    const caps = s.getVideoTracks()[0].getCapabilities?.() || {};
+    if (!realZoom && caps.zoom && caps.zoom.max > caps.zoom.min && zoom === 1) setupZoom();
+    if (!focusModes.length) setupFocus();
+    if (realZoom && focusModes.length) return;
   }
 }
 
@@ -962,6 +1011,8 @@ function showCrop(file, source) {
     // The insect finder (assets/insect-finder.js) moves the box onto the bug by itself. The person
     // can still move it. If it finds no bug, the box stays on the whole photo, like before.
     window.findInsect?.(img, minBox).then(b => { if (b && cropFile === file) setBox(b); }).catch(console.error);
+    const box = $("cropBox");   // restart the "here I am" shrink-and-grow (site.css: .crop-box.hello)
+    box.classList.remove("hello"); void box.offsetWidth; box.classList.add("hello");
     $("checkIt").disabled = false;
     $("checkIt").focus({ preventScroll: true });
   };
