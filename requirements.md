@@ -574,6 +574,32 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [x] In the tree check, a damage photo ends with the warning and tips; a healthy-bark photo still says "Report made, thank you".
   - [ ] A grown-up redeployed the relay (version 13) before this was merged.
 
+## Innvadex: 3D cutscenes, quizzes, read aloud, and cartoon bugs
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-11-18
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Cutscenes were long (beating Boss Burdock was 19 slides in a row), and you only
+  tapped Next. Many bugs looked the same, because most beetles were the same 🪲 emoji.
+- **Why it matters:** Short, interactive cutscenes keep people paying attention, and a cartoon
+  that looks like the real bug helps people recognize it outside.
+- **Our idea:**
+  - **3D cutscenes:** every cutscene happens in a 3D classroom at "Pyinsect University", with a
+    tiled floor, windows, a bookshelf, ceiling lights, and a big screen that shows the place in
+    the story. The camera turns a little toward whoever is talking.
+  - **Shorter:** most cutscenes are 2 to 5 slides now, and Team Tangle's motto plays only once.
+  - **Interactive:** quiz questions with answer buttons (a wrong answer explains why), and a bug
+    to tap and catch in How to play.
+  - **Read aloud is on by default** (it can still be turned off in Settings).
+  - **Cartoon bugs:** each invasive bug and native bug has its own cartoon, drawn to look like
+    the real bug (colors, spots, stripes, wings, and antennae). Pip is a cartoon western bumble bee.
+    In "Where's the Bug?", the other hiding bugs are cartoons too, so you have to find the right one.
+- **Done when:**
+  - [ ] Every cutscene shows the 3D classroom.
+  - [ ] A quiz needs the right answer before Next shows up, and the tap practice catches a bug.
+  - [ ] Read aloud is on for new and old players.
+  - [ ] Every bug in the game has its own cartoon.
+
 ## Game screen: new user flow (home, challenge page, camera)
 
 - **Status:** Building

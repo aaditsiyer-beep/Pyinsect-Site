@@ -288,9 +288,7 @@ function gymIntroScenes(gym) {
     gym.champion
       ? { scene: gym.id, ...HAZEL, text: "This is it, {name}. The Champion's Hall. Everything you've learned comes down to this." }
       : { scene: gym.id, ...HAZEL, text: "Here we are, {name}: {place}! {story}", vars: { place: t(gym.place), story: t(gym.story) } },
-    { scene: gym.id, who: gym.face, name: gym.leader, text: gym.intro },
-    { scene: gym.id, who: f.emoji, name: commonName(bug), text: "Watch out for my {bug}! {harm}", vars: { bug: commonName(bug), harm: t(f.harm) } },
-    { scene: gym.id, ...PIP, text: "Bzz… if you ever see a real {bug}: {todo}", vars: { bug: commonName(bug), todo: t(f.todo) } },
+    { scene: gym.id, who: `art:${bug}`, name: commonName(bug), text: "Watch out for my {bug}! {harm}", vars: { bug: commonName(bug), harm: t(f.harm) } },
     { scene: gym.id, who: gym.face, name: gym.leader, text: gym.say.hi },
   ];
 }
@@ -340,27 +338,23 @@ const SCENES = {
 };
 
 const HAZEL = { who: "👩‍🏫", name: "Professor Hazel" };
-const PIP = { who: "🐝", name: "Pip" };   // Professor Hazel's helper, a native western bumble bee
+const PIP = { who: "art:Western bumble bee", name: "Pip" };   // Professor Hazel's helper, a native western bumble bee
 const INTRO = [
   { scene: "lab",    ...HAZEL, text: "Hi there! I'm Professor Hazel, and I study insects here in Oregon." },
   { scene: "lab",    ...PIP,   text: "Bzz! And I'm Pip, a western bumble bee. I'm native here. My family has lived in Oregon for a very, very long time!" },
-  { scene: "forest", ...HAZEL, text: "Oregon's forests, farms, and backyards are full of plants and animals that depend on each other." },
-  { scene: "forest", ...PIP,   text: "I help flowers make seeds. Birds eat the seeds and the bugs. Everything is connected!" },
   { scene: "danger", who: "🪲", name: "Uh oh!", text: "But some bugs came from far away. They're called invasive species. Here, they have no natural enemies to keep them in check." },
   { scene: "danger", who: "🚚", name: "How do they get here?", text: "They hitchhike! They hide in firewood, shipping crates, plants, and even on cars." },
-  { scene: "danger", who: "🌳", name: "What happens next?", text: "They munch on trees, crops, and gardens, and push out the native bugs that birds and other animals need." },
-  { scene: "danger", ...PIP,   text: "Some of them even push out native bugs like me. Bzz… that's scary!" },
   { scene: "lab",    ...HAZEL, text: "That's where you come in, {name}! Here's your very own Innvadex." },
   { scene: "lab",    ...HAZEL, text: "Snap photos of bugs. If one is invasive, catch it! If it isn't, leave it be." },
-  { scene: "forest", ...HAZEL, text: "Every invasive bug you find is reported, so experts know where to set traps. Real photos help real forests!" },
-  { scene: "mthood", ...HAZEL, text: "Battle trainers, beat the {n} forests, and face the Oregon Champion.", vars: { n: GYMS.length - 1 } },
+  { scene: "forest", ...PIP,   text: "Quick quiz, {name}! You find a bug that isn't invasive. What do you do?",
+    ask: [{ text: "Leave it be", right: true }, { text: "Catch it" }],
+    yes: "That's right! Native bugs help nature, so we leave them be.", no: "Not quite! We only catch invasive bugs. Native bugs help nature." },
   { scene: "forest", ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
 // The first visit uses a short version of the intro. The whole story is in Settings → Watch intro.
-const INTRO_SHORT = [INTRO[0], INTRO[1], INTRO[4], INTRO[8], INTRO[9], INTRO[12]];
+const INTRO_SHORT = [INTRO[0], INTRO[2], INTRO[5], INTRO[6], INTRO[7]];
 const FIRST_CATCH = [
   { scene: "victory", ...HAZEL, text: "You caught your first invasive bug, {name}! It's in your Innvadex now." },
-  { scene: "victory", ...PIP,   text: "Bzz bzz! That's one less bug bothering the trees. Great job!" },
   { scene: "lab",     ...HAZEL, text: "Tap it in your Innvadex to read its fact card. Knowing your bugs makes you a better Bug Ranger!" },
 ];
 const FIRST_LEGENDARY = [
@@ -383,12 +377,8 @@ const RANK_TALK = {
   "Guardian of Oregon": "Guardian of Oregon! Like the beaver, our state animal, you work hard to protect our land. Thank you, {name}!",
 };
 const FINALE = [
-  { scene: "champion", who: "🦸", name: "Champion Juniper", text: "Incredible! You beat me, {name}." },
   { scene: "champion", who: "🦸", name: "Champion Juniper", text: "From the coast to the mountains, you proved you can protect Oregon. You are the new Oregon Champion!" },
   { scene: "victory",  ...HAZEL, text: "{name}, I'm so proud of you. You've learned so much about invasive species." },
-  { scene: "victory",  ...PIP,   text: "Bzz bzz bzz! My whole hive is buzzing about you!" },
-  { scene: "forest",   who: "🌲", name: "Oregon's forests", text: "From Forest Park to Mount Hood, the forests are safer because of Bug Rangers like you." },
-  { scene: "lab",      ...HAZEL, text: "But this isn't really the end. Invasive bugs are still out there in the real world." },
   { scene: "lab",      ...HAZEL, text: "Keep finding them. Every real report helps experts protect nature. Thank you, Champion!" },
   { scene: "victory",  ...HAZEL, text: "Open the Badges tab to print your Forest Protector certificate!" },
   { scene: "forest",   ...PIP,   text: "See you on the next adventure, {name}! Bzz!" },
@@ -467,15 +457,12 @@ const SQUAWK = { who: "🐦", name: "Squawk" };   // their pet European starling
 const BURDOCK = { who: "🕴️", name: "Boss Burdock" };
 const TANGLE_MOTTO = [
   { scene: "tangle", ...BRAMBLE, text: "Bugs in the firewood, bugs on the truck!" },
-  { scene: "tangle", ...THISTLE, text: "Spreading them everywhere, wishing you luck!" },
-  { scene: "tangle", ...BRAMBLE, text: "From the coast to the mountains, big bugs and small!" },
   { scene: "tangle", ...THISTLE, text: "We're Team Tangle! We'll tangle them all!" },
   { scene: "tangle", ...SQUAWK, text: "Squawk! That's right! I'm an invasive starling, too!", sound: "tangle" },
 ];
 // When they lose, they fly away in their firewood truck
 const TANGLE_BLAST_OFF = [
   { scene: "tangle", ...BRAMBLE, text: "No fair! Our perfect plan!" },
-  { scene: "tangle", ...THISTLE, text: "Quick, back to the firewood truck!" },
   { scene: "sky", who: "🚚", name: "Team Tangle", text: "Team Tangle is tangled up agaaain! ✨", fly: true, sound: "fly" },
 ];
 const TANGLE_SAY = { next: "Go, bug! Spread out!", lose: "No fair! We'll be back!", win: "Ha ha! Team Tangle wins this time!" };
@@ -485,53 +472,43 @@ const TANGLE = [
     team: ["anisandrus_dispar", "xyleborus_monographus", "agrilus_planipennis"],
     plan: [
       { scene: "forest", ...HAZEL, text: "{name}, come quick! Someone is loading a big truck with firewood near the campground." },
-      { scene: "tangle", ...BRAMBLE, text: "Ha ha ha! Who's this little Bug Ranger?" },
       "motto",
       { scene: "tangle", ...THISTLE, text: "Our plan: drive this firewood all over Oregon! The beetles hiding inside will move into every forest!" },
-      { scene: "tangle", ...PIP, text: "Bzz! Moving firewood is one of the main ways tree-killing beetles spread! Stop them, {name}!" },
-      { scene: "tangle", ...BRAMBLE, text: "You want our firewood? You'll have to battle us for it!" },
+      { scene: "tangle", ...PIP, text: "Quick, {name}! What's the rule for firewood?",
+        ask: [{ text: "Buy it where you burn it", right: true }, { text: "Take it with you on trips" }],
+        yes: "Yes! Moving firewood spreads tree-killing bugs, so buy it where you burn it.", no: "Nope! That's exactly how bugs spread. Try again!" },
     ],
     lesson: "Remember: buy firewood where you burn it, and never carry it to a new place." },
   { id: "cars", emoji: "🚗", name: "The Road Trip Scheme", gyms: 2, level: 2, bugLevel: 2, reward: 80,
     team: ["halyomorpha_halys", "lymantria_dispar", "lycorma_delicatula"],
     plan: [
       { scene: "road", ...HAZEL, text: "Team Tangle is back! They're at a rest stop on the highway." },
-      { scene: "road", ...THISTLE, text: "Look, Bramble! It's that pesky Bug Ranger again!" },
-      "motto",
       { scene: "road", ...BRAMBLE, text: "This time we're sticking spotted lanternfly eggs on every car and camper! The bugs will ride along to new places!" },
-      { scene: "road", ...SQUAWK, text: "Squawk! A free ride for every bug!" },
       { scene: "road", ...PIP, text: "Bzz… those egg patches look like dried mud. People don't even notice them!" },
-      { scene: "road", ...THISTLE, text: "Let's see you stop a whole parking lot of bugs!" },
+      { scene: "road", ...HAZEL, text: "Before a road trip, where should you check for egg patches?",
+        ask: [{ text: "On cars and camping gear", right: true }, { text: "Only inside the fridge" }],
+        yes: "Exactly! Egg patches hide on cars, trailers, and camping gear.", no: "Hmm, not there. Think about what goes on the trip!" },
     ],
     lesson: "Before a trip, check cars, trailers, and camping gear for egg patches. Spongy moths lay eggs on them too!" },
   { id: "crates", emoji: "📦", name: "The Shipping Crate Scheme", gyms: 5, level: 3, bugLevel: 2, reward: 100,
     team: ["coptotermes_formosanus", "solenopsis_invicta", "popillia_japonica", "anoplophora_glabripennis"],
     plan: [
       { scene: "port", ...HAZEL, text: "{name}! Team Tangle snuck into the shipping port with a pile of wooden crates!" },
-      { scene: "port", ...BRAMBLE, text: "Welcome to our biggest plan yet!" },
-      "motto",
       { scene: "port", ...THISTLE, text: "We'll hide bugs in these crates and ship them across the ocean. Bugs everywhere, all over the world!" },
       { scene: "port", ...HAZEL, text: "That's how the Asian longhorned beetle got to North America: inside wooden packing crates." },
-      { scene: "port", ...SQUAWK, text: "Squawk! My family came here on a ship long ago, too!" },
-      { scene: "port", ...BRAMBLE, text: "Our crates are packed with our strongest bugs. Ready to lose?" },
     ],
     lesson: "Wooden crates from other countries must be heated to kill hidden bugs. They get a special stamp to show it was done!" },
   { id: "boss", emoji: "🏰", name: "Tangle Tower", boss: true, gyms: 9, level: 3, bugLevel: 3, reward: 150,
     team: ["lymantria_dispar", "agrilus_planipennis", "lycorma_delicatula", "anoplophora_glabripennis", "vespa_mandarinia"],
     plan: [
       { scene: "tower", ...HAZEL, text: "This is it, {name}. Tangle Tower, Team Tangle's secret hideout." },
-      { scene: "tower", ...BRAMBLE, text: "Boss! Boss! That Bug Ranger found our hideout!" },
       { scene: "tower", ...BURDOCK, text: "So, you're the one who keeps ruining my plans. I'm Boss Burdock." },
       { scene: "tower", ...BURDOCK, text: "I'm named after the burdock plant. Its prickly burrs stick to fur and socks, so it hitchhikes everywhere. Just like me!" },
-      { scene: "tower", ...THISTLE, text: "The boss has the toughest bugs of all!" },
       { scene: "tower", ...PIP, text: "Bzz! You stopped every plan so far. You can do this, {name}!" },
-      { scene: "tower", ...BURDOCK, text: "Let's see you stop my Legendary team!" },
     ],
     ending: [
       { scene: "tower", ...BURDOCK, text: "Impossible! Beaten by a Bug Ranger!" },
-      { scene: "tower", ...BURDOCK, text: "Hmm. Maybe spreading bugs everywhere isn't such a great plan after all…" },
       { scene: "tower", ...BRAMBLE, text: "Wait, Boss… are we the bad guys?" },
-      { scene: "tower", ...THISTLE, text: "Maybe we could help protect forests instead?" },
       { scene: "tower", ...SQUAWK, text: "Squawk! I'd like that!" },
     ],
     lesson: "Burdock is a real plant that came from far away. Its burrs hitchhike on socks and pets, so check them after a hike!",
@@ -558,7 +535,6 @@ const BUDDIES = {
 // What happens after you beat Boss Burdock for the first time
 const SQUAWK_JOINS = [
   { scene: "forest", ...SQUAWK, text: "Squawk! Wait, {name}! Can I come with you? I want to help protect forests now!" },
-  { scene: "forest", ...PIP, text: "Bzz! A starling and a bumble bee on the same team? Sure, why not!" },
   { scene: "victory", ...SQUAWK, text: "Squawk joined you as your Bug Buddy! Squawk cheers for your bugs in battles.", sound: "badge" },
 ];
 const BUDDY_STAGES = [[0, "Egg"], [40, "Baby"], [150, "Grown-up"], [400, "Super"]];
@@ -626,7 +602,6 @@ const PLACES = [
   ["Cannon Beach", 45.89, -123.96], ["Tillamook", 45.46, -123.84], ["Lincoln City", 44.96, -124.02], ["Newport", 44.64, -124.05],
   ["Florence", 43.98, -124.10], ["Coos Bay", 43.37, -124.22], ["Brookings", 42.05, -124.28],
 ];
-const HIDE_DECOYS = ["🐌", "🕷️", "🪱", "🐸", "🐿️", "🐦"];
 // Native bugs for "Invasive or Native?" and Bug Pop. They belong in Oregon, so we leave them be.
 const NATIVE_BUGS = [
   { emoji: "🐝", name: "Western bumble bee", fact: "Pip's family! It helps flowers make seeds." },
@@ -718,7 +693,9 @@ function loadGame() {
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     spots: [], muted: false, trainer: { name: "", avatar: AVATARS[0] }, unlockSeen: null,
     protectorDex: {}, bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, readAloud: false, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", ...(g || {}) };
+    buddy: null, readAloud: true, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", ...(g || {}) };
+  // Read aloud is on for everyone (once). After that, turning it off in Settings keeps it off.
+  if (!g.readAloudOnce) { g.readAloud = true; g.readAloudOnce = true; }
   // Things from older versions that the game doesn't use anymore
   for (const old of ["items", "coins", "quiz", "streak", "missions", "outfits", "useMap"]) delete g[old];
   // Gyms that were already open before gym cutscenes existed don't need one
@@ -770,6 +747,210 @@ function progress(g, ev) {
   return lines;
 }
 
+// ---------- cartoon bugs ----------
+// Each bug gets its own cartoon, drawn to look like the real bug (colors, spots, stripes, wings,
+// long antennae...), instead of one emoji for every beetle. They're simple SVG drawings, seen from
+// above with the head at the top, built from a few parts: a body shape plus its pattern.
+const BUG_ART = {
+  // Invasive bugs
+  agrilus_planipennis:       { kind: "beetle", w: 13, l: 25, color: "#1fa64b", head: "#178a3c", shine: true },   // slim, shiny green
+  anoplophora_glabripennis:  { kind: "beetle", w: 17, l: 24, color: "#1b1d22", head: "#1b1d22", spots: "#f4f4f4", antenna: "long-banded", legs: "#4a6c9e", shine: true },
+  lycorma_delicatula:        { kind: "lanternfly" },
+  vespa_mandarinia:          { kind: "wasp", big: true, head: "#f08c1a", thorax: "#3b2a1a", bands: ["#f2b51b", "#3b2a1a"] },
+  adelges_piceae:            { kind: "woolly" },
+  coptotermes_formosanus:    { kind: "termite", head: "#e0902f", body: "#f3dfaa" },
+  lymantria_dispar:          { kind: "caterpillar", color: "#6b5a49", dots: ["#3b6fd6", "#3b6fd6", "#d23b3b", "#d23b3b", "#d23b3b"] },
+  popillia_japonica:         { kind: "beetle", w: 17, l: 20, color: "#c8742a", pronotum: "#21a35c", head: "#21a35c", tufts: true, shine: true },
+  solenopsis_invicta:        { kind: "ant", color: "#b2401f", gaster: "#5a2516" },
+  xyleborus_monographus:     { kind: "beetle", w: 11, l: 16, color: "#7b4a25", head: "#5d3519", round: true },
+  anisandrus_dispar:         { kind: "beetle", w: 11, l: 15, color: "#2c1f19", head: "#2c1f19", round: true },
+  exomala_orientalis:        { kind: "beetle", w: 17, l: 19, color: "#c9a56a", head: "#6b4a2b", blotches: "#5b3d22" },
+  halyomorpha_halys:         { kind: "shield", color: "#8a6a4c", mottle: "#5e4532", edge: "#f1e7d2" },
+  harmonia_axyridis:         { kind: "ladybug", color: "#f07d1d", spots: 9, mark: true },
+  linepithema_humile:        { kind: "ant", color: "#8a5a35", gaster: "#6b4428", small: true },
+  macrodactylus_subspinosus: { kind: "beetle", w: 12, l: 21, color: "#cdb37a", head: "#9c8350", legs: "#e0782a", longLegs: true },
+  pieris_rapae:              { kind: "moth", wing: "#fbfbf5", body: "#3a3a3a", wingSpots: "#1d1d1d", tips: "#2a2a2a" },
+  polistes_dominula:         { kind: "wasp", head: "#f2c81b", thorax: "#1e1e1e", bands: ["#f2c81b", "#1e1e1e"], antenna: "#e0782a" },
+  ips_typographus:           { kind: "beetle", w: 12, l: 18, color: "#5b3a22", head: "#3f2716", round: true, hairy: true },
+  lymantria_monacha:         { kind: "moth", wing: "#f4f1ea", body: "#2a2a2a", zigzag: "#1f1f1f" },
+  cydalima_perspectalis:     { kind: "moth", wing: "#fbfbf8", body: "#6b4a2b", border: "#7a4f28" },
+  operophtera_brumata:       { kind: "moth", wing: "#b49a76", body: "#7b6347", lines: "#8d7655", small: true },
+  scolytus_multistriatus:    { kind: "beetle", w: 10, l: 15, color: "#8f3b1f", head: "#6b2a15", round: true, shine: true },
+  drosophila_melanogaster_suzukii: { kind: "fly", color: "#c8a36a", eyes: "#d22a2a", wingSpot: true },
+  // Native bugs (for the minigames, Bug Buddy, and Pip)
+  "Western bumble bee":        { kind: "bee", bands: ["#f2c51b", "#1e1e1e", "#1e1e1e", "#f4f1e6"] },
+  "Oregon swallowtail":        { kind: "moth", wing: "#f6d23b", body: "#1e1e1e", stripes: "#1e1e1e", tails: true },
+  "Convergent lady beetle":    { kind: "ladybug", color: "#d8321f", spots: 12, lines: true },
+  "Blue orchard mason bee":    { kind: "bee", bands: ["#2b4f8f", "#2b4f8f", "#1f3a6e"], small: true },
+  "Western tiger swallowtail": { kind: "moth", wing: "#f8de3a", body: "#1e1e1e", stripes: "#1e1e1e", tails: true },
+  "Ten-lined June beetle":     { kind: "beetle", w: 18, l: 24, color: "#6b4a2b", head: "#4d331c", stripes: "#f6f2e6" },
+  "Pacific dampwood termite":  { kind: "termite", head: "#8f3b1f", body: "#c98a5a", big: true },
+  "Ground beetle":             { kind: "beetle", w: 15, l: 23, color: "#1c1c22", head: "#1c1c22", shine: true, grooves: true },
+};
+const svgArt = {};   // drawings are made once, then reused
+
+// Cute cartoon eyes: white with a dark pupil and a shine
+const eyes = (x, y, r, gap, iris = "#1b1b1b") => [-1, 1].map(s =>
+  `<circle cx="${x + s * gap}" cy="${y}" r="${r}" fill="#fff" stroke="#1b1b1b" stroke-width="1"/><circle cx="${x + s * gap + s * .3}" cy="${y + .6}" r="${r * .55}" fill="${iris}"/><circle cx="${x + s * gap + s * .3 - .8}" cy="${y - .4}" r="${r * .2}" fill="#fff"/>`).join("");
+// Six legs, three on each side
+const legs = (ys, reach, color, width = 2.2) => ys.map((y, i) => [-1, 1].map(s =>
+  `<path d="M${s * 4} ${y} q ${s * reach * .55} ${-3 + i * 3} ${s * reach} ${-6 + i * 8}" stroke="${color}" stroke-width="${width}" fill="none" stroke-linecap="round"/>`).join("")).join("");
+// Two antennae from the head (banded = black and white stripes, like the Asian longhorned beetle)
+function antennae(y, len, color, banded) {
+  return [-1, 1].map(s => {
+    const d = `M${s * 3} ${y} q ${s * len * .35} ${-len * .55} ${s * len * .6} ${-len}`;
+    return `<path d="${d}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round"/>` +
+      (banded ? `<path d="${d}" stroke="#f4f4f4" stroke-width="2.2" fill="none" stroke-dasharray="3 3"/>` : "");
+  }).join("");
+}
+
+function drawBug(a, id) {
+  const k = a.kind;
+  if (k === "beetle" || k === "ladybug") {
+    const w = k === "ladybug" ? 21 : a.w, l = k === "ladybug" ? 20 : a.l, cy = 10;
+    const head = a.head || "#222", pro = a.pronotum || (k === "ladybug" ? "#f6f1e6" : head);
+    let s = legs([cy - 6, cy + 2, cy + 10], a.longLegs ? 22 : 15, a.legs || "#2b2b2b", a.longLegs ? 2.6 : 2.2);
+    s += antennae(cy - l - 10, a.antenna === "long-banded" ? 44 : 12, a.antenna === "long-banded" ? "#1b1d22" : head, a.antenna === "long-banded");
+    s += `<ellipse cx="0" cy="${cy}" rx="${w}" ry="${l}" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.5"/>`;
+    if (k !== "ladybug") s += `<line x1="0" y1="${cy - l + 3}" x2="0" y2="${cy + l - 1}" stroke="#1b1b1b" stroke-width="1" opacity=".55"/>`;
+    if (a.grooves) for (const x of [-9, -5, 5, 9]) s += `<line x1="${x}" y1="${cy - l + 6}" x2="${x * .8}" y2="${cy + l - 5}" stroke="#55555f" stroke-width=".8"/>`;
+    if (a.stripes) for (const x of [-11, -6, 6, 11]) s += `<path d="M${x} ${cy - l + 6} q ${x * .1} ${l} ${x * .5} ${l * 1.75}" stroke="${a.stripes}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    if (a.spots && typeof a.spots === "string") for (const [x, y, r] of [[-8, 0, 2.6], [7, -4, 2.2], [-5, 14, 2.4], [9, 10, 2.8], [-10, 22, 2], [4, 24, 2.3], [0, 4, 1.8]]) s += `<circle cx="${x}" cy="${cy + y - 6}" r="${r}" fill="${a.spots}"/>`;
+    if (k === "ladybug") {
+      const spots = [[-9, 2], [9, 2], [-12, 13], [12, 13], [-5, 20], [5, 20], [-6, 8], [6, 8], [0, 26], [-13, 22], [13, 22], [0, 14]].slice(0, a.spots);
+      for (const [x, y] of spots) s += `<circle cx="${x}" cy="${cy + y - 8}" r="2.6" fill="#1b1b1b"/>`;
+      s += `<line x1="0" y1="${cy - l + 2}" x2="0" y2="${cy + l}" stroke="#1b1b1b" stroke-width="1.2"/>`;
+    }
+    if (a.blotches) for (const [x, y, rx] of [[-8, -2, 4], [8, 4, 3.5], [-6, 12, 3], [7, 16, 4], [0, 22, 3]]) s += `<ellipse cx="${x}" cy="${cy + y - 6}" rx="${rx}" ry="${rx * .7}" fill="${a.blotches}" opacity=".85"/>`;
+    if (a.tufts) for (const y of [0, 7, 14, 21]) for (const x of [-1, 1]) s += `<circle cx="${x * (w - 1)}" cy="${cy + y - 8}" r="2" fill="#fff"/>`;
+    if (a.hairy) for (let i = 0; i < 14; i++) s += `<line x1="${(i % 7 - 3) * 3}" y1="${cy - l + 4 + Math.floor(i / 7) * l}" x2="${(i % 7 - 3) * 3.4}" y2="${cy - l + 1 + Math.floor(i / 7) * l}" stroke="#c9a77a" stroke-width=".8"/>`;
+    if (a.shine) s += `<ellipse cx="${-w * .4}" cy="${cy - l * .35}" rx="${w * .22}" ry="${l * .32}" fill="#fff" opacity=".35"/>`;
+    s += `<ellipse cx="0" cy="${cy - l - 2}" rx="${w * .78}" ry="7" fill="${pro}" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    if (a.mark) s += `<path d="M-5 ${cy - l - 1} l2 -4 l3 3 l3 -3 l2 4" stroke="#1b1b1b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>`;
+    if (a.lines) s += `<path d="M-6 ${cy - l + 1} l3 -4 M6 ${cy - l + 1} l-3 -4" stroke="#fff" stroke-width="1.6"/>`;
+    s += `<circle cx="0" cy="${cy - l - 10}" r="6.5" fill="${head}" stroke="#1b1b1b" stroke-width="1.4"/>` + eyes(0, cy - l - 11, 2.4, 3.2);
+    return s;
+  }
+  if (k === "shield") {   // stink bugs: a shield shape with banded antennae and a speckled back
+    let s = legs([-2, 8, 18], 16, "#5a4232") + antennae(-26, 14, "#5a4232", true);
+    s += `<path d="M0 -24 L22 -10 L20 6 L0 34 L-20 6 L-22 -10 Z" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round"/>`;
+    s += `<path d="M-10 -4 L10 -4 L0 18 Z" fill="${a.mottle}" opacity=".6"/>`;
+    for (const [x, y] of [[-12, -8], [12, -6], [-8, 10], [9, 12], [-3, 2], [4, -12], [-14, 2], [14, 3], [0, 24]]) s += `<circle cx="${x}" cy="${y}" r="1.4" fill="${a.mottle}"/>`;
+    for (const y of [-6, 2]) for (const x of [-1, 1]) s += `<rect x="${x * 21 - 1.5}" y="${y}" width="3" height="3" fill="${a.edge}"/>`;
+    s += `<circle cx="0" cy="-26" r="5.5" fill="${a.mottle}" stroke="#1b1b1b" stroke-width="1.4"/>` + eyes(0, -27, 2.1, 2.8);
+    return s;
+  }
+  if (k === "lanternfly") {   // gray front wings with black spots, and red back wings peeking out
+    let s = legs([2, 8, 14], 12, "#2a2a2a") + antennae(-24, 8, "#2a2a2a");
+    s += `<path d="M0 -10 Q -30 10 -24 36 Q -10 30 0 22 Q 10 30 24 36 Q 30 10 0 -10 Z" fill="#d6372b" stroke="#1b1b1b" stroke-width="1.2"/>`;
+    s += `<path d="M0 -16 Q -26 4 -16 34 Q -6 26 0 18 Q 6 26 16 34 Q 26 4 0 -16 Z" fill="#c9c1b4" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    for (const [x, y] of [[-8, -2], [8, -2], [-12, 8], [12, 8], [-6, 12], [6, 12], [-10, 20], [10, 20], [-3, 4], [3, 4]]) s += `<circle cx="${x}" cy="${y}" r="1.9" fill="#1b1b1b"/>`;
+    s += `<path d="M-14 26 l5 6 l4 -5 l4 5 l3 -5 l4 5 l4 -6" stroke="#1b1b1b" stroke-width="1" fill="none" opacity=".6"/>`;
+    s += `<circle cx="0" cy="-20" r="6" fill="#2a2a2a" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(0, -21, 2.3, 3, "#c22");
+    return s;
+  }
+  if (k === "wasp" || k === "bee") {
+    const big = a.big ? 1.2 : a.small ? .85 : 1;
+    let s = `<g transform="scale(${big})">`;
+    s += `<ellipse cx="-13" cy="-4" rx="12" ry="6" transform="rotate(-25 -13 -4)" fill="#dceefb" opacity=".75" stroke="#7a8a99" stroke-width=".8"/>`;
+    s += `<ellipse cx="13" cy="-4" rx="12" ry="6" transform="rotate(25 13 -4)" fill="#dceefb" opacity=".75" stroke="#7a8a99" stroke-width=".8"/>`;
+    s += legs([-4, 2, 8], 13, "#2a2a2a", 1.8) + antennae(-20, 12, a.antenna || "#1e1e1e");
+    const bands = a.bands, bee = k === "bee";
+    const ab = bee ? `<ellipse cx="0" cy="12" rx="13" ry="15"/>` : `<ellipse cx="0" cy="14" rx="9" ry="17"/>`;
+    s += `<clipPath id="bug-${id}">${ab}</clipPath><g clip-path="url(#bug-${id})">`;
+    bands.forEach((c, i) => { s += `<rect x="-16" y="${-4 + i * (34 / bands.length)}" width="32" height="${34 / bands.length + .5}" fill="${c}"/>`; });
+    s += `</g>` + ab.replace("/>", ` fill="none" stroke="#1b1b1b" stroke-width="1.4"/>`);
+    if (bee) s += `<ellipse cx="0" cy="12" rx="13" ry="15" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="1 2" opacity=".6"/>`;
+    s += `<ellipse cx="0" cy="-8" rx="${bee ? 11 : 8}" ry="7" fill="${a.thorax || bands[0]}" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    s += `<circle cx="0" cy="-19" r="${a.big ? 8 : 6.5}" fill="${a.head || "#1e1e1e"}" stroke="#1b1b1b" stroke-width="1.4"/>` + eyes(0, -20, 2.4, 3.3);
+    return s + "</g>";
+  }
+  if (k === "ant") {
+    const sc = a.small ? .85 : 1;
+    let s = `<g transform="scale(${sc})">` + legs([-6, -1, 4], 14, a.color, 1.8);
+    s += [-1, 1].map(x => `<path d="M${x * 3} -20 l${x * 6} -8 l${x * 6} -2" stroke="${a.color}" stroke-width="2" fill="none" stroke-linecap="round"/>`).join("");
+    s += `<ellipse cx="0" cy="20" rx="10" ry="13" fill="${a.gaster}" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    s += `<circle cx="0" cy="5" r="2.8" fill="${a.color}" stroke="#1b1b1b" stroke-width="1"/>`;
+    s += `<ellipse cx="0" cy="-4" rx="5" ry="7" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    s += `<circle cx="0" cy="-17" r="7" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.4"/>` + eyes(0, -18, 2.3, 3);
+    return s + "</g>";
+  }
+  if (k === "termite") {
+    const sc = a.big ? 1.1 : 1;
+    let s = `<g transform="scale(${sc})">` + legs([-8, -3, 2], 13, "#b88a5a", 1.8) + antennae(-24, 10, a.head);
+    s += `<ellipse cx="0" cy="14" rx="10" ry="18" fill="${a.body}" stroke="#1b1b1b" stroke-width="1.4"/>`;
+    for (let y = 2; y < 30; y += 5) s += `<line x1="-8" y1="${y}" x2="8" y2="${y}" stroke="#b88a5a" stroke-width=".8"/>`;
+    s += `<ellipse cx="0" cy="-6" rx="6" ry="5" fill="${a.body}" stroke="#1b1b1b" stroke-width="1.2"/>`;
+    s += `<ellipse cx="0" cy="-17" rx="8" ry="8" fill="${a.head}" stroke="#1b1b1b" stroke-width="1.4"/>` + eyes(0, -18, 2.2, 3);
+    return s + "</g>";
+  }
+  if (k === "moth") {   // moths and butterflies, wings open
+    const sc = a.small ? .85 : 1;
+    let s = `<g transform="scale(${sc})">`;
+    const wing = (side, front) => {
+      const x = side, d = front ? `M0 -8 Q ${x * 30} -34 ${x * 40} -10 Q ${x * 34} 8 0 4 Z` : `M0 2 Q ${x * 34} 6 ${x * 26} 26 Q ${x * 10} 32 0 12 Z`;
+      return d;
+    };
+    for (const side of [-1, 1]) for (const front of [false, true]) {
+      s += `<path d="${wing(side, front)}" fill="${a.wing}" stroke="${a.border || "#1b1b1b"}" stroke-width="${a.border ? 3 : 1.3}" stroke-linejoin="round"/>`;
+      if (a.border) s += `<path d="${wing(side, front)}" fill="none" stroke="#1b1b1b" stroke-width=".8"/>`;
+    }
+    if (a.tails) for (const x of [-1, 1]) s += `<path d="M${x * 18} 26 l${x * 3} 10" stroke="${a.wing}" stroke-width="3.5" stroke-linecap="round"/><path d="M${x * 18} 26 l${x * 3} 10" stroke="#1b1b1b" stroke-width="1" fill="none"/>`;
+    if (a.stripes) for (const x of [-1, 1]) for (const t of [10, 18, 27]) s += `<path d="M${x * 4} -6 L${x * t} ${-20 + t * .25}" stroke="${a.stripes}" stroke-width="2.4"/>`;
+    if (a.wingSpots) for (const x of [-1, 1]) { s += `<circle cx="${x * 22}" cy="-10" r="2.8" fill="${a.wingSpots}"/><circle cx="${x * 16}" cy="14" r="2.2" fill="${a.wingSpots}"/>`; }
+    if (a.tips) for (const x of [-1, 1]) s += `<path d="M${x * 30} -24 Q ${x * 40} -18 ${x * 40} -10 Q ${x * 34} -16 ${x * 30} -24 Z" fill="${a.tips}"/>`;
+    if (a.zigzag) for (const x of [-1, 1]) for (const y of [-14, -4, 12]) s += `<path d="M${x * 6} ${y} l${x * 5} -4 l${x * 5} 4 l${x * 5} -4 l${x * 5} 4 l${x * 5} -4" stroke="${a.zigzag}" stroke-width="1.6" fill="none"/>`;
+    if (a.lines) for (const x of [-1, 1]) for (const y of [-12, -2]) s += `<path d="M${x * 6} ${y} q ${x * 14} -6 ${x * 28} 2" stroke="${a.lines}" stroke-width="1.2" fill="none"/>`;
+    s += antennae(-18, 12, a.body);
+    s += `<ellipse cx="0" cy="6" rx="4.5" ry="20" fill="${a.body}" stroke="#1b1b1b" stroke-width="1.2"/>`;
+    s += `<circle cx="0" cy="-16" r="5.5" fill="${a.body}" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(0, -17, 2, 2.6);
+    return s + "</g>";
+  }
+  if (k === "caterpillar") {   // a hairy caterpillar with pairs of colored dots
+    let s = "";
+    const segs = 7;
+    for (let i = segs - 1; i >= 0; i--) {
+      const y = 30 - i * 9, x = Math.sin(i * .9) * 5;
+      for (let h = -3; h <= 3; h++) s += `<line x1="${x + h * 2}" y1="${y - 6}" x2="${x + h * 3.2}" y2="${y - 13}" stroke="#a89884" stroke-width="1"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="8" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.2"/>`;
+      if (i > 0 && a.dots[i - 1]) for (const d of [-1, 1]) s += `<circle cx="${x + d * 3.5}" cy="${y - 1}" r="2" fill="${a.dots[i - 1]}"/>`;
+    }
+    const hx = Math.sin(6 * .9) * 5;
+    s += `<circle cx="${hx}" cy="-28" r="8.5" fill="#3b2e24" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(hx, -29, 2.4, 3.2);
+    return s;
+  }
+  if (k === "fly") {   // a little fruit fly with big red eyes and spots on its wings
+    let s = legs([0, 5, 10], 12, "#4a3a2a", 1.6);
+    for (const x of [-1, 1]) {
+      s += `<ellipse cx="${x * 13}" cy="6" rx="14" ry="6" transform="rotate(${x * 30} ${x * 13} 6)" fill="#e8f2fa" opacity=".85" stroke="#7a8a99" stroke-width=".8"/>`;
+      if (a.wingSpot) s += `<circle cx="${x * 23}" cy="12" r="2.6" fill="#2a2a2a"/>`;
+    }
+    s += `<ellipse cx="0" cy="12" rx="8" ry="12" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.3"/>`;
+    for (const y of [10, 15, 20]) s += `<line x1="-6" y1="${y}" x2="6" y2="${y}" stroke="#5a4532" stroke-width="1.4"/>`;
+    s += `<ellipse cx="0" cy="-4" rx="7" ry="6" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.3"/>`;
+    s += `<circle cx="0" cy="-14" r="6.5" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.3"/>`;
+    for (const x of [-1, 1]) s += `<circle cx="${x * 4.5}" cy="-15" r="4" fill="${a.eyes}" stroke="#1b1b1b" stroke-width="1"/><circle cx="${x * 4.5 - .8}" cy="-16" r="1.1" fill="#fff"/>`;
+    return s;
+  }
+  if (k === "woolly") {   // a tiny bug hiding under a fluffy white coat
+    let s = "";
+    for (const [x, y, r] of [[-12, 4, 11], [12, 4, 11], [0, -6, 13], [0, 14, 12], [-16, -8, 8], [16, -8, 8], [-8, 22, 8], [8, 22, 8]]) s += `<circle cx="${x}" cy="${y}" r="${r}" fill="#fbfbfb" stroke="#a9a9a9" stroke-width="1.4"/>`;
+    s += `<ellipse cx="0" cy="-18" rx="8" ry="6" fill="#3a2e28" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(0, -19, 2.2, 3);
+    return s;
+  }
+  return "";
+}
+
+// The cartoon for a bug (a species name, or a native bug's English name), as an element.
+// Bugs without a cartoon get their emoji instead.
+function bugArt(key, cls = "") {
+  const a = BUG_ART[key], span = el("span", `bug-art ${cls}`.trim());
+  span.setAttribute("aria-hidden", "true");
+  if (!a) { span.textContent = SPECIES_FACTS[key]?.emoji || "🐞"; span.classList.add("emoji"); return span; }
+  span.innerHTML = svgArt[key] ??= `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg">${drawBug(a, key.replace(/\W/g, ""))}</svg>`;
+  return span;
+}
+
 // ---------- building blocks ----------
 function rarityTag(species) {
   const r = SPECIES_FACTS[species].rarity;
@@ -780,7 +961,7 @@ function factCard(species, caughtCount) {
   const f = SPECIES_FACTS[species];
   const card = el("article", "factcard");
   const head = el("div", "factcard-head");
-  head.append(el("span", "bug-emoji", f.emoji), el("div", null));
+  head.append(bugArt(species, "bug-emoji"), el("div", null));
   head.lastChild.append(el("strong", null, commonName(species)), el("span", "sci", sciName(species)));
   const tags = el("div", "tags");
   const strong = STRONG_AGAINST[f.group].map(ty => t(TYPES[ty])).join(", ");
@@ -827,7 +1008,7 @@ function renderGame() {
     const slot = el("button", "dex-slot" + (n ? " caught" : "") + (s === justCaught ? " pop" : ""));
     slot.type = "button";
     if (n) {
-      slot.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("strong", null, commonName(s)), rarityTag(s),
+      slot.append(bugArt(s, "bug-emoji"), el("strong", null, commonName(s)), rarityTag(s),
         el("span", "count", t("Lv {lv} · ×{n}", { lv: bugLevel(n), n })));
       slot.onclick = () => showFact(s, n, g.spots.filter(sp => sp.species === s));
     } else {
@@ -892,7 +1073,7 @@ function renderBattles(g) {
     who.append(el("strong", null, name), el("span", "muted", about));
     const b = el("button", "btn" + (locked ? "" : " primary"), label);
     b.type = "button"; b.disabled = locked; b.onclick = onClick;
-    item.append(el("span", "bug-emoji", emoji), who, b);
+    item.append(typeof emoji === "string" ? el("span", "bug-emoji", emoji) : emoji, who, b);
     list.append(item);
   };
   list.append(el("h3", null, `🦹 ${t("Team Tangle's schemes")}`));
@@ -909,7 +1090,7 @@ function renderBattles(g) {
   // The weekly Swarm Boss
   list.append(el("h3", null, `👾 ${t("Weekly Swarm Boss")}`));
   const sw = swarm({ ...g });
-  simpleRow(SPECIES_FACTS[sw.species].emoji, t("Mega Swarm: {bug}", { bug: commonName(sw.species) }),
+  simpleRow(bugArt(sw.species, "bug-emoji"), t("Mega Swarm: {bug}", { bug: commonName(sw.species) }),
     sw.beaten ? t("Beaten this week! A new swarm comes on Monday.") : t("{hp} of {max} HP left. Your damage is saved all week!", { hp: sw.hp, max: BOSS_HP }),
     sw.beaten ? `✅ ${t("Beaten")}` : kinds < BOSS_UNLOCK ? `🔒 ${t("Catch {n} kinds", { n: BOSS_UNLOCK })}` : t("Battle!"),
     sw.beaten || kinds < BOSS_UNLOCK, sw.beaten, () => battle(swarmFoe(loadGame()), false));
@@ -953,16 +1134,13 @@ function showFact(species, n, spots = []) {
 const HOW_TO_PLAY = [
   { scene: "lab",     ...HAZEL, text: "Here's how to play, {name}!" },
   { scene: "lab",     ...HAZEL, text: "Tap the camera at the top of the Game screen, and point it at a bug. Its name shows at the top." },
-  { scene: "forest",  ...PIP,   text: "Take a photo. If the bug is invasive, a wild bug appears! Tap it 3 times to catch it." },
+  { scene: "forest",  ...PIP,   text: "Let's practice! Tap the beetle 3 times to catch it.", tap: "popillia_japonica", got: "Gotcha! That's how you catch a bug in the game." },
   { scene: "forest",  ...PIP,   text: "If it isn't invasive, leave it be. You still get protector points!" },
   { scene: "lab",     ...HAZEL, text: "Do the daily challenge and today's minigame for bonus points." },
   { scene: "victory", ...HAZEL, text: "Start a monthly challenge by connecting the bugs in the shape shown. Finish it to give its badge color!" },
   { scene: "forest",  ...PIP,   text: "Catch the same bug again and again to level it up. Every 3 catches is one more level, all the way to Level 10!" },
   { scene: "mthood",  ...HAZEL, text: "Battle trainers and the {n} forests with the bugs you caught, then face the Oregon Champion!", vars: { n: GYMS.length - 1 } },
   { scene: "danger",  ...PIP,   text: "Don't touch bugs with bare hands. Some sting or bite." },
-  { scene: "danger",  ...PIP,   text: "Never carry an invasive bug (or firewood) to a new place." },
-  { scene: "forest",  ...PIP,   text: "Bring a grown-up, and watch where you walk." },
-  { scene: "lab",     ...HAZEL, text: "Every invasive bug you find is also reported to the Pyinsect team, so experts can learn where invasive bugs are and where to put traps." },
   { scene: "forest",  ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
 const showInstructions = () => cutscene(HOW_TO_PLAY);
@@ -1226,7 +1404,7 @@ function battle(foe, gym) {
     const hp = el("div", "track"), fill = el("div", "fill" + (f.hp / f.max < 0.3 ? " low" : ""));
     fill.style.width = `${f.hp / f.max * 100}%`; hp.append(fill);
     const left = team.filter(tm => tm.hp > 0).length;
-    box.append(el("span", "muted", label), el("span", "bug-emoji", SPECIES_FACTS[f.species].emoji),
+    box.append(el("span", "muted", label), bugArt(f.species, "bug-emoji"),
       el("strong", null, `${commonName(f.species)}${f.level > 1 ? ` · ${t("Lv {lv}", { lv: f.level })}` : ""}`),
       el("span", "type-tag", t(TYPES[SPECIES_FACTS[f.species].group])),
       hp, el("span", "hp", `HP ${f.hp}/${f.max} · ${t(team.length === 1 ? "{n} of {total} bug left" : "{n} of {total} bugs left", { n: left, total: team.length })}`));
@@ -1352,12 +1530,9 @@ function battle(foe, gym) {
     if (foe.champion) return cutscene(FINALE).then(result);
     const next = GYMS[GYMS.indexOf(foe) + 1];
     cutscene([
-      { scene: foe.id, who: foe.face, name: foe.leader, text: foe.say.lose },
-      { scene: foe.id, who: foe.face, name: foe.leader, text: "Here, {name}. You've earned this." },
       { scene: "victory", who: foe.emoji, name: foe.badge, text: "You got the {badge}! That's {n} of {total} forest badges.",
         vars: { badge: t(foe.badge), n: loadGame().gyms.filter(id => GYMS.some(gy => gy.id === id && !gy.champion)).length, total: GYMS.length - 1 } },
       { scene: foe.id, who: foe.face, name: foe.leader, text: "One more thing, a real-world tip: {tip}", vars: { tip: t(foe.tip) } },
-      { scene: next.id, ...PIP, text: "Bzz! You did it! I knew you could!" },
       next.champion
         ? { scene: next.id, ...HAZEL, text: "You have all {n} forest badges! There's only one battle left: the Oregon Champion.", vars: { n: GYMS.length - 1 } }
         : { scene: next.id, ...HAZEL, text: "Next stop: {place}. {leader} is waiting for you there!", vars: { place: t(next.place), leader: next.leader } },
@@ -1456,62 +1631,139 @@ function cutscene(slides) {
     const wrap = el("div", "cutscene");
     wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-label", t("Story"));
     wrap.lang = langTag();
-    const stage = el("div", "cs-stage"), decor = el("div", "cs-decor"), actor = el("div", "cs-actor"), face = el("span", "cs-face");
+    // The 3D room: a classroom at Pyinsect University. The place in the story shows on the big screen.
+    const stage = el("div", "cs-stage"), room = el("div", "cs-room"), cam = el("div", "cs-cam");
+    const face3d = name => el("div", `cs-3d cs-${name}`);
+    const back = face3d("back"), left = face3d("left"), right = face3d("right");
+    const screen = el("div", "cs-screen"), screenDecor = el("div", "cs-decor"), screenPlace = el("div", "cs-screen-label");
+    screen.append(screenDecor, screenPlace);
+    const poster = el("div", "cs-poster");
+    for (const k of ["agrilus_planipennis", "lycorma_delicatula", "harmonia_axyridis", "vespa_mandarinia"]) poster.append(bugArt(k));
+    back.append(el("div", "cs-sign", t("Pyinsect University · Insect Lab")), screen, poster, el("div", "cs-clock"));
+    for (let k = 0; k < 3; k++) left.append(el("div", "cs-window"));
+    right.append(el("div", "cs-door"), el("div", "cs-shelf"));
+    cam.append(face3d("floor"), face3d("ceiling"), left, right, back);
+    room.append(cam);
+    const actor = el("div", "cs-actor"), face = el("span", "cs-face"), play = el("div", "cs-play");
     actor.append(face);
-    const box = el("div", "cs-box"), who = el("strong"), text = el("p"), next = el("button", "btn primary");
+    stage.append(room, play, actor);
+    const box = el("div", "cs-box"), who = el("strong"), text = el("p"), choices = el("div", "cs-choices"), next = el("button", "btn primary");
     const skip = el("button", "btn cs-skip", `${t("Skip")} ⏭`);
     const logo = el("span", "logo-chip cs-logo"), logoImg = el("img");
     logoImg.src = "assets/favicon.svg"; logoImg.alt = ""; logoImg.width = logoImg.height = 22;
     logo.append(logoImg, "Pyinsect"); logo.setAttribute("aria-hidden", "true");
     next.type = skip.type = "button";
     text.setAttribute("aria-live", "polite");
-    box.append(who, text, next);
-    stage.append(decor, actor);
+    box.append(who, text, choices, next);
     wrap.append(stage, box, skip, logo);
+    // The room is as big as the stage, and as deep as it is wide
+    const fit = () => {
+      const r = stage.getBoundingClientRect();
+      cam.style.setProperty("--W", `${r.width}px`); cam.style.setProperty("--H", `${r.height}px`);
+      cam.style.setProperty("--D", `${Math.max(r.width, r.height) * 1.2}px`);
+    };
+    addEventListener("resize", fit);
+    // Camera shots, like a movie: the camera turns a little toward whoever is talking
+    const SHOTS = [{ ry: -7, x: 30, z: 40 }, { ry: 6, x: -30, z: 60 }, { ry: 0, x: 0, z: 120 }, { ry: -3, x: 10, z: 0 }];
+    let shot = 0;
+    const aim = n => { const sh = SHOTS[n % SHOTS.length]; cam.style.setProperty("--ry", `${sh.ry}deg`); cam.style.setProperty("--x", `${sh.x}px`); cam.style.setProperty("--z", `${sh.z}px`); };
 
-    let i = -1, typing = null, full = "";
+    let i = -1, typing = null, full = "", waiting = false;
     const finishTyping = () => { clearInterval(typing); typing = null; text.textContent = full; face.classList.remove("talking"); };
-    let fromLeft = true;
-    function show(n) {
-      i = n;
-      if (i >= slides.length) return done();
-      const s = slides[i], sc = SCENES[s.scene] || SCENES.forest;
-      stage.style.background = sc.bg;
-      decor.textContent = sc.decor;
-      who.textContent = t(s.name);
-      full = t(s.text, s.vars).replaceAll("{name}", nick);
-      // How the character moves: a new speaker walks in from one side (then the other side next time).
-      // The same speaker reacts to what they say: jump for "!", tilt for "?", spin for a win, or sway.
-      const newSpeaker = i === 0 || slides[i - 1].who !== s.who;
-      const move = s.fly ? "fly-away" : newSpeaker ? (fromLeft ? "enter-left" : "enter-right")
-        : s.scene === "victory" ? "spin" : /[!！]$/.test(full) ? "jump" : /[?？]$/.test(full) ? "tilt" : "sway";
-      if (newSpeaker) fromLeft = !fromLeft;
-      face.textContent = s.who;
-      actor.className = "cs-actor"; void actor.offsetWidth; actor.classList.add(move);
+    const say = (words, speaker) => {
+      full = words;
       face.classList.add("talking");
-      if (s.sound) sound(s.sound);
-      speak(full, s.name);
-      next.textContent = i === slides.length - 1 ? `${t("Done")} ✔` : `${t("Next")} ▶`;
+      speak(full, speaker);
       if (calm) return finishTyping();
       text.textContent = "";
       let c = 0;
       clearInterval(typing);
       typing = setInterval(() => { text.textContent = full.slice(0, ++c); if (c >= full.length) finishTyping(); }, 22);
+    };
+    const react = move => { actor.className = "cs-actor"; void actor.offsetWidth; actor.classList.add(move); };
+    const done2 = () => { waiting = false; choices.innerHTML = ""; play.innerHTML = ""; next.hidden = false; next.focus(); };
+    let fromLeft = true;
+    function show(n) {
+      i = n;
+      if (i >= slides.length) return done();
+      const s = slides[i], sc = SCENES[s.scene] || SCENES.forest;
+      screen.style.background = sc.bg;
+      screenDecor.textContent = sc.decor;
+      // The place's name stays on the big screen until the scene changes
+      if (s.vars?.place) screenPlace.textContent = s.vars.place.charAt(0).toUpperCase() + s.vars.place.slice(1);
+      else if (i === 0 || slides[i - 1].scene !== s.scene) screenPlace.textContent = "";
+      who.textContent = t(s.name);
+      // How the character moves: a new speaker walks in from one side (then the other side next time).
+      // The same speaker reacts to what they say: jump for "!", tilt for "?", spin for a win, or sway.
+      const newSpeaker = i === 0 || slides[i - 1].who !== s.who;
+      const words = t(s.text, s.vars).replaceAll("{name}", nick);
+      const move = s.fly ? "fly-away" : newSpeaker ? (fromLeft ? "enter-left" : "enter-right")
+        : s.scene === "victory" ? "spin" : /[!！]$/.test(words) ? "jump" : /[?？]$/.test(words) ? "tilt" : "sway";
+      if (newSpeaker) { fromLeft = !fromLeft; aim(++shot); }
+      // A bug that talks is its cartoon (who: "art:<species>"), everyone else is an emoji
+      face.innerHTML = "";
+      if (s.who.startsWith("art:")) face.append(bugArt(s.who.slice(4), "cs-art")); else face.textContent = s.who;
+      react(move);
+      if (s.sound) sound(s.sound);
+      say(words, s.name);
+      next.textContent = i === slides.length - 1 ? `${t("Done")} ✔` : `${t("Next")} ▶`;
+      choices.innerHTML = ""; play.innerHTML = "";
+      next.hidden = false;
+      if (s.ask) askQuestion(s);
+      if (s.tap) tapTheBug(s);
     }
-    const advance = () => typing ? finishTyping() : show(i + 1);
+    // Interactive: a question with buttons. A wrong answer explains why, and you can try again.
+    function askQuestion(s) {
+      waiting = true; next.hidden = true;
+      for (const opt of shuffle(s.ask)) {
+        const b = el("button", "btn cs-choice", t(opt.text));
+        b.type = "button";
+        b.onclick = e => {
+          e.stopPropagation();
+          if (opt.right) { sound("right"); react("jump"); confetti(); say(t(s.yes).replaceAll("{name}", nick), s.name); done2(); }
+          else { sound("wrong"); b.disabled = true; react("tilt"); box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); say(t(s.no).replaceAll("{name}", nick), s.name); }
+        };
+        choices.append(b);
+      }
+      choices.querySelector("button")?.focus();
+    }
+    // Interactive: a bug runs around the room. Tap it 3 times to catch it.
+    function tapTheBug(s) {
+      waiting = true; next.hidden = true;
+      const bug = el("button", "cs-bug"), need = 3;
+      let taps = 0;
+      bug.type = "button"; bug.setAttribute("aria-label", t("Catch the {bug}", { bug: commonName(s.tap) }));
+      bug.append(bugArt(s.tap));
+      const hop = () => { bug.style.left = `${10 + Math.random() * 70}%`; bug.style.top = `${15 + Math.random() * 45}%`; };
+      const mover = setInterval(() => { if (!bug.isConnected) clearInterval(mover); else hop(); }, calm ? 2000 : 1100);
+      bug.onclick = e => {
+        e.stopPropagation();
+        taps++; sound("hit");
+        bug.classList.remove("hit"); void bug.offsetWidth; bug.classList.add("hit");
+        if (taps < need) return hop();
+        clearInterval(mover); sound("catch"); confetti(); react("jump");
+        say(t(s.got).replaceAll("{name}", nick), s.name);
+        setTimeout(done2, calm ? 0 : 400);
+      };
+      hop(); play.append(bug); bug.focus();
+    }
+    const advance = () => waiting ? null : typing ? finishTyping() : show(i + 1);
     function done() {
       clearInterval(typing);
       hush();
+      removeEventListener("resize", fit);
       wrap.remove();
       resolve();
     }
-    wrap.onclick = e => { if (e.target !== skip) advance(); };
+    wrap.onclick = e => { if (e.target !== skip && !e.target.closest(".cs-choices, .cs-bug")) advance(); };
     skip.onclick = done;
     wrap.onkeydown = e => {
       if (e.key === "Escape") { e.stopPropagation(); done(); }
-      else if ((e.key === "Enter" || e.key === " ") && e.target !== skip) { e.preventDefault(); advance(); }
+      else if ((e.key === "Enter" || e.key === " ") && e.target === next) { e.preventDefault(); advance(); }
+      else if ((e.key === "Enter" || e.key === " ") && e.target === wrap) { e.preventDefault(); advance(); }
     };
     document.body.append(wrap);
+    fit();
     show(0);
     next.focus();
   });
@@ -1690,7 +1942,6 @@ function maybeAmbush(g, species) {
   queueScene(() => cutscene([
     { scene: "tangle", ...BRAMBLE, text: "Not so fast! That {bug} is coming with us!", vars: { bug }, sound: "tangle" },
     { scene: "tangle", ...THISTLE, text: "We'll set it free in a brand-new forest! Ha ha!" },
-    { scene: "tangle", ...SQUAWK, text: "Squawk! More bugs in more places!" },
     { scene: "forest", ...PIP, text: "Bzz! An invasive bug in a new forest? No way! Battle them, {name}!" },
   ]).then(() => battle({ id: "ambush", ambush: true, villain: true, bug: species, emoji: "🦹", name: "Team Tangle",
     level: 2, bugLevel: Math.min(3, 1 + Math.floor(gymCount(g) / 4)), reward: AMBUSH_REWARD,
@@ -1807,7 +2058,8 @@ function trapDefense() {
   };
   const spawn = s => {
     const hp = TRAP_HP[SPECIES_FACTS[s].rarity];
-    const b = { s, pos: 0, hp, max: hp, el: el("span", "trap-bug", SPECIES_FACTS[s].emoji) };
+    const b = { s, pos: 0, hp, max: hp, el: el("span", "trap-bug") };
+    b.el.append(bugArt(s));
     b.el.title = commonName(s);
     board.append(b.el); bugs.push(b); draw(b);
   };
@@ -1870,7 +2122,9 @@ function hideAndSeek() {
   info.setAttribute("aria-live", "polite");
   const startRound = () => {
     const [cols, rows] = HIDE_ROUNDS[round], n = cols * rows, target = pickOne(species), f = SPECIES_FACTS[target];
-    clue.textContent = t("Find the {bug} {emoji}! Clue: {fact}", { bug: commonName(target), emoji: f.emoji, fact: t(f.fact) });
+    clue.textContent = t("Find the {bug}! Clue: {fact}", { bug: commonName(target), fact: t(f.fact) });
+    clue.prepend(bugArt(target, "clue-art"));
+    const others = [...species.filter(sp => sp !== target && BUG_ART[sp]?.kind !== BUG_ART[target]?.kind), ...NATIVE_BUGS.map(nb => nb.name)];
     info.textContent = t("Round {n} of {total}", { n: round + 1, total: HIDE_ROUNDS.length });
     grid.innerHTML = ""; grid.style.setProperty("--cols", cols);
     const spot = Math.floor(Math.random() * n), decoys = new Set();
@@ -1878,7 +2132,7 @@ function hideAndSeek() {
     for (let i = 0; i < n; i++) {
       const cell = el("button", "hide-cell", pickOne(HIDE_PLANTS));
       cell.type = "button";
-      if (i === spot || decoys.has(i)) cell.append(el("span", "peek", i === spot ? f.emoji : pickOne(HIDE_DECOYS)));
+      if (i === spot || decoys.has(i)) { const peek = el("span", "peek"); peek.append(bugArt(i === spot ? target : pickOne(others))); cell.append(peek); }
       cell.onclick = i === spot ? () => found(cell) : () => miss(cell);
       grid.append(cell);
     }
@@ -1930,7 +2184,7 @@ function bugMatch() {
     card.type = "button";
     card.setAttribute("aria-label", t("Hidden card"));
     back.append(makeOrb());
-    front.append(el("span", "bug-emoji", SPECIES_FACTS[s].emoji), el("small", null, commonName(s)));
+    front.append(bugArt(s, "bug-emoji"), el("small", null, commonName(s)));
     card.append(back, front);
     card.onclick = async () => {
       if (busy || over || card.classList.contains("flipped")) return;
@@ -1966,9 +2220,9 @@ function bugMatch() {
 // Invasive or Native?: sort 10 bugs. Half are invasive, half belong in Oregon.
 function invasiveOrNative() {
   const inv = shuffle(gameSpecies()).slice(0, SORT_ROUNDS / 2)
-    .map(s => ({ emoji: SPECIES_FACTS[s].emoji, name: commonName(s), fact: t(SPECIES_FACTS[s].fact), invasive: true }));
+    .map(s => ({ art: s, name: commonName(s), fact: t(SPECIES_FACTS[s].fact), invasive: true }));
   if (!inv.length) return;
-  const nat = shuffle(NATIVE_BUGS).slice(0, SORT_ROUNDS - inv.length).map(b => ({ emoji: b.emoji, name: t(b.name), fact: t(b.fact), invasive: false }));
+  const nat = shuffle(NATIVE_BUGS).slice(0, SORT_ROUNDS - inv.length).map(b => ({ art: b.name, name: t(b.name), fact: t(b.fact), invasive: false }));
   const rounds = shuffle([...inv, ...nat]);
   let i = 0, right = 0, over = false;
   const card = el("div", "sort-card"), feedback = el("p", "quiz-result"), info = el("p", "arena-info"), buttons = el("div", "battle-moves");
@@ -1980,7 +2234,7 @@ function invasiveOrNative() {
   const showRound = () => {
     const r = rounds[i];
     card.innerHTML = "";
-    card.append(el("span", "bug-emoji", r.emoji), el("strong", null, r.name));
+    card.append(bugArt(r.art, "bug-emoji"), el("strong", null, r.name));
     feedback.textContent = ""; yes.disabled = no.disabled = false; next.hidden = true;
     status(); yes.focus();
   };
@@ -2031,10 +2285,10 @@ function bugPop() {
     if (!free.length) return;
     const k = pickOne(free), c = cells[k];
     const nb = Math.random() < POP_NATIVE_CHANCE ? pickOne(NATIVE_BUGS) : null, s = pickOne(species);
-    const bug = nb ? { native: true, emoji: nb.emoji, name: t(nb.name) } : { native: false, emoji: SPECIES_FACTS[s].emoji, name: commonName(s) };
+    const bug = nb ? { native: true, art: nb.name, name: t(nb.name) } : { native: false, art: s, name: commonName(s) };
     c.bug = bug;
     c.h.className = "pop-hole up";
-    c.h.append(el("span", "bug-emoji", bug.emoji), el("small", null, bug.name));
+    c.h.append(bugArt(bug.art, "bug-emoji"), el("small", null, bug.name));
     c.h.setAttribute("aria-label", bug.name);
     // Bugs stay up a little shorter as the game goes on
     c.timer = setTimeout(() => { if (c.bug === bug) hide(k); }, Math.max(800, 1600 - tick * 3));
