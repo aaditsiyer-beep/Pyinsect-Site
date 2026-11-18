@@ -1173,3 +1173,54 @@ body[data-screen="game"] #screens { padding-top: 14px; }
 .buddy-big .bug-art { width: 110px; height: 110px; }
 .arena-buddy .bug-art { width: 46px; height: 46px; }
 .super-art svg { filter: drop-shadow(0 0 6px rgba(255, 215, 90, .95)) drop-shadow(0 0 2px rgba(255, 215, 90, .9)); }
+
+/* ===== Badges as medals (like Apple Watch awards) ===== */
+.badge-list:has(.medal-item) { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+.medal-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border: 0; background: none; cursor: pointer; font: inherit; color: var(--ink); text-align: center; border-radius: 16px; }
+.medal-item strong { font-size: 12px; line-height: 1.2; }
+.medal-item:not(.earned) strong { color: var(--muted); }
+.medal-item:hover .medal { transform: translateY(-3px) rotate(-4deg); }
+.medal-item:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* A medal: a metal rim, a shiny face, and its emoji */
+.medal { --m1: #ffe17a; --m2: #d39b12; position: relative; width: 74px; height: 74px; display: grid; place-items: center; transition: transform .2s;
+  background: radial-gradient(circle at 32% 28%, #fff 0 8%, var(--m1) 30%, var(--m2) 78%, color-mix(in srgb, var(--m2) 70%, #000) 100%);
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--m2) 80%, #000 20%), inset 0 0 0 8px var(--m1), 0 6px 14px rgba(0, 0, 0, .25); border-radius: 50%; }
+.medal.hex { border-radius: 0; clip-path: polygon(25% 3%, 75% 3%, 99% 50%, 75% 97%, 25% 97%, 1% 50%); }
+.medal.shield { border-radius: 0; clip-path: polygon(50% 0, 96% 14%, 92% 62%, 50% 100%, 8% 62%, 4% 14%); }
+.medal-emoji { font-size: 34px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .3)); }
+.medal.locked, .medal-spin.locked { filter: grayscale(1) brightness(.85); opacity: .55; }
+/* The big medal you can spin */
+.medal3d { align-self: center; width: 220px; height: 220px; perspective: 800px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.medal3d:active { cursor: grabbing; }
+.medal3d:focus-visible { outline: 3px solid var(--accent); outline-offset: 6px; border-radius: 20px; }
+.medal-spin { --a: 0deg; --shine: 50%; position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateY(var(--a)); }
+.medal-edge, .medal-side { position: absolute; inset: 0; border-radius: 50%; }
+.medal-spin.hex .medal-edge, .medal-spin.hex .medal-side { border-radius: 0; clip-path: polygon(25% 3%, 75% 3%, 99% 50%, 75% 97%, 25% 97%, 1% 50%); }
+.medal-spin.shield .medal-edge, .medal-spin.shield .medal-side { border-radius: 0; clip-path: polygon(50% 0, 96% 14%, 92% 62%, 50% 100%, 8% 62%, 4% 14%); }
+.medal-edge { background: color-mix(in srgb, var(--m2) 75%, #000); }
+.medal-side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 30px; text-align: center;
+  background: linear-gradient(105deg, transparent calc(var(--shine) - 18%), rgba(255, 255, 255, .55) var(--shine), transparent calc(var(--shine) + 18%)),
+    radial-gradient(circle at 32% 28%, #fff 0 6%, var(--m1) 30%, var(--m2) 80%, color-mix(in srgb, var(--m2) 70%, #000) 100%);
+  box-shadow: inset 0 0 0 12px color-mix(in srgb, var(--m2) 80%, #000 20%), inset 0 0 0 18px var(--m1), inset 0 0 30px rgba(0, 0, 0, .25); }
+.medal-front { transform: translateZ(6px); }
+.medal-back { transform: rotateY(180deg) translateZ(6px); color: color-mix(in srgb, var(--m2) 45%, #000); }
+.medal-front .medal-emoji { font-size: 84px; }
+.medal-name { font: 700 13px var(--display); color: color-mix(in srgb, var(--m2) 40%, #000); text-transform: uppercase; letter-spacing: .06em; }
+/* The back looks engraved: dark letters with a light edge under them */
+.medal-engrave, .medal-date { text-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
+.medal-engrave { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .08em; }
+.medal-date { font: 700 18px var(--display); line-height: 1.2; }
+.medal-why { text-align: left; padding: 12px 14px; border-radius: 16px; background: var(--accent-soft); }
+.medal-why strong { display: block; margin-bottom: 4px; }
+.medal-why p, .medal-hint { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .medal-item:hover .medal { transform: none; } }
+
+/* Each badge's own shape and cartoon are drawn in SVG (see "badge shapes and cartoons" in assets/game.js) */
+.medal { width: 78px; height: 78px; background: none; box-shadow: none; border-radius: 0; clip-path: none; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .25)); }
+.medal svg, .medal-edge svg, .medal-front svg, .medal-back-art svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.medal-edge, .medal-side { border-radius: 0; background: none; box-shadow: none; clip-path: none; }
+.medal-front { padding: 0; }
+.medal-back { padding: 0; }
+.medal-back-art { position: absolute; inset: 0; z-index: -1; }
+.medal-back > :not(.medal-back-art) { max-width: 66%; }
+.medal3d { width: 240px; height: 240px; }

@@ -863,4 +863,11 @@ GAME_EXTRA.zh = {
   "Stop watching": "停止观看",
   "Give up": "放弃",
   "Back to the lobby": "回到大厅",
+  // badges as medals
+  "Why you got it": "你为什么得到它",
+  "Spin": "旋转",
+  "Drag to spin the badge.": "拖动来旋转徽章。",
+  "Drag to spin the badge. The back shows when you got it.": "拖动来旋转徽章。背面会显示你是什么时候得到的。",
+  "Earned by {name}": "获得者：{name}",
+  "Earned before the game saved dates": "在游戏开始记录日期之前获得",
 };

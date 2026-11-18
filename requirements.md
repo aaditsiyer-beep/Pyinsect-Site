@@ -574,6 +574,22 @@ To add one, ask your AI helper to help you plan a new feature. It will use
   - [x] In the tree check, a damage photo ends with the warning and tips; a healthy-bark photo still says "Report made, thank you".
   - [ ] A grown-up redeployed the relay (version 13) before this was merged.
 
+## Innvadex: badges as medals (like Apple Watch awards)
+
+- **Status:** Building
+- **Asked by:** Aadit, 2026-11-18
+- **Who it's for:** Everyday people, kids or adults, who play the Innvadex game.
+- **Problem:** Badges were a plain list with an emoji, and you couldn't see when you got them.
+- **Our idea:**
+  - Each badge is a shiny medal with **its own shape** (no two are the same) and **its own
+    cartoon**, like the Innva-Orb for First Catch! and a little picture of each forest.
+  - Tap a badge to see it big and **why you got it**.
+  - Drag (or use the arrow keys or the Spin button) to **spin it in 3D**. The back is engraved
+    with the **date and time** you got it. Badges earned before this say so.
+- **Done when:**
+  - [ ] Every badge has a different shape and its own cartoon.
+  - [ ] Spinning a badge shows the date and time on the back.
+
 ## Innvadex: 3D cutscenes, quizzes, read aloud, and cartoon bugs
 
 - **Status:** Building

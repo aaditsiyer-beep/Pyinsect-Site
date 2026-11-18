@@ -693,7 +693,7 @@ function loadGame() {
   g = { points: 0, caught: {}, badges: [], protector: 0, wins: 0, gyms: [], daily: null, dailyDone: 0,
     spots: [], muted: false, trainer: { name: "", avatar: AVATARS[0] }, unlockSeen: null,
     protectorDex: {}, bigText: false, tangle: [], trapWins: 0, hideWins: 0, bossWins: 0, boss: null,
-    buddy: null, readAloud: true, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", ...(g || {}) };
+    buddy: null, readAloud: true, games: {}, miniWins: {}, ambushDay: null, monthly: {}, monthlyView: "icons", badgeDates: {}, ...(g || {}) };
   // Read aloud is on for everyone (once). After that, turning it off in Settings keeps it off.
   if (!g.readAloudOnce) { g.readAloud = true; g.readAloudOnce = true; }
   // Things from older versions that the game doesn't use anymore
@@ -732,6 +732,7 @@ function progress(g, ev) {
   const had = new Set(g.badges);
   const fresh = BADGES.filter(b => !had.has(b.id) && b.earned(g));
   g.badges.push(...fresh.map(b => b.id));
+  for (const b of fresh) g.badgeDates[b.id] = new Date().toISOString();   // shown on the back of the badge
   lines.push(...fresh.map(b => `${b.emoji} ${t("New badge: {badge}", { badge: t(b.name) })}`));
   const rank = rankOf(g.points);
   if (rank[2] !== rankBefore) {
@@ -1047,10 +1048,11 @@ function renderGame() {
   const badges = $("badgeList"); badges.innerHTML = "";
   for (const b of BADGES) {
     const has = g.badges.includes(b.id);
-    const item = el("div", "badge" + (has ? " earned" : ""));
-    const desc = t(b.desc, { gym: b.gym && t(b.gym) });
-    item.title = desc;
-    item.append(el("span", "badge-emoji", has ? b.emoji : "🔒"), el("strong", null, t(b.name)), el("span", null, desc));
+    const item = el("button", "medal-item" + (has ? " earned" : ""));
+    item.type = "button";
+    item.setAttribute("aria-label", `${t(b.name)}: ${has ? t("Badge earned") : t("Badge not earned yet")}`);
+    item.append(medalFace(b, has), el("strong", null, t(b.name)));
+    item.onclick = () => showMedal(b);
     badges.append(item);
   }
 
@@ -1170,6 +1172,174 @@ const HOW_TO_PLAY = [
   { scene: "forest",  ...PIP,   text: "I'll be cheering for you the whole way. Let's go, {name}!" },
 ];
 const showInstructions = () => cutscene(HOW_TO_PLAY);
+
+// ---------- badge shapes and cartoons ----------
+// Every badge has its own shape (no two are the same) and its own cartoon. They're drawn as SVG.
+const BADGE_SHAPES = [
+  { kind: "circle" }, { kind: "poly", n: 6 }, { kind: "shield" }, { kind: "poly", n: 8 }, { kind: "star", n: 5, inner: .62 },
+  { kind: "flower", n: 8 }, { kind: "heart" }, { kind: "poly", n: 4, rot: 0 }, { kind: "star", n: 6, inner: .7 }, { kind: "flower", n: 6 },
+  { kind: "poly", n: 5 }, { kind: "poly", n: 7 }, { kind: "gear", n: 10 }, { kind: "star", n: 8, inner: .75 }, { kind: "flower", n: 10 },
+  { kind: "poly", n: 3 }, { kind: "star", n: 4, inner: .55 }, { kind: "flower", n: 12 }, { kind: "star", n: 7, inner: .68 }, { kind: "poly", n: 9 },
+  { kind: "poly", n: 12 }, { kind: "star", n: 10, inner: .8 }, { kind: "squircle" }, { kind: "leaf" }, { kind: "flower", n: 5 },
+  { kind: "star", n: 12, inner: .84 }, { kind: "oval" }, { kind: "gear", n: 8 }, { kind: "cross" }, { kind: "flower", n: 7 },
+  { kind: "star", n: 9, inner: .78 }, { kind: "poly", n: 10 }, { kind: "gear", n: 12 }, { kind: "flower", n: 9 }, { kind: "star", n: 6, inner: .55 },
+  { kind: "poly", n: 11 }, { kind: "gear", n: 6 }, { kind: "flower", n: 4 },
+];
+// The outline of a shape, as an SVG path, about 46 wide from the middle
+function shapePath(sh, r = 46) {
+  const pts = [], P = (a, rr) => [Math.sin(a) * rr, -Math.cos(a) * rr];
+  if (sh.kind === "circle") for (let i = 0; i < 48; i++) pts.push(P(i / 48 * Math.PI * 2, r));
+  if (sh.kind === "oval") for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2; pts.push([Math.sin(a) * r * .8, -Math.cos(a) * r]); }
+  if (sh.kind === "poly") for (let i = 0; i < sh.n; i++) pts.push(P((i + (sh.rot ?? .5)) / sh.n * Math.PI * 2 + (sh.n % 2 ? Math.PI / sh.n : 0) - (sh.rot === 0 ? 0 : Math.PI / sh.n), r));
+  if (sh.kind === "star") for (let i = 0; i < sh.n * 2; i++) pts.push(P(i / (sh.n * 2) * Math.PI * 2, i % 2 ? r * sh.inner : r));
+  if (sh.kind === "flower") for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2; pts.push(P(a, r * (.84 + .16 * Math.abs(Math.cos(a * sh.n / 2))))); }
+  if (sh.kind === "gear") for (let i = 0; i < sh.n * 4; i++) pts.push(P((i + .5) / (sh.n * 4) * Math.PI * 2, i % 4 < 2 ? r : r * .82));
+  if (sh.kind === "squircle") for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, c = Math.cos(a), s = Math.sin(a); pts.push([Math.sign(s) * Math.abs(s) ** .45 * r * .92, -Math.sign(c) * Math.abs(c) ** .45 * r * .92]); }
+  if (sh.kind === "shield") return `M0 ${-r} L${r * .9} ${-r * .72} L${r * .82} ${r * .2} Q${r * .5} ${r * .78} 0 ${r} Q${-r * .5} ${r * .78} ${-r * .82} ${r * .2} L${-r * .9} ${-r * .72} Z`;
+  if (sh.kind === "heart") return `M0 ${r * .95} C${-r * 1.3} ${r * .1} ${-r * .9} ${-r * 1.05} 0 ${-r * .45} C${r * .9} ${-r * 1.05} ${r * 1.3} ${r * .1} 0 ${r * .95} Z`;
+  if (sh.kind === "leaf") return `M0 ${-r} C${r * .95} ${-r * .55} ${r * .95} ${r * .55} 0 ${r} C${-r * .95} ${r * .55} ${-r * .95} ${-r * .55} 0 ${-r} Z`;
+  if (sh.kind === "cross") { const a = r * .38; return `M${-a} ${-r} H${a} V${-a} H${r} V${a} H${a} V${r} H${-a} V${a} H${-r} V${-a} H${-a} Z`; }
+  return "M" + pts.map(p => p.map(v => v.toFixed(1)).join(" ")).join(" L") + " Z";
+}
+
+// Little drawing pieces for the badge cartoons
+const ink = 'stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round"';
+const bugG = (key, x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${drawBug(BUG_ART[key], `b${key.replace(/\W/g, "")}${x}${y}`.replace(/[-.]/g, "m"))}</g>`;
+const starAt = (x, y, r, c = "#ffd23f") => `<path d="${shapePath({ kind: "star", n: 5, inner: .45 }, r)}" transform="translate(${x} ${y})" fill="${c}" ${ink}/>`;
+const pine = (x, y, s, c = "#2f8a4c") => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="4" width="4" height="7" fill="#7a4a24"/><path d="M0 -16 L10 0 L5 0 L12 8 L-12 8 L-5 0 L-10 0 Z" fill="${c}" ${ink}/></g>`;
+const ground = (c = "#7cc06a") => `<path d="M-40 18 Q0 8 40 18 L40 40 L-40 40 Z" fill="${c}" ${ink}/>`;
+const sky = c => `<rect x="-40" y="-40" width="80" height="80" fill="${c}"/>`;
+const landscape = parts => parts;   // (the medal's shape clips the picture)
+
+// The cartoon for each badge (gym badges get a little picture of their forest)
+const BADGE_ART = {
+  first: () => ORB_SVG.replace("<svg ", '<svg x="-34" y="-34" width="68" height="68" ').replace(/orbGlass/g, "ORBg").replace(/orbShade/g, "ORBs"),
+  five: () => `<g ${ink}><path d="M-14 26 Q-20 6 -16 -2 L-12 -2 L-10 8 L-9 -22 Q-5 -26 -2 -22 L-1 4 L1 -28 Q5 -31 8 -27 L8 4 L11 -22 Q15 -25 17 -21 L16 8 L20 -8 Q24 -10 25 -6 L20 18 Q14 30 -14 26 Z" fill="#f6c99c"/></g>${starAt(-26, -22, 7)}${starAt(28, -26, 6)}`,
+  kinds3: () => bugG("popillia_japonica", -6, 6, .55) + `<circle cx="10" cy="-6" r="16" fill="#bfe6ff" fill-opacity=".45" stroke="#3b3b3b" stroke-width="4"/><line x1="21" y1="5" x2="34" y2="20" stroke="#7a4a24" stroke-width="7" stroke-linecap="round"/>`,
+  rare: () => `<g ${ink}><path d="M-22 -10 L-12 -24 L12 -24 L22 -10 L0 26 Z" fill="#5fd3f3"/><path d="M-22 -10 L22 -10 M-12 -24 L-6 -10 L0 26 L6 -10 L12 -24" fill="none"/></g><path d="M-14 -20 L-8 -12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`,
+  legendary: () => bugG("agrilus_planipennis", 0, 14, .55) + `<path d="M-20 -14 L-14 -32 L-6 -20 L0 -36 L6 -20 L14 -32 L20 -14 Z" fill="#ffd23f" ${ink}/>`,
+  points100: () => `<text x="0" y="12" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="32" fill="#fff" stroke="#1b1b1b" stroke-width="1.5">100</text>${starAt(-24, -20, 8)}${starAt(0, -26, 8)}${starAt(24, -20, 8)}`,
+  half: () => `<g ${ink}><path d="M-26 -18 L0 -12 L26 -18 L26 22 L0 28 L-26 22 Z" fill="#fffaf0"/><path d="M0 -12 L0 28" fill="none"/><path d="M-26 -18 L0 -12 L0 28 L-26 22 Z" fill="#7cc06a"/></g>${bugG("harmonia_axyridis", -13, 6, .3)}`,
+  all: () => `<g ${ink}><path d="M-18 -24 H18 V-6 Q18 12 0 14 Q-18 12 -18 -6 Z" fill="#ffd23f"/><path d="M-18 -18 Q-30 -18 -26 -6 Q-22 2 -16 0 M18 -18 Q30 -18 26 -6 Q22 2 16 0" fill="none" stroke-width="3"/><rect x="-5" y="14" width="10" height="8" fill="#e0a800"/><rect x="-14" y="22" width="28" height="8" rx="2" fill="#8a5a32"/></g>${starAt(0, -9, 7, "#fff")}`,
+  protector: () => `<path d="${shapePath({ kind: "shield" }, 28)}" fill="#5aa9e6" ${ink}/><path d="M0 -14 C14 -8 12 10 0 16 C-12 10 -14 -8 0 -14 Z M0 -14 L0 16" fill="#7cc06a" ${ink}/>`,
+  trainer: () => `<g ${ink}><path d="M-24 -24 L14 14 L10 18 L-28 -20 Z" fill="#d9dee5"/><path d="M24 -24 L-14 14 L-10 18 L28 -20 Z" fill="#d9dee5"/><rect x="4" y="12" width="14" height="5" transform="rotate(45 11 14)" fill="#8a5a32"/><rect x="-18" y="12" width="14" height="5" transform="rotate(-45 -11 14)" fill="#8a5a32"/></g>`,
+  daily: () => `<g ${ink}><rect x="-24" y="-20" width="48" height="44" rx="5" fill="#fff"/><path d="M-24 -20 h48 v12 h-48 Z" fill="#e84a4a"/><line x1="-12" y1="-26" x2="-12" y2="-14" stroke-width="3"/><line x1="12" y1="-26" x2="12" y2="-14" stroke-width="3"/></g><path d="M-10 6 L-3 13 L12 -2" stroke="#2f8a4c" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  natives10: () => `<g ${ink}>${[0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-14" rx="8" ry="13" fill="#ffffff" transform="rotate(${a})"/>`).join("")}<circle r="8" fill="#ffd23f"/></g>${bugG("Western bumble bee", 18, -18, .35)}`,
+  tangle: () => `<g ${ink}><rect x="-26" y="-6" width="34" height="20" rx="2" fill="#8e5bd0"/><rect x="8" y="0" width="16" height="14" rx="2" fill="#6b3fa8"/><circle cx="-16" cy="16" r="5" fill="#333"/><circle cx="14" cy="16" r="5" fill="#333"/>${[-20, -12, -4].map(x => `<rect x="${x}" y="-14" width="7" height="8" rx="2" fill="#a0683a"/>`).join("")}</g><path d="M-30 -24 L30 24" stroke="#e84a4a" stroke-width="6" stroke-linecap="round"/><circle r="30" fill="none" stroke="#e84a4a" stroke-width="6"/>`,
+  traps: () => `<g ${ink}><path d="M-14 -26 L14 -26 L18 26 L-18 26 Z" fill="#8e5bd0"/><path d="M0 -26 L0 26" stroke="#6b3fa8" stroke-width="3"/></g>${bugG("agrilus_planipennis", 0, 2, .4)}`,
+  hide: () => `<g ${ink}><path d="M-30 0 Q0 -28 30 0 Q0 28 -30 0 Z" fill="#fff"/><circle r="11" fill="#5aa9e6"/><circle r="5" fill="#1b1b1b"/></g><circle cx="-4" cy="-4" r="3" fill="#fff"/>`,
+  swarm: () => [[-16, -14, .3], [14, -18, .26], [0, 4, .34], [-18, 16, .24], [18, 14, .28]].map(([x, y, s]) => bugG("vespa_mandarinia", x, y, s)).join(""),
+  buddy: () => bugG("Oregon swallowtail", 0, 4, .62) + `<path d="M0 -20 C-8 -30 -20 -22 -12 -12 L0 -2 L12 -12 C20 -22 8 -30 0 -20 Z" transform="translate(20 -8) scale(.55)" fill="#e84a4a" ${ink}/>`,
+  match: () => `<g ${ink}><rect x="-26" y="-22" width="26" height="36" rx="4" fill="#8e5bd0" transform="rotate(-12)"/><rect x="0" y="-20" width="26" height="36" rx="4" fill="#fff" transform="rotate(10)"/></g>${bugG("harmonia_axyridis", 12, -1, .36)}`,
+  sort: () => `<g ${ink}><rect x="-30" y="-14" width="26" height="30" rx="5" fill="#ffd6d6"/><rect x="4" y="-14" width="26" height="30" rx="5" fill="#d8f5d8"/></g>${bugG("halyomorpha_halys", -17, 2, .3)}${bugG("Convergent lady beetle", 17, 2, .3)}`,
+  pop: () => `<ellipse cx="0" cy="20" rx="26" ry="9" fill="#3b2a1a" ${ink}/>${bugG("popillia_japonica", 0, -2, .5)}<path d="M-30 -24 l6 6 M30 -24 l-6 6 M0 -38 v8" stroke="#ffd23f" stroke-width="4" stroke-linecap="round"/>`,
+  games5: () => `<g ${ink}><path d="M-30 -6 Q-30 -16 -20 -16 H20 Q30 -16 30 -6 L32 12 Q32 22 22 20 L14 10 H-14 L-22 20 Q-32 22 -32 12 Z" fill="#5aa9e6"/><rect x="-21" y="-6" width="12" height="4" fill="#1b1b1b"/><rect x="-17" y="-10" width="4" height="12" fill="#1b1b1b"/><circle cx="14" cy="-6" r="3" fill="#e84a4a"/><circle cx="20" cy="0" r="3" fill="#ffd23f"/></g>`,
+};
+// A little picture of each forest for its badge
+const GYM_ART = {
+  forestpark: () => landscape(sky("#bfe6ff") + ground() + pine(-18, 4, 1.2) + pine(0, -2, 1.5) + pine(18, 4, 1.2)),
+  siuslaw: () => landscape(sky("#bfe6ff") + `<path d="M-40 6 Q-20 -6 0 6 T40 6 L40 40 L-40 40 Z" fill="#f2dc9a" ${ink}/><path d="M-40 16 q10 -6 20 0 t20 0 t20 0 t20 0 L40 40 L-40 40 Z" fill="#4aa3e0" ${ink}/>` + pine(26, -4, .9)),
+  tillamook: () => landscape(sky("#c9d6de") + ground("#5f9e6e") + pine(-16, 4, 1.3) + pine(14, 4, 1.3) + `<path d="M-20 -24 a10 10 0 0 1 18 -6 a9 9 0 0 1 16 6 z" fill="#fff" ${ink}/>` + [-14, -4, 6].map(x => `<line x1="${x}" y1="-18" x2="${x - 3}" y2="-10" stroke="#4aa3e0" stroke-width="2.5" stroke-linecap="round"/>`).join("")),
+  gorge: () => landscape(sky("#bfe6ff") + `<path d="M-40 -10 L-12 -10 L-12 40 L-40 40 Z M40 -10 L12 -10 L12 40 L40 40 Z" fill="#7a6a4f" ${ink}/><rect x="-12" y="-10" width="24" height="50" fill="#7fd0f5"/><path d="M-8 -10 v40 M0 -10 v40 M8 -10 v40" stroke="#fff" stroke-width="2" opacity=".8"/>` + pine(-26, -18, .8) + pine(26, -18, .8)),
+  umpqua: () => landscape(sky("#bfe6ff") + ground() + `<path d="M-40 26 Q-10 10 10 22 T40 18 L40 40 L-40 40 Z" fill="#4aa3e0" ${ink}/>` + `<path d="M-4 26 q6 -6 12 0 q-6 6 -12 0 l-4 -3 v6 z" fill="#f08c1a" ${ink}/>` + pine(-20, 2, 1) + pine(20, 0, 1)),
+  willamette: () => landscape(sky("#d8f0d8") + ground("#5f9e6e") + pine(-22, 0, 1.5) + pine(22, 0, 1.5) + `<path d="M-10 18 q0 -16 10 -16 q10 0 10 16 z" fill="#e84a4a" ${ink}/><rect x="-3" y="18" width="6" height="10" fill="#f6efe0" ${ink}/><circle cx="-4" cy="10" r="2" fill="#fff"/><circle cx="4" cy="8" r="2" fill="#fff"/>`),
+  rogue: () => landscape(sky("#bfe6ff") + ground("#a3c46a") + `<path d="M-30 18 L-18 -4 L-6 18 Z M2 18 L14 -12 L28 18 Z" fill="#9a8c7a" ${ink}/>` + [-20, 0, 22].map(x => `<circle cx="${x}" cy="26" r="4" fill="#ff7eb6" ${ink}/>`).join("")),
+  deschutes: () => landscape(sky("#ffd9b5") + `<path d="M-34 30 L-8 -14 L8 -14 L34 30 Z" fill="#7a5a4a" ${ink}/><path d="M-8 -14 Q0 -22 8 -14 L4 -4 L-4 -4 Z" fill="#f05a28" ${ink}/><path d="M-4 -22 q-4 -8 2 -14 M4 -22 q6 -8 0 -14" stroke="#888" stroke-width="3" fill="none"/>` + pine(-26, 22, .8) + pine(26, 22, .8)),
+  wallowa: () => landscape(sky("#ffe7c2") + `<path d="M-40 -6 L-10 -6 L-4 40 L-40 40 Z M40 -6 L10 -6 L4 40 L40 40 Z" fill="#c2643c" ${ink}/><path d="M-6 40 Q0 20 6 40 Z" fill="#4aa3e0"/>` + `<path d="M-20 -24 q4 -4 8 0 q4 -4 8 0" stroke="#1b1b1b" stroke-width="2" fill="none"/>`),
+  craterlake: () => landscape(sky("#bfe6ff") + `<path d="M-40 4 L-24 -10 L24 -10 L40 4 L40 40 L-40 40 Z" fill="#8c7a6a" ${ink}/><ellipse cx="0" cy="10" rx="28" ry="12" fill="#1f5fae" ${ink}/><ellipse cx="8" cy="8" rx="5" ry="3" fill="#6a8a5a" ${ink}/>`),
+  malheur: () => landscape(sky("#f5e6c8") + ground("#c9a55a") + `<path d="M-22 14 q0 -14 9 -14 q9 0 9 14 z" fill="#c98a3a" ${ink}/><rect x="-16" y="14" width="6" height="10" fill="#f6efe0" ${ink}/><path d="M4 18 q0 -20 12 -20 q12 0 12 20 z" fill="#a0683a" ${ink}/><rect x="13" y="18" width="7" height="12" fill="#f6efe0" ${ink}/>`),
+  mthood: () => landscape(sky("#bfe6ff") + `<path d="M-38 30 L0 -26 L38 30 Z" fill="#7a8aa0" ${ink}/><path d="M-12 -8 L0 -26 L12 -8 L6 -4 L0 -10 L-6 -4 Z" fill="#fff" ${ink}/>` + pine(-24, 24, .9) + pine(24, 24, .9)),
+  champion: () => BADGE_ART.all() + `<path d="M-14 -30 L-10 -40 L-4 -32 L0 -42 L4 -32 L10 -40 L14 -30 Z" fill="#ffd23f" ${ink}/>`,
+};
+
+// The whole medal: its shape filled with shiny metal, a rim, and the cartoon inside
+let medalCount = 0;
+function medalSVG(b, has, i) {
+  const sh = BADGE_SHAPES[i % BADGE_SHAPES.length], id = `m${++medalCount}`, { colors } = medalStyle(b);
+  const d = shapePath(sh), inner = shapePath(sh, 36);
+  const art = has ? (b.gym ? GYM_ART[b.id.slice(4)] : BADGE_ART[b.id])?.() || `<text y="12" text-anchor="middle" font-size="34">${b.emoji}</text>` : `<text y="12" text-anchor="middle" font-size="30">🔒</text>`;
+  return `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><radialGradient id="${id}g" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="${colors[0]}"/><stop offset=".8" stop-color="${colors[1]}"/><stop offset="1" stop-color="${colors[1]}" stop-opacity=".9"/></radialGradient>
+    <clipPath id="${id}c"><path d="${inner}"/></clipPath></defs>
+    <path d="${d}" fill="url(#${id}g)" stroke="#1b1b1b" stroke-width="2"/>
+    <path d="${d}" fill="none" stroke="${colors[1]}" stroke-width="6" transform="scale(.9)" opacity=".9"/>
+    <path d="${inner}" fill="#fff" fill-opacity=".25"/>
+    <g clip-path="url(#${id}c)" transform="scale(.82)">${art.replace(/url\(#CLIP\)/g, `url(#${id}c)`).replace(/id="b/g, `id="${id}b`).replace(/url\(#b/g, `url(#${id}b`).replace(/ORB([gs])/g, `${id}orb$1`)}</g>
+  </svg>`;
+}
+
+// ---------- badges as medals (like Apple Watch awards) ----------
+// Each badge is a shiny medal with its own colors. Tap one to see why you got it, and drag it to
+// spin it around: the back is engraved with the date and time you earned it.
+const MEDAL_COLORS = [["#ffe17a", "#d39b12"], ["#f3f5f8", "#9aa3ad"], ["#f6b48a", "#b8652e"], ["#8ee3a8", "#2f8f55"],
+  ["#9fd0ff", "#2f6fb3"], ["#d6b5ff", "#7a4bc2"], ["#ff9e9e", "#c2403a"], ["#9ff0e6", "#25a08f"]];
+const medalStyle = b => ({ colors: MEDAL_COLORS[BADGES.indexOf(b) % MEDAL_COLORS.length] });
+// The front of a medal (small, for the badge list)
+function medalFace(b, has) {
+  const m = el("span", `medal${has ? "" : " locked"}`);
+  m.innerHTML = medalSVG(b, has, BADGES.indexOf(b));
+  return m;
+}
+// The big medal in its own pop-up. Drag it (or use the arrow keys or the button) to spin it.
+function showMedal(b) {
+  const g = loadGame(), has = g.badges.includes(b.id), when = g.badgeDates[b.id];
+  const { colors } = medalStyle(b), calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sh = BADGE_SHAPES[BADGES.indexOf(b) % BADGE_SHAPES.length], outline = shapePath(sh);
+  const stage = el("div", "medal3d"), spin = el("div", `medal-spin${has ? "" : " locked"}`);
+  stage.tabIndex = 0;
+  stage.setAttribute("role", "img");
+  stage.setAttribute("aria-label", `${t(b.name)}. ${t("Drag to spin the badge.")}`);
+  spin.style.setProperty("--m1", colors[0]); spin.style.setProperty("--m2", colors[1]);
+  // A medal is a stack of thin layers, so it looks thick when it turns
+  for (let k = 0; k < 10; k++) {
+    const layer = el("span", "medal-edge"); layer.style.transform = `translateZ(${k - 5}px)`;
+    layer.innerHTML = `<svg viewBox="-50 -50 100 100"><path d="${outline}" fill="${colors[1]}" stroke="#1b1b1b" stroke-width="1"/></svg>`;
+    spin.append(layer);
+  }
+  const front = el("span", "medal-side medal-front"), back = el("span", "medal-side medal-back");
+  front.innerHTML = medalSVG(b, has, BADGES.indexOf(b));
+  const backArt = el("span", "medal-back-art");
+  backArt.innerHTML = `<svg viewBox="-50 -50 100 100"><defs><radialGradient id="mbg" cx="65%" cy="30%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="${colors[0]}"/><stop offset="1" stop-color="${colors[1]}"/></radialGradient></defs>
+    <path d="${outline}" fill="url(#mbg)" stroke="#1b1b1b" stroke-width="2"/><path d="${outline}" fill="none" stroke="${colors[1]}" stroke-width="6" transform="scale(.9)"/></svg>`;
+  back.append(backArt);
+  const date = when ? new Date(when) : null;
+  back.append(el("span", "medal-engrave", has ? t("Earned by {name}", { name: g.trainer.name || t("Ranger") }) : t("Badge not earned yet")),
+    el("strong", "medal-date", !has ? "🔒" : date ? date.toLocaleDateString(langTag(), { year: "numeric", month: "long", day: "numeric" }) : t("Earned before the game saved dates")),
+    el("span", "medal-engrave", has && date ? date.toLocaleTimeString(langTag(), { hour: "numeric", minute: "2-digit" }) : ""));
+  spin.append(front, back);
+  stage.append(spin);
+  // Spinning: drag to turn it, it keeps going a little after you let go, then settles face up or face down
+  let angle = 0, speed = 0, dragging = false, lastX = 0, frame = null, faceUp = false, goal = null;
+  const draw = () => { spin.style.setProperty("--a", `${angle}deg`); spin.style.setProperty("--shine", `${50 + Math.sin(angle * Math.PI / 180) * 45}%`); };
+  const settle = () => {
+    cancelAnimationFrame(frame);
+    const step = () => {
+      if (dragging) return;
+      if (goal != null) { angle += (goal - angle) * .12; if (Math.abs(goal - angle) < .3) { angle = goal; goal = null; draw(); return; } }
+      else if (Math.abs(speed) > .3) { angle += speed; speed *= .95; }
+      else { const unit = faceUp ? 360 : 180, target = Math.round(angle / unit) * unit; angle += (target - angle) * .15; if (Math.abs(target - angle) < .3) { angle = target; draw(); return; } }
+      draw(); frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+  };
+  // The arrow keys and the Spin button turn it to an exact stop: half a turn shows the other side
+  const turn = by => { faceUp = false; speed = 0; goal = Math.round((angle + by) / 180) * 180; if (calm) { angle = goal; goal = null; draw(); return; } settle(); };
+  stage.addEventListener("pointerdown", e => { dragging = true; faceUp = false; goal = null; lastX = e.clientX; speed = 0; stage.setPointerCapture(e.pointerId); cancelAnimationFrame(frame); });
+  stage.addEventListener("pointermove", e => { if (!dragging) return; const dx = e.clientX - lastX; lastX = e.clientX; angle += dx * .9; speed = dx * .9; draw(); });
+  for (const ev of ["pointerup", "pointercancel"]) stage.addEventListener(ev, () => { if (!dragging) return; dragging = false; sound("tick"); settle(); });
+  stage.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); turn(e.key === "ArrowLeft" ? -180 : 180); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); turn(180); }
+  });
+  const spinBtn = el("button", "btn", `🔄 ${t("Spin")}`);
+  spinBtn.type = "button"; spinBtn.onclick = () => turn(360 + 180);
+  const why = el("div", "medal-why");
+  why.append(el("strong", null, t("Why you got it")), el("p", null, t(b.desc, { gym: b.gym && t(b.gym) })));
+  openPopup([stage, el("h2", null, t(b.name)), why, el("p", "muted medal-hint", t("Drag to spin the badge. The back shows when you got it.")), spinBtn], [["Close", true]]);
+  draw();
+  if (!calm) { angle = -360; speed = 0; faceUp = true; draw(); requestAnimationFrame(() => { speed = 14; settle(); }); }   // it spins in when it opens
+  sound(has ? "badge" : "tick");
+}
 
 // ---------- the Innva-Orb ----------
 // Our catching orb: a glowing crystal ball where green and purple swirl together, with a glowing leaf inside.

@@ -1058,4 +1058,11 @@ const GAME_I18N = {
   "Stop watching": ["Dejar de mirar", "Arrêter de regarder"],
   "Give up": ["Rendirse", "Abandonner"],
   "Back to the lobby": ["Volver a la sala", "Retour au salon"],
+  // ---- badges as medals ----
+  "Why you got it": ["Por qué la ganaste", "Pourquoi tu l'as eu"],
+  "Spin": ["Girar", "Tourner"],
+  "Drag to spin the badge.": ["Arrastra para girar la medalla.", "Fais glisser pour tourner le badge."],
+  "Drag to spin the badge. The back shows when you got it.": ["Arrastra para girar la medalla. Atrás dice cuándo la ganaste.", "Fais glisser pour tourner le badge. Le dos montre quand tu l'as eu."],
+  "Earned by {name}": ["Ganada por {name}", "Gagné par {name}"],
+  "Earned before the game saved dates": ["Ganada antes de que el juego guardara fechas", "Gagné avant que le jeu garde les dates"],
 };
