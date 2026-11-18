@@ -786,6 +786,12 @@ const BUG_ART = {
   "Ten-lined June beetle":     { kind: "beetle", w: 18, l: 24, color: "#6b4a2b", head: "#4d331c", stripes: "#f6f2e6" },
   "Pacific dampwood termite":  { kind: "termite", head: "#8f3b1f", body: "#c98a5a", big: true },
   "Ground beetle":             { kind: "beetle", w: 15, l: 23, color: "#1c1c22", head: "#1c1c22", shine: true, grooves: true },
+  // Bug Buddy stages: an egg, then a baby bug (larva) that looks like the real one
+  egg:                              { kind: "egg" },
+  "Oregon swallowtail caterpillar": { kind: "caterpillar", color: "#7cc243", headColor: "#5f9e2f", smooth: true, band: "#1e1e1e", dots: ["#f08c1a", "#f08c1a", "#f08c1a", "#f08c1a", "#f08c1a", "#f08c1a"] },
+  "Convergent lady beetle larva":   { kind: "caterpillar", color: "#2b2b33", headColor: "#1b1b20", dots: [null, "#f07d1d", null, "#f07d1d", null, null], spiky: true },
+  "Ground beetle larva":            { kind: "caterpillar", color: "#6b5236", headColor: "#3a2a1a", smooth: true, dots: [], band: "#4a3826" },
+  Squawk:                           { kind: "bird" },   // Team Tangle's old starling
 };
 const svgArt = {};   // drawings are made once, then reused
 
@@ -911,12 +917,13 @@ function drawBug(a, id) {
     const segs = 7;
     for (let i = segs - 1; i >= 0; i--) {
       const y = 30 - i * 9, x = Math.sin(i * .9) * 5;
-      for (let h = -3; h <= 3; h++) s += `<line x1="${x + h * 2}" y1="${y - 6}" x2="${x + h * 3.2}" y2="${y - 13}" stroke="#a89884" stroke-width="1"/>`;
+      if (!a.smooth) for (let h = -3; h <= 3; h++) s += `<line x1="${x + h * 2}" y1="${y - 6}" x2="${x + h * 3.2}" y2="${y - (a.spiky ? 11 : 13)}" stroke="${a.spiky ? "#1b1b20" : "#a89884"}" stroke-width="${a.spiky ? 1.6 : 1}"/>`;
       s += `<circle cx="${x}" cy="${y}" r="8" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.2"/>`;
+      if (a.band) s += `<path d="M${x - 7} ${y - 3} q 7 -3 14 0" stroke="${a.band}" stroke-width="2.4" fill="none"/>`;
       if (i > 0 && a.dots[i - 1]) for (const d of [-1, 1]) s += `<circle cx="${x + d * 3.5}" cy="${y - 1}" r="2" fill="${a.dots[i - 1]}"/>`;
     }
     const hx = Math.sin(6 * .9) * 5;
-    s += `<circle cx="${hx}" cy="-28" r="8.5" fill="#3b2e24" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(hx, -29, 2.4, 3.2);
+    s += `<circle cx="${hx}" cy="-28" r="8.5" fill="${a.headColor || "#3b2e24"}" stroke="#1b1b1b" stroke-width="1.2"/>` + eyes(hx, -29, 2.4, 3.2);
     return s;
   }
   if (k === "fly") {   // a little fruit fly with big red eyes and spots on its wings
@@ -931,6 +938,23 @@ function drawBug(a, id) {
     s += `<circle cx="0" cy="-14" r="6.5" fill="${a.color}" stroke="#1b1b1b" stroke-width="1.3"/>`;
     for (const x of [-1, 1]) s += `<circle cx="${x * 4.5}" cy="-15" r="4" fill="${a.eyes}" stroke="#1b1b1b" stroke-width="1"/><circle cx="${x * 4.5 - .8}" cy="-16" r="1.1" fill="#fff"/>`;
     return s;
+  }
+  if (k === "egg") {   // a sleepy egg, before the buddy hatches
+    let s = `<ellipse cx="0" cy="4" rx="22" ry="29" fill="#fbf3dc" stroke="#1b1b1b" stroke-width="1.6"/>`;
+    for (const [x, y, r] of [[-8, -12, 3], [9, -4, 2.4], [-4, 14, 2.8], [10, 16, 2], [-12, 4, 1.8]]) s += `<circle cx="${x}" cy="${y}" r="${r}" fill="#e8c98a"/>`;
+    s += `<ellipse cx="-9" cy="-12" rx="5" ry="9" fill="#fff" opacity=".6"/>`;
+    s += [-1, 1].map(x => `<path d="M${x * 7 - 3} 6 q 3 3 6 0" stroke="#1b1b1b" stroke-width="1.6" fill="none" stroke-linecap="round"/>`).join("");
+    return s + `<path d="M-3 13 q 3 2 6 0" stroke="#1b1b1b" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+  }
+  if (k === "bird") {   // Squawk: a European starling, dark and shiny with white speckles
+    let s = `<path d="M-6 30 l-6 12 l6 -3 l6 3 l-6 -12 Z" fill="#2b2a3f" stroke="#1b1b1b" stroke-width="1.2"/>`;
+    s += [-1, 1].map(x => `<path d="M${x * 4} 30 l${x * 2} 9 m${-x * 3} 0 l${x * 6} 0" stroke="#e0782a" stroke-width="2" stroke-linecap="round"/>`).join("");
+    s += `<ellipse cx="0" cy="10" rx="20" ry="24" fill="#2b2a3f" stroke="#1b1b1b" stroke-width="1.6"/>`;
+    s += [-1, 1].map(x => `<path d="M${x * 16} 0 q ${x * 14} 12 ${x * 4} 28 q ${-x * 8} -10 ${-x * 4} -26 Z" fill="#3c3a5c" stroke="#1b1b1b" stroke-width="1.2"/>`).join("");
+    s += `<ellipse cx="-6" cy="4" rx="7" ry="12" fill="#5b4f8f" opacity=".35"/><ellipse cx="6" cy="16" rx="6" ry="9" fill="#3f8f6a" opacity=".3"/>`;
+    for (const [x, y] of [[-8, 14], [6, 6], [-3, 22], [9, 20], [0, 10], [-11, 4], [4, 28]]) s += `<path d="M${x} ${y} l1.5 -2 l1.5 2 l-1.5 2 Z" fill="#fff"/>`;
+    s += `<circle cx="0" cy="-16" r="13" fill="#2b2a3f" stroke="#1b1b1b" stroke-width="1.6"/>` + eyes(0, -18, 3.2, 5);
+    return s + `<path d="M-4 -10 L4 -10 L0 0 Z" fill="#f2c81b" stroke="#1b1b1b" stroke-width="1.2" stroke-linejoin="round"/>`;
   }
   if (k === "woolly") {   // a tiny bug hiding under a fluffy white coat
     let s = "";
@@ -1030,6 +1054,8 @@ function renderGame() {
     badges.append(item);
   }
 
+  $("learnSub").textContent = t("Fact cards for all {n} invasive bugs", { n: all.length });
+  $("learnIntro").textContent = t("What each invasive bug looks like, why it's a problem, and what to do if you see one.");
   const learn = $("learnList"); learn.innerHTML = "";
   for (const s of all) learn.append(factCard(s, g.caught[s] || 0));
 
@@ -1198,7 +1224,7 @@ function minigame(species, photo) {
     arena.append(bug);
     // Items from the shop are used up here, if you have them
     const g = loadGame();
-    if (g.buddy) arena.append(el("span", "arena-buddy", buddyFace(g)));   // your Bug Buddy cheers you on
+    if (g.buddy) { const cheer = el("span", "arena-buddy"); cheer.append(buddyArt(g)); arena.append(cheer); }   // your Bug Buddy cheers you on
     const needTaps = MINIGAME_TAPS, seconds = MINIGAME_SECONDS;
     const info = el("p", "arena-info", t("Tap it {taps} times! {s} seconds left", { taps: needTaps, s: seconds }));
     const bar = el("div", "track"), fill = el("div", "fill");
@@ -1434,8 +1460,9 @@ function battle(foe, gym) {
     buddyTip.hidden = !g.buddy;
     if (g.buddy) {
       const boost = typeBoost(mine[me].species, theirs[them].species), vars = { bug: commonName(mine[me].species), foe: commonName(theirs[them].species) };
-      buddyTip.textContent = `${buddyFace(g)} ${buddyName(g)}: ${boost > 1 ? t("Your {bug} is strong against {foe}. Attack!", vars)
+      buddyTip.textContent = `${buddyName(g)}: ${boost > 1 ? t("Your {bug} is strong against {foe}. Attack!", vars)
         : typeBoost(theirs[them].species, mine[me].species) > 1 ? t("Uh oh, {foe} is strong against your {bug}. Try switching!", vars) : t("You can do it!")}`;
+      buddyTip.prepend(buddyArt(g, "tip-art"));
     }
   };
 
@@ -1873,13 +1900,23 @@ function renderWorld(g) {
 // ---- Bug Buddy ----
 const buddyStage = g => !g.buddy ? -1 : BUDDIES[g.buddy.kind].grown ? BUDDY_STAGES.length - 1 : BUDDY_STAGES.filter(s => g.buddy.xp >= s[0]).length - 1;
 const buddyFace = g => BUDDIES[g.buddy.kind].stages[buddyStage(g)];
+// The buddy's cartoon at each stage (egg, baby, grown-up, Super). Super ones glow.
+const BUDDY_ART = { swallowtail: ["egg", "Oregon swallowtail caterpillar", "Oregon swallowtail"], ladybug: ["egg", "Convergent lady beetle larva", "Convergent lady beetle"],
+  groundbeetle: ["egg", "Ground beetle larva", "Ground beetle"], squawk: ["Squawk"] };
+function buddyArt(g, cls = "") {
+  const list = BUDDY_ART[g.buddy.kind] || [], st = buddyStage(g);
+  const art = bugArt(list[Math.min(st, list.length - 1)], cls);
+  if (st === BUDDY_STAGES.length - 1) art.classList.add("super-art");
+  return art;
+}
 const buddyName = g => t(BUDDIES[g.buddy.kind].name);
 const buddyBoost = g => Math.max(0, buddyStage(g) - 1);   // grown-up: +1 attack, super: +2
 
 function renderBuddy(g) {
   const b = $("buddyBtn");
   b.classList.toggle("super", buddyStage(g) === BUDDY_STAGES.length - 1);
-  b.textContent = g.buddy ? `${buddyFace(g)} ${buddyName(g)} · ${t(BUDDY_STAGES[buddyStage(g)][1])}` : `🥚 ${t("Pick a Bug Buddy")}`;
+  b.textContent = g.buddy ? `${buddyName(g)} · ${t(BUDDY_STAGES[buddyStage(g)][1])}` : t("Pick a Bug Buddy");
+  b.prepend(g.buddy ? buddyArt(g, "btn-art") : bugArt("egg", "btn-art"), " ");
 }
 // Pick a buddy, or switch to another one. Switching keeps the points your buddy has earned.
 function pickBuddy() {
@@ -1888,7 +1925,7 @@ function pickBuddy() {
     if (bd.unlock && !bd.unlock(now)) continue;
     const b = el("button", "buddy-pick");
     b.type = "button";
-    b.append(el("span", "bug-emoji", bd.stages[2]), el("strong", null, t(bd.name)), el("span", "muted", t(bd.fact)));
+    b.append(bugArt(BUDDY_ART[kind].at(-1), "bug-emoji"), el("strong", null, t(bd.name)), el("span", "muted", t(bd.fact)));
     b.onclick = () => {
       const g = loadGame(), had = g.buddy;
       g.buddy = { kind, xp: had?.xp || 0, seen: 0 };
@@ -1907,14 +1944,15 @@ function showBuddy() {
   const g = loadGame();
   if (!g.buddy) return pickBuddy();
   const st = buddyStage(g), next = BUDDY_STAGES[st + 1], from = BUDDY_STAGES[st][0];
-  const big = el("div", "buddy-big" + (next ? "" : " super"), buddyFace(g));
+  const big = el("div", "buddy-big" + (next ? "" : " super"));
+  big.append(buddyArt(g));
   const bar = el("div", "track"), fill = el("div", "fill");
   fill.style.width = next ? `${(g.buddy.xp - from) / (next[0] - from) * 100}%` : "100%";
   bar.append(fill);
   openPopup([big, el("h2", null, buddyName(g)),
     el("p", null, `${t(BUDDY_STAGES[st][1])} · ${next ? t("{n} more points to grow", { n: next[0] - g.buddy.xp }) : t("Fully grown!")}`), bar,
     el("p", "muted", t(BUDDIES[g.buddy.kind].fact)),
-    el("p", "speech", `${buddyFace(g)} “${t(pickOne(BUDDY_TIPS))}”`),
+    (() => { const tip = el("p", "speech", `“${t(pickOne(BUDDY_TIPS))}”`); tip.prepend(buddyArt(g, "tip-art"), " "); return tip; })(),
     el("p", "muted", st >= 2 ? t("In battles, your buddy cheers: your bugs get +{n} attack.", { n: buddyBoost(g) }) : t("When your buddy is grown up, it cheers for your bugs in battles."))],
     [["Close", true], ["Switch buddy", false, pickBuddy]]);
   sound("right");
@@ -2406,7 +2444,7 @@ function route(sub) {
   const [page, id] = sub || [];
   if (page !== "camera") stopGameCamera();
   if (!sub) return;   // another screen is open
-  const pages = { challenge: "gameChallenge", battles: "gameBattles", badges: "gameBadges" };
+  const pages = { challenge: "gameChallenge", battles: "gameBattles", badges: "gameBadges", learn: "gameLearn" };
   // The camera opens over the page you were on, so the page under it doesn't change
   if (page !== "camera") {
     gamePage = pages[page] ? page : null;
@@ -2768,6 +2806,7 @@ document.addEventListener("click", e => { if (e.target.closest("[data-settings]"
 $("gameCameraBtn").onclick = () => goGame("camera");
 $("battlesTile").onclick = () => goGame("battles");
 $("badgesTile").onclick = () => goGame("badges");
+$("learnTile").onclick = () => goGame("learn");
 $("monthlyView").onclick = () => { const g = loadGame(); g.monthlyView = g.monthlyView === "list" ? "icons" : "list"; saveGame(g); renderGame(); };
 $("gcClose").onclick = closeGameCamera;
 $("gcShoot").onclick = () => {

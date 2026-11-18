@@ -1164,3 +1164,12 @@ body[data-screen="game"] #screens { padding-top: 14px; }
 .clue-art { width: 2em; height: 2em; margin-right: 6px; }
 .peek .bug-art { width: 1.1em; height: 1.1em; }
 .trap-bug .bug-art { width: 1.2em; height: 1.2em; }
+/* Learn about species: a wide tile under Battles & Forests and Badges */
+.half-tile.wide-tile { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 4px 12px; }
+.half-tile.wide-tile .muted { flex-basis: 100%; padding-left: 46px; margin-top: -6px; }
+/* Bug Buddy cartoons */
+.buddy-btn .btn-art { width: 1.6em; height: 1.6em; margin: -4px 2px -4px -4px; }
+.tip-art { width: 1.8em; height: 1.8em; margin-right: 4px; }
+.buddy-big .bug-art { width: 110px; height: 110px; }
+.arena-buddy .bug-art { width: 46px; height: 46px; }
+.super-art svg { filter: drop-shadow(0 0 6px rgba(255, 215, 90, .95)) drop-shadow(0 0 2px rgba(255, 215, 90, .9)); }

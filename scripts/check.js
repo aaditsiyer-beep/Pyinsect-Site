@@ -155,8 +155,8 @@ if (fs.existsSync("assets/game-i18n.js")) {
       if (holes(x) !== holes(en)) problems.push(`"${en}": the ${["Spanish", "French"][i]} needs the same {curly bracket} words as the English`);
     });
   }
-  // Sentences written straight into t("...") in the game must be in the dictionary
-  const game = fs.existsSync("assets/game.js") ? fs.readFileSync("assets/game.js", "utf8") : "";
+  // Sentences written straight into t("...") in the game (and its online part) must be in the dictionary
+  const game = ["assets/game.js", "assets/game-online.js"].filter(f => fs.existsSync(f)).map(f => fs.readFileSync(f, "utf8")).join("\n");
   for (const m of game.matchAll(/\bt\("((?:[^"\\]|\\.)*)"[,)]/g)) {
     const en = JSON.parse(`"${m[1]}"`);
     if (!dict[en]) problems.push(`"${en}" is in assets/game.js but has no translation in assets/game-i18n.js`);
@@ -170,7 +170,7 @@ if (fs.existsSync("assets/i18n")) {
   const problems = [];
   const holes = text => (text.match(/\{\w+\}/g) || []).sort().join(" ");
   const base = fs.readFileSync("assets/game-i18n.js", "utf8");
-  const game = fs.existsSync("assets/game.js") ? fs.readFileSync("assets/game.js", "utf8") : "";
+  const game = ["assets/game.js", "assets/game-online.js"].filter(f => fs.existsSync(f)).map(f => fs.readFileSync(f, "utf8")).join("\n");
   const literals = [...game.matchAll(/\bt\("((?:[^"\\]|\\.)*)"[,)]/g)].map(m => JSON.parse(`"${m[1]}"`));
   for (const f of fs.readdirSync("assets/i18n").filter(f => f.endsWith(".js"))) {
     let extra = {};
