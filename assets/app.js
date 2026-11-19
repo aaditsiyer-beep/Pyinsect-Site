@@ -793,10 +793,13 @@ async function startCamera() {
   $("shutter").disabled = true;
   cameraMessage("Starting camera…");
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-    });
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: videoWanted() }); }
+    catch (e) {
+      // The saved camera (see findFocusCamera) may be gone: forget it and use any back camera
+      if (!savedFocusCam()) throw e;
+      store.del(CAM_KEY);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: videoWanted() });
+    }
     const video = $("cameraVideo");
     video.srcObject = stream;
     await video.play();
@@ -822,6 +825,63 @@ async function startCamera() {
   }
 }
 
+// Some phones have 2 or 3 back cameras, and the browser doesn't always pick the main one. On a
+// Galaxy S24 FE Chrome can get the ultra-wide camera, which has fixed focus, so tap to focus never
+// turned on (it worked on a Pixel). When the camera we got can't focus, we try the other back
+// cameras once, and remember the one that can focus on this phone (localStorage).
+const CAM_KEY = "pyinsect.focusCam";   // that camera's id, or "none" (we looked, none can focus)
+const BACK_SIZE = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+let camSearch = false;
+const savedFocusCam = () => { const id = store.get(CAM_KEY, null); return id && id !== "none" ? id : null; };
+const canFocus = track => { const m = track.getCapabilities?.().focusMode || []; return m.includes("single-shot") || m.includes("continuous"); };
+
+function videoWanted() {
+  const id = facing === "environment" ? savedFocusCam() : null;
+  return id ? { deviceId: { exact: id }, ...BACK_SIZE } : { facingMode: { ideal: facing }, ...BACK_SIZE };
+}
+
+async function findFocusCamera(s) {
+  if (camSearch || facing !== "environment" || store.get(CAM_KEY, null)) return;   // only once per phone
+  // Browsers that can't aim the focus at all (iPhones, Firefox): another camera won't help
+  if (!navigator.mediaDevices.getSupportedConstraints?.().pointsOfInterest || canFocus(s.getVideoTracks()[0])) return;
+  const current = s.getVideoTracks()[0].getSettings().deviceId;
+  const cams = (await navigator.mediaDevices.enumerateDevices())
+    .filter(d => d.kind === "videoinput" && d.deviceId && d.deviceId !== current && !/front|user/i.test(d.label));
+  if (stream !== s) return;
+  if (!cams.length) { store.set(CAM_KEY, "none"); camDebug(); return; }
+  camSearch = true;
+  stopStream();
+  $("shutter").disabled = true;
+  cameraMessage("Finding the camera that can focus…");
+  const video = $("cameraVideo");
+  let found = null;
+  for (const c of cams) {
+    if ($("camera").hidden) break;   // they closed the camera
+    let test;
+    try { test = await navigator.mediaDevices.getUserMedia({ audio: false, video: { deviceId: { exact: c.deviceId }, ...BACK_SIZE } }); }
+    catch { continue; }
+    video.srcObject = test;
+    await video.play().catch(() => {});
+    const track = test.getVideoTracks()[0];
+    let ok = canFocus(track);
+    for (let i = 0; i < 4 && !ok; i++) { await new Promise(r => setTimeout(r, 400)); ok = canFocus(track); }
+    test.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+    if (ok) { found = c.deviceId; break; }
+  }
+  camSearch = false;
+  store.set(CAM_KEY, found || "none");
+  if (!$("camera").hidden) startCamera();
+}
+
+// Add ?camdebug to the link to see what the camera can do (for fixing phone problems)
+function camDebug() {
+  if (!/[?&]camdebug/.test(location.search) || !stream) return;
+  const t = stream.getVideoTracks()[0], c = t.getCapabilities?.() || {};
+  cameraMessage(`${t.label} · focus: ${(c.focusMode || []).join(",") || "none"} · aim: ${!!navigator.mediaDevices.getSupportedConstraints?.().pointsOfInterest}` +
+    ` · zoom: ${c.zoom ? c.zoom.min + "-" + c.zoom.max : "none"} · tap focus: ${focusModes.length ? "ON" : "off"} · saved: ${store.get(CAM_KEY, "-")}`);
+}
+
 // Chrome on Android tells us about the camera's own zoom and focus a moment AFTER the camera
 // starts, so the first look can miss them (tap to focus then never turned on). Look again a few
 // times in the first 2 seconds. s = the camera we started with, so an old check stops when it changes.
@@ -832,8 +892,11 @@ async function recheckControls(s) {
     const caps = s.getVideoTracks()[0].getCapabilities?.() || {};
     if (!realZoom && caps.zoom && caps.zoom.max > caps.zoom.min && zoom === 1) setupZoom();
     if (!focusModes.length) setupFocus();
-    if (realZoom && focusModes.length) return;
+    if (realZoom && focusModes.length) break;
   }
+  if (stream !== s) return;
+  camDebug();
+  if (!focusModes.length) findFocusCamera(s);   // this camera can't focus: look for one that can
 }
 
 function stopStream() {
