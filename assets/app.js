@@ -806,9 +806,10 @@ async function startCamera() {
     setupFocus();
     recheckControls(stream);
     $("shutter").disabled = false;
-    $("useCameraApp").hidden = true;
-    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
-    $("switchCamera").hidden = cams.length < 2;
+    if ($("switchCamera")) {   // only the 2.7 page still has this button
+      const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+      $("switchCamera").hidden = cams.length < 2;
+    }
   } catch (e) {
     console.error(e);
     stopStream();
@@ -817,7 +818,7 @@ async function startCamera() {
       : e && e.name === "NotFoundError" ? "No camera found on this device."
       : "Couldn't start the camera here. You can use your camera app instead.");
     $("useCameraApp").hidden = false;
-    $("switchCamera").hidden = true;
+    if ($("switchCamera")) $("switchCamera").hidden = true;
   }
 }
 
@@ -1157,7 +1158,7 @@ if ($("crop")) {
 if ($("openCamera")) $("openCamera").onclick = openCamera;
 $("closeCamera").onclick = closeCamera;
 $("shutter").onclick = takePhoto;
-$("switchCamera").onclick = () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); };
+if ($("switchCamera")) $("switchCamera").onclick = () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); };
 $("useCameraApp").onclick = () => { closeCamera(); $("captureInput").click(); };
 $("captureInput").onchange = e => { handleFiles(e.target.files, "capture"); e.target.value = ""; };
 // Don't keep the camera running in a background tab
