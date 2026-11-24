@@ -192,6 +192,10 @@ input[type=file] { display: none; }
 /* --zoom is the digital zoom (set by app.js); it stays 1 when the camera zooms by itself */
 .viewfinder video { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(var(--zoom, 1)); }
 .viewfinder video.mirror { transform: scaleX(-1) scale(var(--zoom, 1)); }
+/* Flash button in the corner of the camera view; yellow when the light is on */
+.torch-btn { position: absolute; top: 10px; right: 10px; z-index: 2; width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .7); background: rgba(0, 0, 0, .45); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
+.torch-btn[aria-pressed="true"] { background: #ffd400; color: #000; border-color: #ffd400; }
+.torch-btn[hidden] { display: none; }
 .focus-ring { position: absolute; width: 72px; height: 72px; margin: -36px 0 0 -36px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(0, 0, 0, .35); pointer-events: none; animation: focus-ring .5s ease-out; }
 @keyframes focus-ring { from { transform: scale(1.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .focus-ring { animation: none; } }
@@ -199,7 +203,9 @@ input[type=file] { display: none; }
 .crop { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 28px; scroll-margin-top: 12px; }
 .crop-title { margin: 4px 6px 0; font-size: 22px; }
 .crop-tip { margin: 0 6px; font-size: 16px; font-weight: 500; }
-.crop-stage { position: relative; width: fit-content; max-width: 100%; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+/* flex: none: never squeeze the frame shorter than the photo (on short screens, like many Android phones, that cut the
+   photo off and put the box in the wrong place). The crop screen scrolls instead. */
+.crop-stage { position: relative; flex: none; width: fit-content; max-width: 100%; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
 .crop-stage img { display: block; max-width: 100%; max-height: 65vh; -webkit-user-drag: none; pointer-events: none; }
 /* The huge shadow darkens everything outside the box */
 .crop-box { position: absolute; border: 4px solid #ffd43b; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .5); cursor: move; outline: none; }
@@ -875,10 +881,14 @@ body.app.onboarding { padding-bottom: 0; overflow: hidden; }
 .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: var(--menu-h); z-index: 120; overflow: auto; }
 .camera.overlay, .crop.overlay { border-radius: 0; padding: 12px max(12px, calc((100% - 820px) / 2)); background: var(--backdrop); }
 .camera.overlay .viewfinder { max-height: calc(100dvh - var(--menu-h) - 170px); }
-.crop.overlay .crop-stage img { max-height: calc(100dvh - var(--menu-h) - 200px); }
+.crop.overlay .crop-stage img { max-height: calc(100dvh - var(--menu-h) - 270px); }   /* 270px: the title, tip and buttons (2 rows on phones) */
 .sheet { display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 12, 10, .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .sheet-box { width: min(560px, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 26px; background: var(--surface); box-shadow: var(--glass-shadow); }
+.results-close { position: sticky; top: 0; z-index: 2; align-self: flex-end; flex: none; width: 40px; height: 40px; margin-bottom: -10px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .12); color: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
 .sheet-box h2 { font-size: 24px; font-weight: 700; }
+#resultsActions { width: 100%; flex-wrap: nowrap; margin: 16px 0; }
+#resultsActions .btn { flex: 1 1 0; justify-content: center; text-align: center; border-radius: 16px; }
+#resultsActions .btn.primary { flex: 2 1 0; font-size: 20px; padding: 16px 20px; min-height: 56px; border-radius: 16px; }
 .big-note { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 700; color: var(--accent); }
 .checking { margin: 0; color: var(--muted); animation: pulse 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .checking { animation: none; } }
@@ -1054,45 +1064,34 @@ body[data-screen="game"] #screens { padding-top: 14px; }
 .btn.small { padding: 5px 10px; font-size: 13px; }
 .name-options { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* ===== Accounts and levels (assets/account.js) ===== */
-.topbar-end { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.account-btn { flex: none; max-width: 17em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13px var(--body); color: var(--ink); padding: 7px 12px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass-strong); cursor: pointer; }
-.account-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.top-btns { display: flex; gap: 8px; }
-.game-locked { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 32px 20px; border-radius: 24px; background: var(--glass); border: 1px solid var(--glass-edge); }
-.game-locked h2, .game-locked p { margin: 0; }
-.game-locked .tile-emoji { font-size: 44px; }
-.account { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
-.account h2, .account p { margin: 0; }
-.account-field { display: flex; flex-direction: column; gap: 4px; text-align: left; font-size: 14px; font-weight: 600; }
-.account-field input { font: 500 16px var(--body); padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); background: var(--glass-strong); color: var(--ink); min-width: 0; }
-.account-field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.account-msg { font-weight: 600; color: var(--alert, #b3261e); }
-.account-msg:empty { display: none; }
-.account .name-options { justify-content: center; }
-.level-chip { align-self: center; font-weight: 600; padding: 4px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-.account-setup { text-align: left; display: flex; flex-direction: column; gap: 8px; }
-.account-setup summary { cursor: pointer; font-weight: 600; }
-.account-setup[open] { display: flex; }
-.account-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; text-align: left; }
-.account-row { border-color: color-mix(in srgb, var(--ink) 15%, transparent); }
-.account-row .foe-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.level-pick { font: 500 13px var(--body); padding: 5px 8px; border-radius: 10px; border: 1px solid var(--glass-edge); background: var(--glass-strong); color: var(--ink); }
-.level-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); vertical-align: middle; white-space: nowrap; }
-.level-tag.team, .level-tag.owner { background: color-mix(in srgb, #d4a017 22%, transparent); color: color-mix(in srgb, #8a6400 80%, var(--ink)); }
-.level-tag.manager { background: color-mix(in srgb, #3b6fd8 18%, transparent); color: color-mix(in srgb, #2a55b0 80%, var(--ink)); }
+/* Invasive species alarm: red glow around the screen and bright red text */
+.invasive-alarm { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; cursor: pointer; background: rgba(255, 0, 0, .12); box-shadow: inset 0 0 140px 50px rgba(255, 0, 0, .85); animation: alarm-pulse .7s ease-in-out infinite alternate; }
+.invasive-alarm-text { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 8vw, 72px); line-height: 1.05; color: #ff0000; background: #fff; padding: 12px 22px; border-radius: 16px; border: 4px solid #ff0000; text-transform: uppercase; }
+.invasive-alarm-hint { color: #fff; font-weight: 600; text-shadow: 0 1px 4px #000; }
+@keyframes alarm-pulse { from { opacity: .8; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .invasive-alarm { animation: none; } }
+.invasive-alarm.glow-only { background: none; pointer-events: none; box-shadow: inset 0 0 140px 50px rgba(255, 0, 0, .85); }
+.result-note .alert-line { font-family: var(--display); font-weight: 800; font-size: clamp(22px, 6vw, 34px); line-height: 1.1; color: #ff0000; margin: 0 0 10px; text-align: center; text-shadow: 0 0 12px rgba(255, 0, 0, .5); }
+.result-note .alert-bars { margin: 0 0 12px; }
+.result-note .alert-bars .alt { grid-template-columns: minmax(0, 1fr) 90px 52px; font-weight: 600; }
+.result-note .alert-bars .track { height: 10px; background: rgba(255, 255, 255, .2); }
+.result-note .alert-bars .fill { background: linear-gradient(90deg, #ff6b5e, #ff0000); }
+.result-note .alert-bars .pct { color: inherit; }
 
-/* Sign in with Google (assets/account.js) */
-.google-box { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 4px; }
-.google-box .or-line { margin: 0; }
-.google-btn { min-height: 44px; }
+/* Big readings in the alert box */
+.alert-photo { margin: 0 0 16px; }
+.alert-photo-title { font-weight: 700; margin: 0 0 6px; }
+.alert-reading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; margin: 0 0 8px; }
+.alert-reading .alert-name { font-size: 20px; font-weight: 700; }
+.alert-reading .pct { font-size: 22px; font-weight: 800; color: inherit; }
+.alert-reading .track { grid-column: 1 / -1; height: 12px; background: rgba(255, 255, 255, .2); }
+.alert-reading:first-of-type .fill { background: linear-gradient(90deg, #ff6b5e, #ff0000); }
+.alert-reading .fill { background: rgba(255, 255, 255, .55); }
+/* Nothing invasive: the same readings, calm green instead of alarm red */
+.result-note .calm-line { font-family: var(--display); font-weight: 700; font-size: clamp(20px, 5vw, 26px); line-height: 1.2; color: var(--accent); margin: 0 0 10px; }
+.alert-readings.calm .track { background: rgba(127, 127, 127, .2); }
+.alert-readings.calm .alert-reading .fill, .alert-readings.calm .alert-reading:first-of-type .fill { background: var(--accent); }
 
-/* Terms of Use and Privacy Policy pages (terms/, privacy/) */
-.legal { gap: 16px; }
-.legal-box { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; }
-.legal-box h2 { margin: 0 0 6px; }
-.legal-box p, .legal-box li { font-size: 15px; line-height: 1.55; }
-.legal-box p { margin: 6px 0; }
-.legal-box ul { margin: 6px 0; padding-left: 20px; }
-.legal-box li + li { margin-top: 4px; }
-.agree-line { font-size: 12px; text-align: center; margin: 4px 0 0; }
+/* Emerald ash borer alert: a big photo of the beetle under the alert, no brown text */
+.result-note.care { background: rgba(255, 0, 0, .08); }
+.alert-eab-img { display: block; width: 100%; max-height: 60vh; object-fit: cover; border-radius: 16px; margin: 8px 0 0; border: 3px solid #ff0000; }

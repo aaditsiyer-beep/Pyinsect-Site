@@ -24,17 +24,17 @@ Kids in elementary and middle school. Please:
 | File or folder | What it does |
 |---|---|
 | `index.html` | The main page: splash, permissions, Home, Detect, Game, and Map screens |
+| `privacy.html` | Our privacy policy. If a change collects or shares new information, update it too |
 | `assets/app.js` | The AI and report code: camera, photos, runs the model, sends reports |
 | `assets/flow.js` | The screens and menu bar: splash, permissions, home, the 3 Detect steps, and the results pop-up |
 | `assets/reportsmap.js` | The Map screen: our numbers and the reports map |
+| `assets/analytics.js` | Website analytics (GoatCounter, no cookies): counts visits and screens, never photos, reports, or locations |
 | `assets/site.css` | Colors, fonts, and layout |
 | `assets/species.js` | Common names for each insect |
 | `assets/models/` | Settings for each model version, like the invasive list |
 | `assets/trees/` | Settings for each tree: the Detect step words and photos (with credits), and the damage signs |
 | `model/` | The trained AI models (`.onnx` files) |
 | `relay/worker.js` | Runs on Cloudflare and saves reports |
-| `server/` | The game server on Cloudflare: online battles, and accounts with levels (Team, Manager, Player) |
-| `assets/account.js` | Sign in, make an account, your level, and Manage accounts (for our team) |
 | `scripts/check.js` | Checks for mistakes. Run `node scripts/check.js` before sharing work |
 | `.github/workflows/` | Makes GitHub run those checks on every pull request |
 | `skills/shared/` | Team skills shared by all our projects (a git submodule, don't edit here) |

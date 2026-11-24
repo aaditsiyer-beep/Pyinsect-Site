@@ -82,6 +82,10 @@ async function getLowresSession() {
 // sim is null when there's no fingerprint check (old models, or a low-res model without one).
 // cutoff is the "not in my list" line for the model that looked at the photo (the low-res model has its own).
 function verdictFor(best, sim, cutoff = MODEL.notInListCutoff) {
+  // Species that always count once the AI is this sure (%), even if the photo is blurry, small, or
+  // fails the "not in my list" check. Set in the model config (alwaysReport).
+  const always = MODEL.alwaysReport?.[best.species];
+  if (always != null && best.confidence >= always) return "ok";
   if (MODEL.otherClass && best.species === MODEL.otherClass) return "not_listed";
   if (sim != null && cutoff != null && sim < cutoff) return "not_listed";
   if (MODEL.minConfidence && best.confidence < MODEL.minConfidence) return "unable";
@@ -110,13 +114,13 @@ function pilCoeffs(inSize, outSize, from, count) {
 // Pillow-style bilinear resize (as above), ImageNet normalisation, CHW
 const roundHalfEven = v => { const f = Math.floor(v), d = v - f; return d > 0.5 || (d === 0.5 && f % 2) ? f + 1 : f; };
 
+// The photo is read in strips of BAND rows, not all at once: a phone photo (12-50 megapixels) is
+// 48-200 MB as pixels, and copying the whole thing a few times made phones run out of memory
+// (Galaxy S24 FE, Nov 2026). Each strip is copied 1:1, so the pixels are exactly the same.
+const BAND = 64;
+
 function preprocess(bmp) {
   const { width: w, height: h } = bmp;
-  const c = document.createElement("canvas");
-  c.width = w; c.height = h;
-  const ctx = c.getContext("2d", { willReadFrequently: true });
-  ctx.drawImage(bmp, 0, 0);
-  const src = ctx.getImageData(0, 0, w, h).data;
 
   let cx, cy;
   if (RESIZE_MODE === "squash") {
@@ -131,18 +135,29 @@ function preprocess(bmp) {
   // Horizontal pass (rounded to 8-bit like Pillow), only over the source rows the crop needs
   const y0 = cy[0].min, y1 = cy[223].min + cy[223].w.length;
   const mid = new Uint8ClampedArray((y1 - y0) * 224 * 3);
-  for (let y = y0; y < y1; y++) {
-    const row = y * w * 4, outRow = (y - y0) * 224 * 3;
-    for (let x = 0; x < 224; x++) {
-      const { min, w: k } = cx[x];
-      let r = 0, g = 0, b = 0;
-      for (let i = 0; i < k.length; i++) {
-        const p = row + (min + i) * 4;
-        r += src[p] * k[i]; g += src[p + 1] * k[i]; b += src[p + 2] * k[i];
+  const c = document.createElement("canvas");
+  c.width = w; c.height = Math.min(BAND, y1 - y0);
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = false;
+  for (let top = y0; top < y1; top += BAND) {
+    const rows = Math.min(BAND, y1 - top);
+    ctx.clearRect(0, 0, w, c.height);
+    ctx.drawImage(bmp, 0, top, w, rows, 0, 0, w, rows);
+    const src = ctx.getImageData(0, 0, w, rows).data;
+    for (let y = top; y < top + rows; y++) {
+      const row = (y - top) * w * 4, outRow = (y - y0) * 224 * 3;
+      for (let x = 0; x < 224; x++) {
+        const { min, w: k } = cx[x];
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < k.length; i++) {
+          const p = row + (min + i) * 4;
+          r += src[p] * k[i]; g += src[p + 1] * k[i]; b += src[p + 2] * k[i];
+        }
+        mid[outRow + x * 3] = Math.round(r); mid[outRow + x * 3 + 1] = Math.round(g); mid[outRow + x * 3 + 2] = Math.round(b);
       }
-      mid[outRow + x * 3] = Math.round(r); mid[outRow + x * 3 + 1] = Math.round(g); mid[outRow + x * 3 + 2] = Math.round(b);
     }
   }
+  c.width = c.height = 0;   // give the strip's memory back now, not whenever the browser gets round to it
 
   // Vertical pass, then normalise into CHW
   const out = new Float32Array(3 * 224 * 224), plane = 224 * 224;
@@ -190,7 +205,9 @@ function reportPhoto(bmp) {
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
   c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-  return c.toDataURL("image/jpeg", 0.8).split(",")[1];
+  const data = c.toDataURL("image/jpeg", 0.8).split(",")[1];
+  c.width = c.height = 0;   // free it right away (phones run low on memory)
+  return data;
 }
 
 // A new report's id (UTC time + random letters) and its local time with the time zone
@@ -368,6 +385,7 @@ function sharpness(bmp) {
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(bmp, 0, 0, w, h);
   const d = ctx.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+  c.width = c.height = 0;   // free the canvas, we have the pixels
   for (let i = 0; i < w * h; i++) g[i] = d[i * 4] * .299 + d[i * 4 + 1] * .587 + d[i * 4 + 2] * .114;
   const sum = new Float64Array(16), sq = new Float64Array(16), n = new Float64Array(16);
   for (let y = 1; y < h - 1; y++) {
@@ -561,6 +579,33 @@ function altName(species) {
   return name;
 }
 
+// Invasive species alarm: bright red text, a pulsing red glow around the screen, and a siren beep.
+// It goes away by itself after a few seconds, or when you tap it.
+let alarmEl = null, alarmTimer = 0;
+function invasiveAlarm(glowOnly = false) {   // glowOnly: just the red glow and siren (the words are shown somewhere else)
+  if (alarmEl) return;
+  alarmEl = el("div", "invasive-alarm" + (glowOnly ? " glow-only" : ""));
+  alarmEl.setAttribute("role", "alert");
+  if (!glowOnly) alarmEl.append(el("div", "invasive-alarm-text", "INVASIVE SPECIES DETECTED"), el("div", "invasive-alarm-hint", "Tap to close"));
+  const close = () => { clearTimeout(alarmTimer); alarmEl?.remove(); alarmEl = null; };
+  alarmEl.addEventListener("click", close);
+  document.body.append(alarmEl);
+  alarmTimer = setTimeout(close, 7000);
+  try {   // a fast, high fire-alarm beeping made by the browser (no sound file); silent if the browser blocks sound
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = "sawtooth"; osc.frequency.value = 1500;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    for (let i = 0; i < 14; i++) {   // beep-beep-beep... (0.1s on, 0.1s off)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.2);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.2 + 0.1);
+    }
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 2.8);
+    osc.onended = () => ctx.close();
+  } catch {}
+}
+
 function fillCard(card, top3, verdict = "ok") {
   if (verdict !== "ok") return fillUnsureCard(card, top3, verdict);
   const best = top3[0], invasive = INVASIVE.has(best.species), sick = damagedTree(best.species);
@@ -645,8 +690,8 @@ function classify(file) {
   queue = queue.then(async () => {
     try {
       setStatus(`Analysing ${file.name}…`, "busy");
-      const bmp = await createImageBitmap(file);   // for the report photo (normal colours)
       const { top3, verdict } = await identify(file);
+      const bmp = await createImageBitmap(file);   // for the report photo (normal colours); after the AI, to save memory
       if (file.tree) {
         await treePhoto(file, bmp, top3, card, verdict);
         bmp.close?.();
@@ -665,8 +710,10 @@ function classify(file) {
         if (ai.verdict === "ai") { blockReport(card, ai); window.Innvadex?.fakePhoto(); }
         else if (infested) {
           // Sent right away, so the team knows about the infested tree
+          invasiveAlarm();
           fileReport(buildInfestedReport(bmp, infested, top3), card, "Infested tree: action needed");
         } else {
+          invasiveAlarm();
           fileReport(buildReport(bmp, top3[0].species, top3[0].confidence, top3), card);
           window.Innvadex?.encounter(top3[0].species, card.querySelector("img").src);   // the game (assets/game.js)
         }
@@ -707,6 +754,7 @@ async function treePhoto(file, bmp, top3, card, verdict) {
   }
   const ai = file.fromCamera ? { verdict: "camera", reasons: [] } : await checkAI(file.original || file).catch(() => ({ verdict: "unknown", reasons: [] }));
   if (ai.verdict === "ai") { blockReport(card, ai); return; }
+  if (infested) invasiveAlarm();
   fileReport(buildTreeReport(bmp, tree, top3, infested), card, infested ? "Infested tree: action needed" : tree.signsText);
   window.treeCheck?.reported(infested);
 }
@@ -745,10 +793,13 @@ async function startCamera() {
   $("shutter").disabled = true;
   cameraMessage("Starting camera…");
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-    });
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: videoWanted() }); }
+    catch (e) {
+      // The saved camera (see findFocusCamera) may be gone: forget it and use any back camera
+      if (!savedFocusCam()) throw e;
+      store.del(CAM_KEY);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: videoWanted() });
+    }
     const video = $("cameraVideo");
     video.srcObject = stream;
     await video.play();
@@ -756,10 +807,13 @@ async function startCamera() {
     cameraMessage("");
     setupZoom();
     setupFocus();
+    setupTorch();
+    recheckControls(stream);
     $("shutter").disabled = false;
-    $("useCameraApp").hidden = true;
-    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
-    $("switchCamera").hidden = cams.length < 2;
+    if ($("switchCamera")) {   // only the 2.7 page still has this button
+      const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+      $("switchCamera").hidden = cams.length < 2;
+    }
   } catch (e) {
     console.error(e);
     stopStream();
@@ -768,8 +822,85 @@ async function startCamera() {
       : e && e.name === "NotFoundError" ? "No camera found on this device."
       : "Couldn't start the camera here. You can use your camera app instead.");
     $("useCameraApp").hidden = false;
-    $("switchCamera").hidden = true;
+    if ($("switchCamera")) $("switchCamera").hidden = true;
   }
+}
+
+// Some phones have 2 or 3 back cameras, and the browser doesn't always pick the main one. On a
+// Galaxy S24 FE Chrome can get the ultra-wide camera, which has fixed focus, so tap to focus never
+// turned on (it worked on a Pixel). When the camera we got can't focus, we try the other back
+// cameras once, and remember the one that can focus on this phone (localStorage).
+const CAM_KEY = "pyinsect.focusCam";   // that camera's id, or "none" (we looked, none can focus)
+const BACK_SIZE = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+let camSearch = false;
+const savedFocusCam = () => { const id = store.get(CAM_KEY, null); return id && id !== "none" ? id : null; };
+const canFocus = track => { const m = track.getCapabilities?.().focusMode || []; return m.includes("single-shot") || m.includes("continuous"); };
+
+function videoWanted() {
+  const id = facing === "environment" ? savedFocusCam() : null;
+  return id ? { deviceId: { exact: id }, ...BACK_SIZE } : { facingMode: { ideal: facing }, ...BACK_SIZE };
+}
+
+async function findFocusCamera(s) {
+  if (camSearch || facing !== "environment" || store.get(CAM_KEY, null)) return;   // only once per phone
+  // Browsers that can't aim the focus at all (iPhones, Firefox): another camera won't help
+  if (!navigator.mediaDevices.getSupportedConstraints?.().pointsOfInterest || canFocus(s.getVideoTracks()[0])) return;
+  const current = s.getVideoTracks()[0].getSettings().deviceId;
+  const cams = (await navigator.mediaDevices.enumerateDevices())
+    .filter(d => d.kind === "videoinput" && d.deviceId && d.deviceId !== current && !/front|user/i.test(d.label));
+  if (stream !== s) return;
+  if (!cams.length) { store.set(CAM_KEY, "none"); camDebug(); return; }
+  camSearch = true;
+  stopStream();
+  $("shutter").disabled = true;
+  cameraMessage("Finding the camera that can focus…");
+  const video = $("cameraVideo");
+  let found = null, finished = true;
+  for (const c of cams) {
+    if ($("camera").hidden) { finished = false; break; }   // they closed the camera before we tried them all
+    let test;
+    try { test = await navigator.mediaDevices.getUserMedia({ audio: false, video: { deviceId: { exact: c.deviceId }, ...BACK_SIZE } }); }
+    catch { continue; }
+    video.srcObject = test;
+    await video.play().catch(() => {});
+    const track = test.getVideoTracks()[0];
+    let ok = canFocus(track);
+    for (let i = 0; i < 4 && !ok; i++) { await new Promise(r => setTimeout(r, 400)); ok = canFocus(track); }
+    test.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+    if (ok) { found = c.deviceId; break; }
+  }
+  camSearch = false;
+  // Only remember "none" if we really tried every camera. If they closed it early, look again next time.
+  if (found || finished) store.set(CAM_KEY, found || "none");
+  if (!$("camera").hidden) startCamera();
+}
+
+// Add ?camdebug to the link to see what the camera can do (for fixing phone problems)
+function camDebug() {
+  if (!/[?&]camdebug/.test(location.search) || !stream) return;
+  const t = stream.getVideoTracks()[0], c = t.getCapabilities?.() || {};
+  cameraMessage(`${t.label} · focus: ${(c.focusMode || []).join(",") || "none"} · aim: ${!!navigator.mediaDevices.getSupportedConstraints?.().pointsOfInterest}` +
+    ` · zoom: ${c.zoom ? c.zoom.min + "-" + c.zoom.max : "none"} · tap focus: ${focusModes.length ? "ON" : "off"} · saved: ${store.get(CAM_KEY, "-")}`);
+}
+
+// Chrome on Android tells us about the camera's own zoom and focus a moment AFTER the camera
+// starts, so the first look can miss them (tap to focus then never turned on). Look again a few
+// times in the first 2 seconds. s = the camera we started with, so an old check stops when it changes.
+async function recheckControls(s) {
+  for (const wait of [250, 500, 1000]) {
+    await new Promise(r => setTimeout(r, wait));
+    if (stream !== s) return;
+    const caps = s.getVideoTracks()[0].getCapabilities?.() || {};
+    if (!realZoom && caps.zoom && caps.zoom.max > caps.zoom.min && zoom === 1) setupZoom();
+    if (!focusModes.length) setupFocus();
+    setupTorch();
+    if (realZoom && focusModes.length) break;
+  }
+  if (stream !== s) return;
+  setupTorch();
+  camDebug();
+  if (!focusModes.length) findFocusCamera(s);   // this camera can't focus: look for one that can
 }
 
 function stopStream() {
@@ -778,6 +909,38 @@ function stopStream() {
   $("cameraVideo").srcObject = null;
   resetZoom();
   resetFocus();
+  resetTorch();
+}
+
+// ---------- flash ----------
+// The phone's light, for dark places (under leaves, inside bark). Only phones that allow websites
+// to use it (mostly Android with Chrome) show the ⚡ button; iPhones don't. Same as the game camera.
+let torchOn = false;
+
+function setupTorch() {
+  if (!$("torchBtn") || !stream) return;
+  const caps = stream.getVideoTracks()[0].getCapabilities?.() || {};
+  $("torchBtn").hidden = !caps.torch;
+}
+
+function resetTorch() {   // the light goes off by itself when the camera stops
+  torchOn = false;
+  if (!$("torchBtn")) return;
+  $("torchBtn").hidden = true;
+  $("torchBtn").setAttribute("aria-pressed", "false");
+}
+
+if ($("torchBtn")) {
+  $("torchBtn").onclick = async () => {
+    if (!stream) return;
+    try {
+      await stream.getVideoTracks()[0].applyConstraints({ advanced: [{ torch: !torchOn }] });
+      torchOn = !torchOn;
+      $("torchBtn").setAttribute("aria-pressed", String(torchOn));
+    } catch {}
+  };
+  // A tap on the button isn't a tap to focus or the start of a pinch
+  $("torchBtn").addEventListener("pointerdown", e => e.stopPropagation());
 }
 
 // ---------- camera zoom ----------
@@ -1013,6 +1176,7 @@ async function checkCrop() {
     c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, sw, sh);
     bmp.close?.();
     const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.92));
+    c.width = c.height = 0;   // free the big canvas right away (phones run low on memory)
     if (!blob) throw new Error("couldn't make the zoomed photo");
     const zoomed = new File([blob], file.name.replace(/\.[^.]+$/, "") + "-zoomed.jpg", { type: "image/jpeg" });
     zoomed.fromCamera = file.fromCamera;
@@ -1093,7 +1257,7 @@ if ($("crop")) {
 if ($("openCamera")) $("openCamera").onclick = openCamera;
 $("closeCamera").onclick = closeCamera;
 $("shutter").onclick = takePhoto;
-$("switchCamera").onclick = () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); };
+if ($("switchCamera")) $("switchCamera").onclick = () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); };
 $("useCameraApp").onclick = () => { closeCamera(); $("captureInput").click(); };
 $("captureInput").onchange = e => { handleFiles(e.target.files, "capture"); e.target.value = ""; };
 // Don't keep the camera running in a background tab
