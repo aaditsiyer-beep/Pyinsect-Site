@@ -404,8 +404,8 @@ async function showResults() {
     for (let i = 0; i < list.length; i++) {
       const p = list[i];
       wait.textContent = `Checking photo ${i + 1} of ${list.length}…`;
-      const bmp = await createImageBitmap(p.file);
       Object.assign(p, await identify(p.file));
+      const bmp = await createImageBitmap(p.file);   // opened after the AI is done, so only one big copy at a time
       p.blurry = sharpness(bmp) < BLUR_THRESHOLD;
       p.photo = reportPhoto(bmp);
       bmp.close?.();
@@ -455,6 +455,13 @@ async function showResults() {
     if (bug) { const big = el("img", "alert-eab-img"); big.src = bug.url; big.alt = "Your photo of the invasive insect"; note.append(big); }
     note.append($("resultsActions"), alertBars(), el("p", null, `This is an invasive species. It is reported to the experts.`));
   } else {
+    // Nothing invasive: still say what the bug is (like "This looks like a Ladybug. It isn't invasive."),
+    // with the AI's readings in calm green instead of alarm red
+    const bugs = list.filter(p => p.step === "bug" && p.ai !== "ai");
+    for (const p of bugs) note.append(el("p", "calm-line", photoLine(p)));
+    if (list.some(p => p.ai !== "ai" && p.step !== "tree" && p.verdict === "ok")) {
+      const bars = alertBars(); bars.classList.add("calm"); note.append(bars);
+    }
     note.append(el("p", null, "We didn't find signs of the emerald ash borer. Great news! Your report still helps: it shows where trees were checked."), $("resultsActions"));
   }
   body.append(note);
